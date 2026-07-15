@@ -1,0 +1,145 @@
+{
+  "name": "AI Suite - Business Suite",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-suite/business",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-business",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+      },
+      "id": "prepare-business",
+      "name": "Prepare Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify($json.apiPayload) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "gemini-business",
+      "name": "Call Gemini API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+      },
+      "id": "extract-business",
+      "name": "Extract Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-business",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Request": {
+      "main": [
+        [
+          {
+            "node": "Call Gemini API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Gemini API": {
+      "main": [
+        [
+          {
+            "node": "Extract Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    "ai-suite",
+    "business"
+  ],
+  "meta": {
+    "description": "AI Suite - Business Suite. Webhook path: /webhook/ai-suite/business. Tools: business-plan, resume, job-description, swot-analysis, sales-pitch, pitch-deck, contract-generator"
+  }
+}

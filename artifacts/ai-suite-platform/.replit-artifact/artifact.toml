@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "AI Suite Platform"
+version = "1.0.0"
+id = "artifacts/ai-suite-platform"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21559
+
+[services.development]
+run = "pnpm --filter @workspace/ai-suite-platform run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ai-suite-platform", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ai-suite-platform/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21559"
+BASE_PATH = "/"

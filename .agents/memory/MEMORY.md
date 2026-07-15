@@ -1,0 +1,5 @@
+- [Architecture decisions](architecture.md) — React+Express SaaS with N8N webhooks and WooCommerce plugin; not Next.js or full PHP
+- [Auth flow](auth-flow.md) — JWT in localStorage, Zustand store, setAuthTokenGetter wired to api-client-react
+- [AI generation](ai-generation.md) — Direct Gemini 2.0 Flash fallback; N8N webhook if tool has n8nWebhookUrl configured
+- [DB schema tables](db-schema.md) — users, generations, favorites, plans, tools_config — all in lib/db/src/schema/
+- [Tools data](tools-data.md) — 80+ tools in artifacts/api-server/src/lib/tools-data.ts; no DB, static with DB config overlay

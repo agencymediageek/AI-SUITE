@@ -1,0 +1,1889 @@
+{
+  "workflows": [
+    {
+      "name": "AI Suite - Core AI Tools",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/core",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-core",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-core",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-core",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-core",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-core",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "core"
+      ],
+      "meta": {
+        "description": "AI Suite - Core AI Tools. Webhook path: /webhook/ai-suite/core. Tools: chat, image-generator, code, translator, game-maker, website"
+      }
+    },
+    {
+      "name": "AI Suite - Writing Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/writing",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-writing",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-writing",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-writing",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-writing",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-writing",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "writing"
+      ],
+      "meta": {
+        "description": "AI Suite - Writing Suite. Webhook path: /webhook/ai-suite/writing. Tools: writer, blog-post, article-writer, content-improver, summary, headline-generator, story, grammar"
+      }
+    },
+    {
+      "name": "AI Suite - Social Media Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/social",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-social",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-social",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-social",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-social",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-social",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "social"
+      ],
+      "meta": {
+        "description": "AI Suite - Social Media Suite. Webhook path: /webhook/ai-suite/social. Tools: social, instagram-caption, twitter-thread, linkedin-post, hashtag-generator"
+      }
+    },
+    {
+      "name": "AI Suite - Marketing Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/marketing",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-marketing",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-marketing",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-marketing",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-marketing",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-marketing",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "marketing"
+      ],
+      "meta": {
+        "description": "AI Suite - Marketing Suite. Webhook path: /webhook/ai-suite/marketing. Tools: marketing-plan, facebook-ads, google-ads, email, content-calendar, elevator-pitch"
+      }
+    },
+    {
+      "name": "AI Suite - Business Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/business",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-business",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-business",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-business",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-business",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-business",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "business"
+      ],
+      "meta": {
+        "description": "AI Suite - Business Suite. Webhook path: /webhook/ai-suite/business. Tools: business-plan, resume, job-description, swot-analysis, sales-pitch, pitch-deck, contract-generator"
+      }
+    },
+    {
+      "name": "AI Suite - Development Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/development",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-development",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-development",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-development",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-development",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-development",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "development"
+      ],
+      "meta": {
+        "description": "AI Suite - Development Suite. Webhook path: /webhook/ai-suite/development. Tools: sql, bug-fix, code-reviewer, api-docs, readme-generator, regex-generator, unit-test, docker-compose"
+      }
+    },
+    {
+      "name": "AI Suite - Education Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/education",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-education",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-education",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-education",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-education",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-education",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "education"
+      ],
+      "meta": {
+        "description": "AI Suite - Education Suite. Webhook path: /webhook/ai-suite/education. Tools: quiz, lesson-plan, study-guide, flashcard-generator, math-solver, interview"
+      }
+    },
+    {
+      "name": "AI Suite - Creative Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/creative",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-creative",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-creative",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-creative",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-creative",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-creative",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "creative"
+      ],
+      "meta": {
+        "description": "AI Suite - Creative Suite. Webhook path: /webhook/ai-suite/creative. Tools: recipe, story-ideas, character-creator, song-lyrics, joke-generator, name-generator"
+      }
+    },
+    {
+      "name": "AI Suite - Legal Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/legal",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-legal",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-legal",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-legal",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-legal",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-legal",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "legal"
+      ],
+      "meta": {
+        "description": "AI Suite - Legal Suite. Webhook path: /webhook/ai-suite/legal. Tools: privacy-policy, terms-of-service, disclaimer-generator, refund-policy"
+      }
+    },
+    {
+      "name": "AI Suite - SEO Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/seo",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-seo",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-seo",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-seo",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-seo",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-seo",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "seo"
+      ],
+      "meta": {
+        "description": "AI Suite - SEO Suite. Webhook path: /webhook/ai-suite/seo. Tools: meta-description, keyword-research, schema-markup, seo-audit"
+      }
+    },
+    {
+      "name": "AI Suite - Finance Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/finance",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-finance",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-finance",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-finance",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-finance",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-finance",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "finance"
+      ],
+      "meta": {
+        "description": "AI Suite - Finance Suite. Webhook path: /webhook/ai-suite/finance. Tools: finance, trading"
+      }
+    },
+    {
+      "name": "AI Suite - Personal Suite",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/personal",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-personal",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-personal",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-personal",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-personal",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-personal",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "personal"
+      ],
+      "meta": {
+        "description": "AI Suite - Personal Suite. Webhook path: /webhook/ai-suite/personal. Tools: meal-plan, workout-routine, goal-setting, journal-prompt"
+      }
+    },
+    {
+      "name": "AI Suite - AI Agents",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "ai-suite/agents",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-agents",
+          "name": "Webhook",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            240,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst prompt = body.prompt || \"\";\nconst systemPrompt = body.systemPrompt || \"You are a helpful AI assistant.\";\nconst extraInputs = body.extraInputs || {};\nlet fullPrompt = prompt;\nif (extraInputs && typeof extraInputs === \"object\") {\n  const extras = Object.entries(extraInputs).filter(([,v]) => v).map(([k,v]) => k + \": \" + v).join(\"\n\");\n  if (extras) fullPrompt = extras + \"\n\n\" + prompt;\n}\nreturn [{ json: { toolId: body.toolId, prompt: fullPrompt, systemPrompt, userId: body.userId || null, apiPayload: { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: \"user\", parts: [{ text: fullPrompt }] }], generationConfig: { maxOutputTokens: 2048 } } } }];"
+          },
+          "id": "prepare-agents",
+          "name": "Prepare Request",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            460,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+            "sendBody": true,
+            "contentType": "json",
+            "body": "={{ JSON.stringify($json.apiPayload) }}",
+            "options": {
+              "response": {
+                "response": {
+                  "responseFormat": "json"
+                }
+              }
+            }
+          },
+          "id": "gemini-agents",
+          "name": "Call Gemini API",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            680,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\nreturn [{ json: { text, success: true } }];"
+          },
+          "id": "extract-agents",
+          "name": "Extract Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            900,
+            300
+          ]
+        },
+        {
+          "parameters": {
+            "respondWith": "json",
+            "responseBody": "={{ JSON.stringify({ text: $json.text, success: $json.success }) }}",
+            "options": {
+              "responseCode": 200
+            }
+          },
+          "id": "respond-agents",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            300
+          ]
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Prepare Request",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Request": {
+          "main": [
+            [
+              {
+                "node": "Call Gemini API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call Gemini API": {
+          "main": [
+            [
+              {
+                "node": "Extract Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "active": false,
+      "settings": {
+        "executionOrder": "v1"
+      },
+      "tags": [
+        "ai-suite",
+        "agents"
+      ],
+      "meta": {
+        "description": "AI Suite - AI Agents. Webhook path: /webhook/ai-suite/agents. Tools: research-agent, marketing-agent, code-agent, writing-agent"
+      }
+    }
+  ]
+}

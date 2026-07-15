@@ -3,20 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AI Suite Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: tools
+    description: AI Tools catalog
+  - name: ai
+    description: AI generation
+  - name: user
+    description: User profile and usage
+  - name: plans
+    description: Subscription plans
+  - name: admin
+    description: Admin panel
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +36,491 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Auth ───────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ─── Tools ──────────────────────────────────────────────────────────────────
+  /tools:
+    get:
+      operationId: listTools
+      tags: [tools]
+      summary: List all AI tools
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tool"
+
+  /tools/{toolId}:
+    get:
+      operationId: getTool
+      tags: [tools]
+      summary: Get a single tool by ID
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tool details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /tools/categories:
+    get:
+      operationId: listToolCategories
+      tags: [tools]
+      summary: List all tool categories
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ToolCategory"
+
+  # ─── AI Generation ──────────────────────────────────────────────────────────
+  /ai/generate:
+    post:
+      operationId: generateAi
+      tags: [ai]
+      summary: Generate AI output (non-streaming)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateInput"
+      responses:
+        "200":
+          description: Generated content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateResponse"
+        "402":
+          description: Insufficient tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /ai/models:
+    get:
+      operationId: listModels
+      tags: [ai]
+      summary: List available AI models
+      responses:
+        "200":
+          description: Available models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiModel"
+
+  /ai/usage:
+    get:
+      operationId: getAiUsage
+      tags: [ai]
+      summary: Get AI usage stats for current user
+      responses:
+        "200":
+          description: Usage stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageStats"
+
+  # ─── User ───────────────────────────────────────────────────────────────────
+  /user/profile:
+    get:
+      operationId: getUserProfile
+      tags: [user]
+      summary: Get full user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+    patch:
+      operationId: updateUserProfile
+      tags: [user]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /user/history:
+    get:
+      operationId: getUserHistory
+      tags: [user]
+      summary: Get user generation history
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Generation history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GenerationRecord"
+
+  /user/favorites:
+    get:
+      operationId: getUserFavorites
+      tags: [user]
+      summary: Get user favorite tools
+      responses:
+        "200":
+          description: Favorite tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tool"
+
+  /user/favorites/{toolId}:
+    post:
+      operationId: addFavorite
+      tags: [user]
+      summary: Add tool to favorites
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Added to favorites
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    delete:
+      operationId: removeFavorite
+      tags: [user]
+      summary: Remove tool from favorites
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Removed from favorites
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ─── Plans ──────────────────────────────────────────────────────────────────
+  /plans:
+    get:
+      operationId: listPlans
+      tags: [plans]
+      summary: List subscription plans
+      responses:
+        "200":
+          description: Available plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Plan"
+
+  /plans/subscribe:
+    post:
+      operationId: subscribeToPlan
+      tags: [plans]
+      summary: Subscribe to a plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscribeInput"
+      responses:
+        "200":
+          description: Subscription result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscribeResponse"
+
+  # ─── Dashboard summary ───────────────────────────────────────────────────────
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [user]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/recent:
+    get:
+      operationId: getRecentGenerations
+      tags: [user]
+      summary: Get recent AI generations
+      responses:
+        "200":
+          description: Recent generations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GenerationRecord"
+
+  /dashboard/trending-tools:
+    get:
+      operationId: getTrendingTools
+      tags: [tools]
+      summary: Get trending / most used tools
+      responses:
+        "200":
+          description: Trending tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tool"
+
+  # ─── Admin ──────────────────────────────────────────────────────────────────
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get platform-wide admin stats
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/users:
+    get:
+      operationId: listUsers
+      tags: [admin]
+      summary: List all users
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /admin/users/{userId}:
+    patch:
+      operationId: updateUser
+      tags: [admin]
+      summary: Update a user (tokens, plan, status)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [admin]
+      summary: Delete a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +528,335 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]
+
+    # ─── Auth ─────────────────────────────────────────────────────────────────
+    RegisterInput:
+      type: object
+      required: [email, password, name]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      required: [id, email, name, role, tokenBalance, planId, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        tokenBalance:
+          type: integer
+        planId:
+          type: ["string", "null"]
+        planName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    # ─── Tools ────────────────────────────────────────────────────────────────
+    Tool:
+      type: object
+      required: [id, label, category, tokenCost]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        category:
+          type: string
+        description:
+          type: ["string", "null"]
+        tokenCost:
+          type: integer
+        isNew:
+          type: ["boolean", "null"]
+        isPro:
+          type: ["boolean", "null"]
+        usageCount:
+          type: ["integer", "null"]
+        n8nWebhookUrl:
+          type: ["string", "null"]
+
+    ToolCategory:
+      type: object
+      required: [id, label, toolCount]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        toolCount:
+          type: integer
+
+    # ─── AI ───────────────────────────────────────────────────────────────────
+    GenerateInput:
+      type: object
+      required: [toolId, prompt]
+      properties:
+        toolId:
+          type: string
+        prompt:
+          type: string
+        model:
+          type: ["string", "null"]
+        extraInputs:
+          type: ["object", "null"]
+          additionalProperties: true
+
+    GenerateResponse:
+      type: object
+      required: [text, tokensUsed]
+      properties:
+        text:
+          type: string
+        tokensUsed:
+          type: integer
+        model:
+          type: string
+
+    AiModel:
+      type: object
+      required: [id, name, provider]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        provider:
+          type: string
+        description:
+          type: ["string", "null"]
+
+    UsageStats:
+      type: object
+      required: [totalGenerations, tokensUsed, tokenBalance, topTools]
+      properties:
+        totalGenerations:
+          type: integer
+        tokensUsed:
+          type: integer
+        tokenBalance:
+          type: integer
+        topTools:
+          type: array
+          items:
+            type: object
+            required: [toolId, label, count]
+            properties:
+              toolId:
+                type: string
+              label:
+                type: string
+              count:
+                type: integer
+
+    # ─── User Profile ─────────────────────────────────────────────────────────
+    UserProfile:
+      type: object
+      required: [id, email, name, role, tokenBalance, planId, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        tokenBalance:
+          type: integer
+        planId:
+          type: ["string", "null"]
+        planName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        totalGenerations:
+          type: integer
+        favoriteToolIds:
+          type: array
+          items:
+            type: string
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+
+    GenerationRecord:
+      type: object
+      required: [id, toolId, toolLabel, tokensUsed, createdAt]
+      properties:
+        id:
+          type: integer
+        toolId:
+          type: string
+        toolLabel:
+          type: string
+        prompt:
+          type: ["string", "null"]
+        output:
+          type: ["string", "null"]
+        tokensUsed:
+          type: integer
+        model:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    # ─── Plans ────────────────────────────────────────────────────────────────
+    Plan:
+      type: object
+      required: [id, name, price, tokenAllowance, features, interval]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        interval:
+          type: string
+          enum: [monthly, yearly, lifetime]
+        tokenAllowance:
+          type: integer
+        features:
+          type: array
+          items:
+            type: string
+        isPopular:
+          type: ["boolean", "null"]
+        woocommerceProductId:
+          type: ["integer", "null"]
+
+    SubscribeInput:
+      type: object
+      required: [planId]
+      properties:
+        planId:
+          type: string
+
+    SubscribeResponse:
+      type: object
+      required: [success, checkoutUrl]
+      properties:
+        success:
+          type: boolean
+        checkoutUrl:
+          type: string
+        message:
+          type: ["string", "null"]
+
+    # ─── Dashboard ────────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required: [tokenBalance, tokensUsed, totalGenerations, planName, favoriteCount]
+      properties:
+        tokenBalance:
+          type: integer
+        tokensUsed:
+          type: integer
+        totalGenerations:
+          type: integer
+        planName:
+          type: string
+        favoriteCount:
+          type: integer
+        generationsByDay:
+          type: array
+          items:
+            type: object
+            required: [date, count]
+            properties:
+              date:
+                type: string
+              count:
+                type: integer
+
+    # ─── Admin ────────────────────────────────────────────────────────────────
+    AdminStats:
+      type: object
+      required: [totalUsers, totalGenerations, totalTokensUsed, activeToday, revenueTotal]
+      properties:
+        totalUsers:
+          type: integer
+        totalGenerations:
+          type: integer
+        totalTokensUsed:
+          type: integer
+        activeToday:
+          type: integer
+        revenueTotal:
+          type: number
+        usersByPlan:
+          type: array
+          items:
+            type: object
+            required: [planName, count]
+            properties:
+              planName:
+                type: string
+              count:
+                type: integer
+
+    AdminUserUpdate:
+      type: object
+      properties:
+        tokenBalance:
+          type: integer
+        planId:
+          type: string
+        role:
+          type: string
+        isActive:
+          type: boolean
