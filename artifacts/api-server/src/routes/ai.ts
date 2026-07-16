@@ -124,6 +124,63 @@ router.post("/ai/generate", requireAuth, async (req, res) => {
   }
 });
 
+// Public chatbot endpoint (works with or without auth)
+router.post("/ai/chat", async (req, res) => {
+  try {
+    const { message, history = [], lang = "en" } = req.body;
+
+    if (!message || typeof message !== "string") {
+      res.status(400).json({ error: "message is required" });
+      return;
+    }
+
+    const apiKey = process.env["GEMINI_API_KEY"] || process.env["GOOGLE_API_KEY"];
+    if (!apiKey) {
+      res.status(500).json({ error: "AI API key not configured" });
+      return;
+    }
+
+    const systemPrompt = lang === "pt"
+      ? `Você é o assistente virtual da MediaGeek AI Suite, uma plataforma SaaS com mais de 100 ferramentas de IA para criadores de conteúdo, agências e profissionais de marketing digital. Seja prestativo, conciso e amigável. Responda sempre em português. Ajude os usuários a entender as ferramentas disponíveis, planos e como usar a plataforma. Se não souber algo específico, sugira que o usuário entre em contato pelo suporte.`
+      : `You are the virtual assistant for MediaGeek AI Suite, a SaaS platform with 100+ AI tools for content creators, agencies and digital marketing professionals. Be helpful, concise and friendly. Always respond in English. Help users understand available tools, plans and how to use the platform. If you don't know something specific, suggest the user contact support.`;
+
+    // Build conversation history for Gemini
+    const contents = [];
+    for (const msg of history.slice(-8)) {
+      contents.push({ role: msg.role === "assistant" ? "model" : "user", parts: [{ text: msg.content }] });
+    }
+    contents.push({ role: "user", parts: [{ text: message }] });
+
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents,
+          generationConfig: { maxOutputTokens: 512, temperature: 0.7 },
+        }),
+      }
+    );
+
+    if (!geminiRes.ok) {
+      const err = await geminiRes.text();
+      req.log.error({ err }, "Gemini chat error");
+      res.status(502).json({ error: "AI chat failed" });
+      return;
+    }
+
+    const data = await geminiRes.json() as any;
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || (lang === "pt" ? "Desculpe, não consegui processar sua mensagem." : "Sorry, I couldn't process your message.");
+
+    res.json({ reply });
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Chat failed" });
+  }
+});
+
 router.get("/ai/usage", requireAuth, async (req, res) => {
   try {
     const user = (req as any).user;

@@ -1,16 +1,25 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useGetMe, useLogoutUser } from "@workspace/api-client-react";
-import { LayoutDashboard, Zap, History, Settings, LogOut, Shield, Menu, X } from "lucide-react";
+import { LayoutDashboard, Zap, History, Settings, LogOut, Shield, Menu, X, Globe } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
+import { MediaGeekLogo } from "@/components/logo";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t, locale, setLocale } = useI18n();
 
-  const { data: user, isLoading } = useGetMe({
+  const { data: user } = useGetMe({
     query: {
       retry: false,
       refetchOnWindowFocus: false,
@@ -30,23 +39,21 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   const navItems = [
-    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Tools", href: "/tools", icon: Zap },
-    { label: "History", href: "/history", icon: History },
-    { label: "Account", href: "/account", icon: Settings },
+    { label: t("app.dashboard"), href: "/dashboard", icon: LayoutDashboard },
+    { label: t("app.tools"), href: "/tools", icon: Zap },
+    { label: t("app.history"), href: "/history", icon: History },
+    { label: t("app.account"), href: "/account", icon: Settings },
   ];
 
   if (user?.role === "admin") {
-    navItems.push({ label: "Admin", href: "/admin", icon: Shield });
+    navItems.push({ label: t("app.admin"), href: "/admin", icon: Shield });
   }
 
   return (
     <div className="min-h-[100dvh] flex flex-col md:flex-row bg-background dark text-foreground">
       {/* Mobile header */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-card">
-        <div className="font-sans font-bold text-xl tracking-tight text-primary">
-          AI<span className="text-foreground">Suite</span>
-        </div>
+        <MediaGeekLogo size="sm" />
         <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
           {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
@@ -57,10 +64,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         fixed inset-0 z-50 transform transition-transform duration-200 ease-in-out bg-card border-r border-border md:relative md:translate-x-0 md:w-64 md:flex md:flex-col
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="hidden md:flex p-6 items-center border-b border-border">
-          <Link href="/dashboard" className="font-sans font-bold text-2xl tracking-tight flex items-center gap-2 cursor-pointer text-primary">
-            <Zap className="w-6 h-6 fill-primary" />
-            <span>AI<span className="text-foreground">Suite</span></span>
+        <div className="hidden md:flex p-5 items-center border-b border-border">
+          <Link href="/dashboard" className="cursor-pointer">
+            <MediaGeekLogo size="md" />
           </Link>
         </div>
 
@@ -82,16 +88,34 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           })}
         </div>
 
-        <div className="p-4 border-t border-border">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-4 border-t border-border space-y-3">
+          {/* Language switcher in sidebar */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground gap-2">
+                <Globe className="w-4 h-4" />
+                {locale === "pt" ? "🇧🇷 Português" : "🇺🇸 English"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="top" className="min-w-[140px]">
+              <DropdownMenuItem onClick={() => setLocale("pt")} className={locale === "pt" ? "text-primary font-semibold" : ""}>
+                🇧🇷 Português
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocale("en")} className={locale === "en" ? "text-primary font-semibold" : ""}>
+                🇺🇸 English
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="flex items-center justify-between">
             <div className="flex flex-col overflow-hidden">
               <span className="text-sm font-medium truncate">{user?.name || "User"}</span>
-              <span className="text-xs text-muted-foreground truncate">{user?.planName || "Free Plan"}</span>
+              <span className="text-xs text-muted-foreground truncate">{user?.planName || t("app.free_plan")}</span>
             </div>
           </div>
           <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={handleLogout}>
             <LogOut className="w-4 h-4 mr-2" />
-            Logout
+            {t("app.logout")}
           </Button>
         </div>
       </div>
