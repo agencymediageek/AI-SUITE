@@ -7,6 +7,7 @@ import userRouter from "./user.js";
 import plansRouter from "./plans.js";
 import dashboardRouter from "./dashboard.js";
 import adminRouter from "./admin.js";
+import paymentsRouter from "./payments.js";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(userRouter);
 router.use(plansRouter);
 router.use(dashboardRouter);
 router.use(adminRouter);
+router.use(paymentsRouter);
 
 export default router;

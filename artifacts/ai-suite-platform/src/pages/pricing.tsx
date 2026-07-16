@@ -1,37 +1,57 @@
 import { Link } from "wouter";
-import { useListPlans, useSubscribeToPlan, useGetMe } from "@workspace/api-client-react";
+import { useListPlans, useGetMe } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Zap, Loader2, Globe } from "lucide-react";
+import { Check, Zap, Loader2, Globe, ShieldCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { useI18n } from "@/lib/i18n";
+import { useState } from "react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 export default function Pricing() {
   const { data: plans, isLoading } = useListPlans();
   const { data: user } = useGetMe({ query: { retry: false } });
-  const subscribeMutation = useSubscribeToPlan();
   const { t, locale, setLocale, formatPrice } = useI18n();
+  const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
 
-  const handleSubscribe = async (planId: string) => {
+  const handleSubscribe = async (planId: string, planName: string, priceUsd: number) => {
     if (!user) {
       window.location.href = "/register";
       return;
     }
+    setLoadingPlanId(planId);
     try {
-      const res = await subscribeMutation.mutateAsync({ data: { planId } });
-      if (res.checkoutUrl) {
-        window.location.href = res.checkoutUrl;
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch(`${BASE}/api/payments/mp/create-preference`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ planId, planName, priceUsd }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any).error || res.statusText);
+      }
+      const data = await res.json() as any;
+      const checkoutUrl = data.initPoint || data.sandboxInitPoint;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       } else {
-        toast.success(locale === "pt" ? "Assinatura realizada!" : "Subscribed successfully!");
+        toast.error(locale === "pt" ? "Não foi possível iniciar o pagamento." : "Could not start payment.");
       }
     } catch (error: any) {
-      toast.error(error?.message || (locale === "pt" ? "Erro ao assinar" : "Failed to subscribe"));
+      toast.error(error?.message || (locale === "pt" ? "Erro ao processar pagamento" : "Payment error"));
+    } finally {
+      setLoadingPlanId(null);
     }
   };
 

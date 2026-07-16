@@ -17,6 +17,11 @@ import Pricing from '@/pages/pricing';
 import Account from '@/pages/account';
 import AdminPanel from '@/pages/admin';
 
+// Info pages
+import ComoFunciona from '@/pages/como-funciona';
+import FAQ from '@/pages/faq';
+import Contato from '@/pages/contato';
+
 // Feature / Tool landing pages
 import AiInfluencer from '@/pages/features/ai-influencer';
 import ViralReels from '@/pages/features/viral-reels';
@@ -54,6 +59,10 @@ function Router() {
       <Route path="/features/music-creator" component={MusicCreator} />
       <Route path="/features/website-builder" component={WebsiteBuilder} />
       <Route path="/features/manga-studio" component={MangaStudio} />
+      {/* Info pages */}
+      <Route path="/como-funciona" component={ComoFunciona} />
+      <Route path="/faq" component={FAQ} />
+      <Route path="/contato" component={Contato} />
       <Route component={NotFound} />
     </Switch>
   );
