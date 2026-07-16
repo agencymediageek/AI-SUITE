@@ -5,6 +5,7 @@ import NotFound from '@/pages/not-found';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { I18nProvider } from '@/lib/i18n';
 import { ChatbotWidget } from '@/components/chatbot-widget';
+import { ThemeProvider } from 'next-themes';
 
 import Landing from '@/pages/landing';
 import Login from '@/pages/login';
@@ -70,17 +71,19 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <I18nProvider>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-            <Router />
-            <ChatbotWidget />
-          </WouterRouter>
-          <Toaster theme="dark" position="top-right" />
-        </TooltipProvider>
-      </I18nProvider>
-    </QueryClientProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
+      <QueryClientProvider client={queryClient}>
+        <I18nProvider>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+              <Router />
+              <ChatbotWidget />
+            </WouterRouter>
+            <Toaster position="top-right" />
+          </TooltipProvider>
+        </I18nProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

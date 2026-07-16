@@ -1,0 +1,28 @@
+Olá a página preços/pricing esta quebrada, fica em branco nos dois idiomas e travada, não tem como voltar ou sair dela
+
+Pode deletar a página 'Ferramentas' que nada mais é do que a página login com a diferença que ao clicar nela já aparece o painel admin e inclusive que estamos logados sem estarmos, acredito que seja um bug, pois para conseguirmos voltar ao site temos que clicar em 'Sair'
+
+Note que na home page oficial do ai suite https://preview.codecanyon.net/item/ai-suite-react-frontend-application-with-gemini-ai-integration/full_screen_preview/59967831 todos os links menos o 'Get started for free'levam para a página de login https://aisuite.mounikai.com/login
+
+Para o 'Get started for free' o usuário é levado para a página de registro https://aisuite.mounikai.com/register, em nossa Home o comportamento do botão 'Começar gratuitamente' esta certo e leva para á pagina certa https://aisuite.mediageek.io/register
+
+Já temos uma página 'Entrar, Sign in, Login' para onde ela leva quando o usuário efetua o login? Deveria ser para esta página https://aisuite.mediageek.io/tools onde aparecemos como logados?
+
+Em nossa home page quando o usuário clica em 'ver todas as ferramentas' ele deve ser levado para um página equivalente a esta https://aisuite.mounikai.com/login, então depois de logar ai sim ele 'enxerga' o que é exibido nesta nossa página, https://aisuite.mediageek.io/tools  
+
+Preciso que a página home (https://aisuite.mediageek.io/) esteja no menu como HOME, brasileiros não clicam na logo  
+
+PRECISO DE UMA HOME MAIS BONITA, COM ALGUMAS ANIMAÇÕES E CAMPOS COM CONSTRASTE/DERIVAÇÃO AO INVÉS DO AZUL PETROLEO PREDOMINANTE, A HOME ESTA SEM GRAÇA, SE PUDER SE INSPIRAR NA HOME OFICIAL DO AI SUITE https://preview.codecanyon.net/item/ai-suite-react-frontend-application-with-gemini-ai-integration/full_screen_preview/59967831, NOTE QUE NA HOME DO AI SUITE OR CARDS TEM CORES LEVEMENTE DIFERENTES, OS CAMPOS TEM BACK COLOR DISCRETA, E AO NAVEGAR OS CAMPOS MUDAM LEVEMENTE O ESQUEMA DE CORES PARA FACILITAR A NAVEGAÇÃO.
+
+PRECISAMOS DE UM CAMPO DESTE Trusted by 50,000+ professionals worldwide IGUAL OU PARECIDO AO DA HOME DO AI SUITE, PARA GERAR CONFIANÇA E AUTORIDADE.
+
+PRECISAMOS DE UMA CAMPO DESTE Loved by Creators Worldwide IGUAL OU PARECIDO AO DA HOME DO AI SUITE, PARA GERAR CONFIANÇA E AUTORIDADE.
+
+PRECISO DO ICONE 'CLARO E ESCURO' NO MENU AO LADO DO ICONE DO IDIOMA
+
+PRECISO QUE TODOS OS ITENS DO MENU SEJAM EM LETRA MAIÚSCULA PARA FICAR MAIS PROFISSIONAl E BONITO
+
+VAMOS LÁ, OBRIGADO 
+
+
+  

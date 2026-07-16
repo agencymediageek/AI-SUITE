@@ -1,11 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useGetMe, useLogoutUser } from "@workspace/api-client-react";
-import { LayoutDashboard, Zap, History, Settings, LogOut, Shield, Menu, X, Globe } from "lucide-react";
+import { LayoutDashboard, Zap, History, Settings, LogOut, Shield, Menu, X, Globe, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { MediaGeekLogo } from "@/components/logo";
+import { useTheme } from "next-themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t, locale, setLocale } = useI18n();
+  const { theme, setTheme } = useTheme();
 
   const { data: user } = useGetMe({
     query: {
@@ -52,7 +54,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col md:flex-row bg-background dark text-foreground">
+    <div className="min-h-[100dvh] flex flex-col md:flex-row bg-background text-foreground">
       {/* Mobile header */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
         {/* Icon-only logo on mobile */}
@@ -118,23 +120,34 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="p-4 border-t border-border space-y-3 shrink-0">
-          {/* Language switcher */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground gap-2">
-                <Globe className="w-4 h-4" />
-                {locale === "pt" ? "🇧🇷 Português" : "🇺🇸 English"}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" side="top" className="min-w-[140px]">
-              <DropdownMenuItem onClick={() => setLocale("pt")} className={locale === "pt" ? "text-primary font-semibold" : ""}>
-                🇧🇷 Português
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocale("en")} className={locale === "en" ? "text-primary font-semibold" : ""}>
-                🇺🇸 English
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Language + Theme row */}
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex-1 justify-start text-muted-foreground gap-2">
+                  <Globe className="w-4 h-4" />
+                  {locale === "pt" ? "🇧🇷 PT" : "🇺🇸 EN"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="top" className="min-w-[140px]">
+                <DropdownMenuItem onClick={() => setLocale("pt")} className={locale === "pt" ? "text-primary font-semibold" : ""}>
+                  🇧🇷 Português
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocale("en")} className={locale === "en" ? "text-primary font-semibold" : ""}>
+                  🇺🇸 English
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute w-4 h-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            </Button>
+          </div>
 
           <div className="flex items-center justify-between px-1">
             <div className="flex flex-col overflow-hidden">

@@ -1,10 +1,11 @@
 import { Link } from "wouter";
-import { Globe, Menu, X } from "lucide-react";
+import { Globe, Menu, X, Sun, Moon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { MediaGeekLogo } from "@/components/logo";
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,17 +17,18 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
   const { t, locale, setLocale } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const navLinks = [
-    { label: t("nav.how_it_works"), href: "/como-funciona" },
-    { label: t("nav.tools"), href: "/tools" },
-    { label: t("nav.pricing"), href: "/pricing" },
-    { label: t("nav.faq"), href: "/faq" },
-    { label: t("nav.contact"), href: "/contato" },
+    { label: locale === "pt" ? "HOME" : "HOME", href: "/" },
+    { label: locale === "pt" ? "COMO FUNCIONA" : "HOW IT WORKS", href: "/como-funciona" },
+    { label: locale === "pt" ? "PREÇOS" : "PRICING", href: "/pricing" },
+    { label: "FAQ", href: "/faq" },
+    { label: locale === "pt" ? "CONTATO" : "CONTACT", href: "/contato" },
   ];
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background dark text-foreground">
+    <div className="min-h-[100dvh] flex flex-col bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto max-w-6xl flex h-16 items-center justify-between px-4">
           {/* Logo — icon only on mobile, full on desktop */}
@@ -45,7 +47,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors tracking-wide"
               >
                 {link.label}
               </Link>
@@ -53,7 +55,19 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Right actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            {/* Dark/Light toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              aria-label="Toggle theme"
+            >
+              <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute w-4 h-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            </Button>
+
             {/* Language switcher */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -72,8 +86,8 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             </DropdownMenu>
 
             {token ? (
-              <Link href="/dashboard">
-                <Button variant="default" size="sm">{t("nav.dashboard")}</Button>
+              <Link href="/tools">
+                <Button variant="default" size="sm" className="hidden sm:inline-flex">{t("nav.dashboard")}</Button>
               </Link>
             ) : (
               <>
@@ -108,15 +122,15 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="block px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                  className="block px-3 py-2.5 rounded-lg text-xs font-bold tracking-wide text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                 >
                   {link.label}
                 </Link>
               ))}
               {!token && (
                 <Link href="/login" onClick={() => setMobileOpen(false)}
-                  className="block px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
-                  {t("nav.signin")}
+                  className="block px-3 py-2.5 rounded-lg text-xs font-bold tracking-wide text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                  {locale === "pt" ? "ENTRAR" : "SIGN IN"}
                 </Link>
               )}
             </nav>
@@ -134,7 +148,6 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             <MediaGeekLogo size="sm" />
             <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <Link href="/como-funciona" className="hover:text-foreground transition-colors">{t("footer.how_it_works")}</Link>
-              <Link href="/tools" className="hover:text-foreground transition-colors">{t("footer.tools")}</Link>
               <Link href="/pricing" className="hover:text-foreground transition-colors">{t("footer.pricing")}</Link>
               <Link href="/faq" className="hover:text-foreground transition-colors">{t("footer.faq")}</Link>
               <Link href="/contato" className="hover:text-foreground transition-colors">{t("footer.contact")}</Link>

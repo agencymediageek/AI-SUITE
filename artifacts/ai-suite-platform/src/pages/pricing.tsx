@@ -155,12 +155,12 @@ export default function Pricing() {
                     <Button
                       className={`w-full rounded-xl ${isPopular ? "bg-gradient-to-r from-primary to-accent shadow-sm shadow-primary/20" : ""}`}
                       variant={isPopular ? "default" : "outline"}
-                      disabled={isCurrentPlan || subscribeMutation.isPending}
-                      onClick={() => handleSubscribe(plan.id)}
+                      disabled={isCurrentPlan || loadingPlanId === plan.id}
+                      onClick={() => handleSubscribe(plan.id, plan.name, usdPrice)}
                     >
                       {isCurrentPlan
                         ? t("pricing.current_plan")
-                        : subscribeMutation.isPending
+                        : loadingPlanId === plan.id
                         ? <Loader2 className="w-4 h-4 animate-spin" />
                         : t("pricing.subscribe")}
                     </Button>

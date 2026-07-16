@@ -30,7 +30,7 @@ export default function Login() {
   
   useEffect(() => {
     if (token) {
-      setLocation("/dashboard");
+      setLocation("/tools");
     }
   }, [token, setLocation]);
 
@@ -49,7 +49,7 @@ export default function Login() {
       const response = await loginMutation.mutateAsync({ data: values });
       if (response.token) {
         setToken(response.token);
-        setLocation("/dashboard");
+        setLocation("/tools");
       }
     } catch (error) {
       console.error(error);
