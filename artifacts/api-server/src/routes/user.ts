@@ -93,7 +93,9 @@ router.delete("/user/favorites/:toolId", requireAuth, async (req, res) => {
   try {
     const user = (req as any).user;
     const { toolId } = req.params;
-    await db.delete(favoritesTable).where(eq(favoritesTable.userId, user.id));
+    await db
+      .delete(favoritesTable)
+      .where(and(eq(favoritesTable.userId, user.id), eq(favoritesTable.toolId, toolId)));
     res.json({ success: true, message: "Removed from favorites" });
   } catch (err) {
     req.log.error(err);
