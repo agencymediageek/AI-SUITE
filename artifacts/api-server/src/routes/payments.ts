@@ -1,5 +1,6 @@
 import { Router } from "express";
 import Stripe from "stripe";
+import crypto from "crypto";
 import { requireAuth } from "../lib/auth.js";
 import { db } from "@workspace/db";
 import { usersTable, plansTable } from "@workspace/db";
@@ -199,6 +200,29 @@ router.get("/payments/mp/webhook", (_req, res) => {
 
 router.post("/payments/mp/webhook", async (req, res) => {
   try {
+    // ── Signature verification ──────────────────────────────────────────────
+    // MP sends: x-signature: ts=<unix_ts>,v1=<hmac_sha256>
+    // Manifest: id:<notification_id>;request-date:<ts>;
+    const webhookSecret = process.env["MERCADO_PAGO_WEBHOOK_SECRET"];
+    if (webhookSecret) {
+      const xSig = req.headers["x-signature"] as string | undefined;
+      const notifId = (req.query["id"] as string) || req.body?.data?.id;
+
+      if (xSig && notifId) {
+        const ts = xSig.split(",").find((p) => p.startsWith("ts="))?.split("=")[1];
+        const v1 = xSig.split(",").find((p) => p.startsWith("v1="))?.split("=")[1];
+        if (ts && v1) {
+          const manifest = `id:${notifId};request-date:${ts};`;
+          const expected = crypto.createHmac("sha256", webhookSecret).update(manifest).digest("hex");
+          if (expected !== v1) {
+            req.log.warn({ notifId }, "MP webhook signature mismatch — ignoring");
+            res.status(200).json({ received: true }); // 200 to stop retries
+            return;
+          }
+        }
+      }
+    }
+
     const { type, data } = req.body;
 
     if (type !== "payment" || !data?.id) {
