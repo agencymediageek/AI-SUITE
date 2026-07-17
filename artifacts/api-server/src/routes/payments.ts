@@ -192,6 +192,11 @@ function mpStatusDetail(code: string): string {
 
 // ─── Mercado Pago: Webhook (async notifications / pending → approved) ─────────
 
+// MP sends a GET to validate the endpoint when first registered
+router.get("/payments/mp/webhook", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 router.post("/payments/mp/webhook", async (req, res) => {
   try {
     const { type, data } = req.body;
