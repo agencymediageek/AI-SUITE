@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useListPlans, useGetMe } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ export default function Pricing() {
   const { data: user } = useGetMe({ query: { retry: false } });
   const { t, locale, setLocale, formatPrice } = useI18n();
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
+  const [, navigate] = useLocation();
 
   // Default gateway based on locale: PT (Brazil) → MP, EN → Stripe
   // Allow ?gateway=mp or ?gateway=stripe from account page upgrade link
@@ -50,54 +51,41 @@ export default function Pricing() {
   // Keep gateway in sync when locale auto-detects
   const effectiveGateway: Gateway = gateway;
 
-  // Only planId is sent to the server — price and plan name are resolved server-side from the DB
+  // MP → navega para a página de checkout transparente (sem sair do site)
+  // Stripe → redireciona para Stripe Checkout (hosted)
   const handleSubscribe = async (planId: string) => {
     if (!user) {
       window.location.href = `${BASE}/register`;
       return;
     }
 
+    if (effectiveGateway === "mp") {
+      // Checkout Transparente — cartão processado na nossa página
+      navigate(`/checkout/mp/${planId}`);
+      return;
+    }
+
+    // Stripe — redirect para Stripe Checkout
     setLoadingPlanId(planId);
     try {
       const token = localStorage.getItem("auth_token");
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
-
-      if (effectiveGateway === "mp") {
-        const res = await fetch(`${BASE}/api/payments/mp/create-preference`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ planId }),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error((err as any).error || res.statusText);
-        }
-        const data = await res.json() as any;
-        const checkoutUrl = data.initPoint || data.sandboxInitPoint;
-        if (checkoutUrl) {
-          window.location.href = checkoutUrl;
-        } else {
-          toast.error(locale === "pt" ? "Não foi possível iniciar o pagamento." : "Could not start payment.");
-        }
+      const res = await fetch(`${BASE}/api/payments/stripe/create-session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ planId }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any).error || res.statusText);
+      }
+      const data = await res.json() as any;
+      if (data.sessionUrl) {
+        window.location.href = data.sessionUrl;
       } else {
-        const res = await fetch(`${BASE}/api/payments/stripe/create-session`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ planId }),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error((err as any).error || res.statusText);
-        }
-        const data = await res.json() as any;
-        if (data.sessionUrl) {
-          window.location.href = data.sessionUrl;
-        } else {
-          toast.error(locale === "pt" ? "Não foi possível iniciar o pagamento." : "Could not start payment.");
-        }
+        toast.error(locale === "pt" ? "Não foi possível iniciar o pagamento." : "Could not start payment.");
       }
     } catch (error: any) {
       toast.error(error?.message || (locale === "pt" ? "Erro ao processar pagamento" : "Payment error"));

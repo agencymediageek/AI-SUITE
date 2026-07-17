@@ -26,6 +26,7 @@ import Contato from '@/pages/contato';
 // Payment pages
 import PaymentSuccess from '@/pages/payment-success';
 import PaymentCancel from '@/pages/payment-cancel';
+import MpCheckout from '@/pages/mp-checkout';
 
 // Feature / Tool landing pages
 import AiInfluencer from '@/pages/features/ai-influencer';
@@ -71,6 +72,7 @@ function Router() {
       {/* Payment return pages */}
       <Route path="/payment/success" component={PaymentSuccess} />
       <Route path="/payment/cancel" component={PaymentCancel} />
+      <Route path="/checkout/mp/:planId" component={MpCheckout} />
       <Route component={NotFound} />
     </Switch>
   );
