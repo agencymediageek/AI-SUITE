@@ -39,7 +39,8 @@ export default function Pricing() {
   // Keep gateway in sync when locale auto-detects
   const effectiveGateway: Gateway = gateway;
 
-  const handleSubscribe = async (planId: string, planName: string, priceUsd: number) => {
+  // Only planId is sent to the server — price and plan name are resolved server-side from the DB
+  const handleSubscribe = async (planId: string) => {
     if (!user) {
       window.location.href = `${BASE}/register`;
       return;
@@ -54,11 +55,10 @@ export default function Pricing() {
       };
 
       if (effectiveGateway === "mp") {
-        // Mercado Pago flow
         const res = await fetch(`${BASE}/api/payments/mp/create-preference`, {
           method: "POST",
           headers,
-          body: JSON.stringify({ planId, planName, priceUsd }),
+          body: JSON.stringify({ planId }),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -72,11 +72,10 @@ export default function Pricing() {
           toast.error(locale === "pt" ? "Não foi possível iniciar o pagamento." : "Could not start payment.");
         }
       } else {
-        // Stripe flow
         const res = await fetch(`${BASE}/api/payments/stripe/create-session`, {
           method: "POST",
           headers,
-          body: JSON.stringify({ planId, planName, priceUsd }),
+          body: JSON.stringify({ planId }),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -227,7 +226,7 @@ export default function Pricing() {
                       className={`w-full rounded-xl ${isPopular ? "bg-gradient-to-r from-primary to-accent shadow-sm shadow-primary/20" : ""}`}
                       variant={isPopular ? "default" : "outline"}
                       disabled={isCurrentPlan || !!loadingPlanId || isFree}
-                      onClick={() => !isFree && handleSubscribe(plan.id, plan.name, usdPrice)}
+                      onClick={() => !isFree && handleSubscribe(plan.id)}
                     >
                       {isCurrentPlan
                         ? t("pricing.current_plan")

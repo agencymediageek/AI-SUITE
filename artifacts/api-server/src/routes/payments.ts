@@ -15,16 +15,27 @@ function getStripe(): Stripe {
   return new Stripe(key);
 }
 
-/** Activate a paid plan for a user after confirmed payment */
+/**
+ * Fetch plan from DB. Always resolve plan server-side — never trust client-supplied price/name.
+ */
+async function getPlan(planId: string) {
+  const [plan] = await db.select().from(plansTable).where(eq(plansTable.id, planId)).limit(1);
+  return plan ?? null;
+}
+
+/**
+ * Activate a paid plan for a user after confirmed payment.
+ * Only called after cryptographic payment verification (Stripe sig or MP API call).
+ */
 async function activatePlan(
   userId: number,
   planId: string,
   gateway: "mp" | "stripe",
   logger?: any
 ) {
-  const [plan] = await db.select().from(plansTable).where(eq(plansTable.id, planId)).limit(1);
+  const plan = await getPlan(planId);
   if (!plan) {
-    logger?.warn({ planId, userId }, "Plan not found for activation");
+    logger?.warn({ planId, userId }, "Plan not found for activation — skipping");
     return;
   }
 
@@ -56,23 +67,35 @@ router.post("/payments/mp/create-preference", requireAuth, async (req, res) => {
       return;
     }
 
-    const { planId, planName, priceUsd } = req.body;
-    if (!planId || !planName || !priceUsd) {
-      res.status(400).json({ error: "planId, planName and priceUsd are required" });
+    // Accept only planId — resolve name and price server-side from DB
+    const { planId } = req.body;
+    if (!planId) {
+      res.status(400).json({ error: "planId is required" });
+      return;
+    }
+
+    const plan = await getPlan(planId);
+    if (!plan) {
+      res.status(404).json({ error: "Plan not found" });
+      return;
+    }
+
+    if (plan.price <= 0) {
+      res.status(400).json({ error: "Cannot create payment for free plan" });
       return;
     }
 
     const user = (req as any).user;
     const USD_TO_BRL = 5.5;
-    const priceBrl = Math.round(priceUsd * USD_TO_BRL * 100) / 100;
+    const priceBrl = Math.round(plan.price * USD_TO_BRL * 100) / 100;
     const appBaseUrl = process.env["APP_BASE_URL"] || "https://aisuite.mediageek.io";
 
     const preference = {
       items: [
         {
-          id: planId,
-          title: `MediaGeek AI Suite — Plano ${planName}`,
-          description: `Acesso ao plano ${planName} da MediaGeek AI Suite`,
+          id: plan.id,
+          title: `MediaGeek AI Suite — Plano ${plan.name}`,
+          description: `Acesso ao plano ${plan.name} da MediaGeek AI Suite`,
           quantity: 1,
           currency_id: "BRL",
           unit_price: priceBrl,
@@ -80,13 +103,13 @@ router.post("/payments/mp/create-preference", requireAuth, async (req, res) => {
       ],
       payer: { email: user.email, name: user.name },
       back_urls: {
-        success: `${appBaseUrl}/payment/success?gateway=mp&plan=${planId}`,
+        success: `${appBaseUrl}/payment/success?gateway=mp&plan=${plan.id}`,
         failure: `${appBaseUrl}/payment/cancel`,
-        pending: `${appBaseUrl}/payment/success?gateway=mp&plan=${planId}&status=pending`,
+        pending: `${appBaseUrl}/payment/success?gateway=mp&plan=${plan.id}&status=pending`,
       },
       auto_return: "approved",
-      external_reference: `${user.id}|${planId}`,
-      metadata: { user_id: user.id, plan_id: planId },
+      external_reference: `${user.id}|${plan.id}`,
+      metadata: { user_id: user.id, plan_id: plan.id },
       statement_descriptor: "MEDIAGEEK AI",
       expires: false,
     };
@@ -132,17 +155,18 @@ router.post("/payments/mp/webhook", async (req, res) => {
 
     const accessToken = process.env["MERCADO_PAGO_ACCESS_TOKEN"];
     if (!accessToken) {
-      res.status(500).json({ error: "MP not configured" });
+      req.log.error("MERCADO_PAGO_ACCESS_TOKEN not set — cannot verify payment");
+      res.status(200).json({ received: true }); // Always 200 to MP to avoid retries
       return;
     }
 
-    // Verify payment with MP API
+    // Verify payment with MP API — never trust webhook body alone
     const paymentRes = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (!paymentRes.ok) {
-      req.log.warn({ paymentId: data.id }, "Could not fetch MP payment");
+      req.log.warn({ paymentId: data.id, status: paymentRes.status }, "Could not fetch MP payment");
       res.status(200).json({ received: true });
       return;
     }
@@ -150,17 +174,25 @@ router.post("/payments/mp/webhook", async (req, res) => {
     const payment = await paymentRes.json() as any;
 
     if (payment.status !== "approved") {
-      req.log.info({ paymentId: data.id, status: payment.status }, "MP payment not approved, skipping");
+      req.log.info({ paymentId: data.id, status: payment.status }, "MP payment not approved — skipping");
       res.status(200).json({ received: true });
       return;
     }
 
-    // external_reference format: "userId|planId"
+    // external_reference format set by our server: "userId|planId"
     const [userIdStr, planId] = (payment.external_reference || "").split("|");
     const userId = parseInt(userIdStr, 10);
 
     if (!userId || !planId) {
-      req.log.warn({ external_reference: payment.external_reference }, "Invalid external_reference");
+      req.log.warn({ external_reference: payment.external_reference }, "Invalid external_reference format");
+      res.status(200).json({ received: true });
+      return;
+    }
+
+    // Validate that the plan exists before activating
+    const plan = await getPlan(planId);
+    if (!plan) {
+      req.log.warn({ planId }, "Plan in external_reference not found in DB");
       res.status(200).json({ received: true });
       return;
     }
@@ -169,7 +201,7 @@ router.post("/payments/mp/webhook", async (req, res) => {
     res.status(200).json({ received: true });
   } catch (err) {
     req.log.error(err, "MP webhook error");
-    res.status(200).json({ received: true }); // Always 200 to MP to avoid retries
+    res.status(200).json({ received: true }); // Always 200 to avoid MP retries
   }
 });
 
@@ -178,16 +210,28 @@ router.post("/payments/mp/webhook", async (req, res) => {
 router.post("/payments/stripe/create-session", requireAuth, async (req, res) => {
   try {
     const stripe = getStripe();
-    const { planId, planName, priceUsd } = req.body;
 
-    if (!planId || !planName || !priceUsd) {
-      res.status(400).json({ error: "planId, planName and priceUsd are required" });
+    // Accept only planId — resolve price and name from DB, never from client
+    const { planId } = req.body;
+    if (!planId) {
+      res.status(400).json({ error: "planId is required" });
+      return;
+    }
+
+    const plan = await getPlan(planId);
+    if (!plan) {
+      res.status(404).json({ error: "Plan not found" });
+      return;
+    }
+
+    if (plan.price <= 0) {
+      res.status(400).json({ error: "Cannot create payment session for free plan" });
       return;
     }
 
     const user = (req as any).user;
     const appBaseUrl = process.env["APP_BASE_URL"] || "https://aisuite.mediageek.io";
-    const priceInCents = Math.round(parseFloat(String(priceUsd)) * 100);
+    const priceInCents = Math.round(plan.price * 100);
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -197,10 +241,10 @@ router.post("/payments/stripe/create-session", requireAuth, async (req, res) => 
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: priceInCents,
+            unit_amount: priceInCents, // Computed server-side from DB
             product_data: {
-              name: `MediaGeek AI Suite — ${planName} Plan`,
-              description: `Monthly access to ${planName} plan — 30 days`,
+              name: `MediaGeek AI Suite — ${plan.name} Plan`,
+              description: `Monthly access to ${plan.name} plan — 30 days`,
             },
           },
         },
@@ -208,10 +252,10 @@ router.post("/payments/stripe/create-session", requireAuth, async (req, res) => 
       customer_email: user.email,
       metadata: {
         user_id: String(user.id),
-        plan_id: planId,
-        plan_name: planName,
+        plan_id: plan.id,
+        plan_name: plan.name,
       },
-      success_url: `${appBaseUrl}/payment/success?gateway=stripe&plan=${planId}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${appBaseUrl}/payment/success?gateway=stripe&plan=${plan.id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appBaseUrl}/payment/cancel`,
     });
 
@@ -224,60 +268,53 @@ router.post("/payments/stripe/create-session", requireAuth, async (req, res) => 
 
 // ─── Stripe: Webhook ─────────────────────────────────────────────────────────
 
-// Raw body needed for Stripe signature verification — mount before JSON middleware
-router.post(
-  "/payments/stripe/webhook",
-  // express.raw is applied globally for this route via rawBody middleware in server setup
-  async (req, res) => {
-    const sig = req.headers["stripe-signature"];
-    const webhookSecret = process.env["STRIPE_WEBHOOK_SECRET"];
+router.post("/payments/stripe/webhook", async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  const webhookSecret = process.env["STRIPE_WEBHOOK_SECRET"];
 
-    if (!webhookSecret) {
-      req.log.warn("STRIPE_WEBHOOK_SECRET not set — skipping signature check");
-      // In dev without secret, parse body directly
-      const body = req.body;
-      await handleStripeEvent(body, req.log);
+  // Signature verification is mandatory — never process unverified events
+  if (!webhookSecret) {
+    req.log.error("STRIPE_WEBHOOK_SECRET not configured — refusing to process webhook");
+    res.status(400).json({ error: "Webhook secret not configured on server" });
+    return;
+  }
+
+  let event: Stripe.Event;
+  try {
+    const stripe = getStripe();
+    // rawBody is captured by express.json({ verify }) in app.ts
+    event = stripe.webhooks.constructEvent(
+      (req as any).rawBody as Buffer,
+      sig as string,
+      webhookSecret
+    );
+  } catch (err: any) {
+    req.log.warn({ err: err.message }, "Stripe webhook signature verification failed — possible tampered payload");
+    res.status(400).json({ error: "Invalid signature" });
+    return;
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const userId = parseInt(session.metadata?.user_id || "0", 10);
+    const planId = session.metadata?.plan_id || "";
+
+    if (!userId || !planId) {
+      req.log.warn({ metadata: session.metadata }, "Missing user_id or plan_id in Stripe session metadata");
       res.status(200).json({ received: true });
       return;
     }
 
-    let event: Stripe.Event;
-    try {
-      const stripe = getStripe();
-      event = stripe.webhooks.constructEvent(
-        (req as any).rawBody || req.body,
-        sig as string,
-        webhookSecret
-      );
-    } catch (err: any) {
-      req.log.warn({ err: err.message }, "Stripe webhook signature verification failed");
-      res.status(400).json({ error: "Invalid signature" });
+    if (session.payment_status !== "paid") {
+      req.log.info({ sessionId: session.id, status: session.payment_status }, "Stripe session not paid — skipping activation");
+      res.status(200).json({ received: true });
       return;
     }
 
-    await handleStripeEvent(event, req.log);
-    res.status(200).json({ received: true });
-  }
-);
-
-async function handleStripeEvent(event: Stripe.Event | any, logger?: any) {
-  if (event.type !== "checkout.session.completed") return;
-
-  const session = event.data?.object as Stripe.Checkout.Session;
-  const userId = parseInt(session?.metadata?.user_id || "0", 10);
-  const planId = session?.metadata?.plan_id || "";
-
-  if (!userId || !planId) {
-    logger?.warn({ metadata: session?.metadata }, "Missing user_id or plan_id in Stripe metadata");
-    return;
+    await activatePlan(userId, planId, "stripe", req.log);
   }
 
-  if (session.payment_status !== "paid") {
-    logger?.info({ sessionId: session.id, status: session.payment_status }, "Stripe session not paid, skipping");
-    return;
-  }
-
-  await activatePlan(userId, planId, "stripe", logger);
-}
+  res.status(200).json({ received: true });
+});
 
 export default router;
