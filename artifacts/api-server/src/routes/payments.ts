@@ -88,7 +88,7 @@ router.post("/payments/mp/create-preference", requireAuth, async (req, res) => {
     const user = (req as any).user;
     const USD_TO_BRL = 5.5;
     const priceBrl = Math.round(plan.price * USD_TO_BRL * 100) / 100;
-    const appBaseUrl = process.env["APP_BASE_URL"] || "https://aisuite.mediageek.io";
+    const appBaseUrl = process.env["APP_BASE_URL"] || "https://mediageek.io";
 
     const preference = {
       items: [
@@ -230,7 +230,7 @@ router.post("/payments/stripe/create-session", requireAuth, async (req, res) => 
     }
 
     const user = (req as any).user;
-    const appBaseUrl = process.env["APP_BASE_URL"] || "https://aisuite.mediageek.io";
+    const appBaseUrl = process.env["APP_BASE_URL"] || "https://mediageek.io";
     const priceInCents = Math.round(plan.price * 100);
 
     const session = await stripe.checkout.sessions.create({
