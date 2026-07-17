@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { useI18n } from "@/lib/i18n";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -33,8 +33,19 @@ export default function Pricing() {
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
 
   // Default gateway based on locale: PT (Brazil) → MP, EN → Stripe
-  const defaultGateway: Gateway = locale === "pt" ? "mp" : "stripe";
+  // Allow ?gateway=mp or ?gateway=stripe from account page upgrade link
+  const searchParams = new URLSearchParams(window.location.search);
+  const urlGateway = searchParams.get("gateway") as Gateway | null;
+  const defaultGateway: Gateway = urlGateway === "mp" || urlGateway === "stripe" ? urlGateway : (locale === "pt" ? "mp" : "stripe");
   const [gateway, setGateway] = useState<Gateway>(defaultGateway);
+
+  // Sync gateway when URL param is present on first load
+  useEffect(() => {
+    if (urlGateway === "mp" || urlGateway === "stripe") {
+      setGateway(urlGateway);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Keep gateway in sync when locale auto-detects
   const effectiveGateway: Gateway = gateway;

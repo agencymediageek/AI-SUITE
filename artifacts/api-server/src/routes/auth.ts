@@ -60,7 +60,18 @@ router.post("/auth/logout", (_req, res) => {
 
 router.get("/auth/me", requireAuth, (req, res) => {
   const user = (req as any).user;
-  res.json({ id: user.id, email: user.email, name: user.name, role: user.role, tokenBalance: user.tokenBalance, planId: user.planId, planName: user.planName, planExpiresAt: user.planExpiresAt?.toISOString() ?? null, paymentGateway: user.paymentGateway ?? null, createdAt: user.createdAt.toISOString() });
+  res.json({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    tokenBalance: user.tokenBalance,
+    planId: user.planId,
+    planName: user.planName,
+    planExpiresAt: user.planExpiresAt ? user.planExpiresAt.toISOString() : null,
+    paymentGateway: user.paymentGateway ?? null,
+    createdAt: user.createdAt.toISOString(),
+  });
 });
 
 export default router;
