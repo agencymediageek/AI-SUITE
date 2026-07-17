@@ -20,6 +20,8 @@ router.get("/user/profile", requireAuth, async (req, res) => {
       tokenBalance: user.tokenBalance,
       planId: user.planId,
       planName: user.planName,
+      planExpiresAt: user.planExpiresAt?.toISOString() ?? null,
+      paymentGateway: user.paymentGateway ?? null,
       createdAt: user.createdAt.toISOString(),
       totalGenerations: generations.length,
       favoriteToolIds: favorites.map((f) => f.toolId),
@@ -38,7 +40,7 @@ router.patch("/user/profile", requireAuth, async (req, res) => {
     if (name) updates.name = name;
     if (email) updates.email = email;
     const [updated] = await db.update(usersTable).set(updates).where(eq(usersTable.id, user.id)).returning();
-    res.json({ id: updated.id, email: updated.email, name: updated.name, role: updated.role, tokenBalance: updated.tokenBalance, planId: updated.planId, planName: updated.planName, createdAt: updated.createdAt.toISOString(), totalGenerations: 0, favoriteToolIds: [] });
+    res.json({ id: updated.id, email: updated.email, name: updated.name, role: updated.role, tokenBalance: updated.tokenBalance, planId: updated.planId, planName: updated.planName, planExpiresAt: updated.planExpiresAt?.toISOString() ?? null, paymentGateway: updated.paymentGateway ?? null, createdAt: updated.createdAt.toISOString(), totalGenerations: 0, favoriteToolIds: [] });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to update profile" });
