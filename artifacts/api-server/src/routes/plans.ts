@@ -56,24 +56,6 @@ router.get("/plans", async (req, res) => {
   }
 });
 
-router.post("/plans/subscribe", requireAuth, async (req, res) => {
-  try {
-    const { planId } = req.body;
-    const [plan] = await db.select().from(plansTable).where((p: any) => p.id.eq(planId)).limit(1);
-
-    // In a real app, this would create a WooCommerce/Stripe checkout session
-    // For now, return a mock checkout URL
-    const checkoutUrl = `https://your-wordpress-site.com/checkout?plan=${planId}&token=${Date.now()}`;
-
-    res.json({
-      success: true,
-      checkoutUrl,
-      message: plan ? `Redirecting to checkout for ${plan.name} plan` : "Redirecting to checkout",
-    });
-  } catch (err) {
-    req.log.error(err);
-    res.status(500).json({ error: "Failed to initiate subscription" });
-  }
-});
+// Checkout is handled via /api/payments/stripe/create-session and /api/payments/mp/create-payment
 
 export default router;

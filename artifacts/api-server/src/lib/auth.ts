@@ -4,7 +4,10 @@ import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
-const JWT_SECRET = process.env["JWT_SECRET"] || "ai-suite-secret-change-in-production";
+const JWT_SECRET = process.env["JWT_SECRET"] || process.env["SESSION_SECRET"] || "ai-suite-secret-change-in-production";
+if (!process.env["JWT_SECRET"] && !process.env["SESSION_SECRET"] && process.env["NODE_ENV"] === "production") {
+  console.warn("[WARN] JWT_SECRET not set — using insecure default. Set JWT_SECRET or SESSION_SECRET in production.");
+}
 
 export interface AuthUser {
   id: number;

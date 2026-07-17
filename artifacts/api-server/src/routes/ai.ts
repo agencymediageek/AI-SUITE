@@ -60,7 +60,7 @@ router.post("/ai/generate", requireAuth, async (req, res) => {
       outputText = data.text || data.output || JSON.stringify(data);
     } else {
       // Direct Gemini call
-      const apiKey = process.env["GEMINI_API_KEY"] || process.env["GOOGLE_API_KEY"];
+      const apiKey = process.env["GEMINI_API_KEY"] || process.env["GOOGLE_API_KEY"] || process.env["GEMINI"];
       if (!apiKey) {
         res.status(500).json({ error: "AI API key not configured. Please set GEMINI_API_KEY in your environment." });
         return;
@@ -134,7 +134,7 @@ router.post("/ai/chat", async (req, res) => {
       return;
     }
 
-    const apiKey = process.env["GEMINI_API_KEY"] || process.env["GOOGLE_API_KEY"];
+    const apiKey = process.env["GEMINI_API_KEY"] || process.env["GOOGLE_API_KEY"] || process.env["GEMINI"];
     if (!apiKey) {
       res.status(500).json({ error: "AI API key not configured" });
       return;
