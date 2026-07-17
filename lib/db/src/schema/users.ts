@@ -13,6 +13,8 @@ export const usersTable = pgTable("users", {
   tokenBalance: integer("token_balance").notNull().default(1000),
   planId: text("plan_id"),
   planName: text("plan_name"),
+  planExpiresAt: timestamp("plan_expires_at"),
+  paymentGateway: text("payment_gateway"), // "mp" | "stripe"
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

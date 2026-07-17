@@ -150,9 +150,22 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center justify-between px-1">
-            <div className="flex flex-col overflow-hidden">
+            <div className="flex flex-col overflow-hidden gap-1">
               <span className="text-sm font-medium truncate">{user?.name || "User"}</span>
-              <span className="text-xs text-muted-foreground truncate">{user?.planName || t("app.free_plan")}</span>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  user?.planName && user.planName !== "Free"
+                    ? "bg-primary/15 text-primary"
+                    : "bg-muted text-muted-foreground"
+                }`}>
+                  {user?.planName || t("app.free_plan")}
+                </span>
+                {user?.planExpiresAt && user.planName !== "Free" && (
+                  <span className="text-[9px] text-muted-foreground truncate">
+                    {locale === "pt" ? "até" : "until"} {new Date((user as any).planExpiresAt).toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US", { month: "short", day: "numeric" })}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <Button
