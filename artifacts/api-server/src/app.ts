@@ -26,7 +26,16 @@ app.use(
   }),
 );
 app.use(cors());
-app.use(express.json());
+
+// Capture raw body for Stripe webhook signature verification
+// Must run BEFORE express.json() — Stripe needs the unmodified Buffer
+app.use(
+  express.json({
+    verify: (req: any, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
