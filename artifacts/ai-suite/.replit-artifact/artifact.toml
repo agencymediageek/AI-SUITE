@@ -1,0 +1,17 @@
+kind = "web"
+previewPath = "/ai-suite"
+title = "AI Suite (Template Oficial)"
+version = "1.0.0"
+id = "artifacts/ai-suite"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/ai-suite" ]
+localPort = 24981
+
+[services.development]
+run = "pnpm --filter @workspace/ai-suite run dev"
+
+[services.env]
+PORT = "24981"

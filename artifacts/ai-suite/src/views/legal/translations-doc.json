@@ -1,0 +1,208 @@
+{
+  "_meta": {
+    "description": "Complete string reference for MediaGeek A.I legal pages and cookie consent. To add a new language, copy the 'en' block, change the key to the new language code (e.g. 'fr', 'de', 'it'), and translate every value.",
+    "languages_supported": ["en", "pt", "es"],
+    "last_updated": "2026-07-21",
+    "contact": "contato@mediageek.io"
+  },
+
+  "cookie_consent": {
+    "en": {
+      "title": "We use cookies 🍪",
+      "description": "We use cookies to keep you logged in, remember your preferences, and improve the platform. You can choose what to accept.",
+      "acceptAll": "Accept All",
+      "essentialOnly": "Essential Only",
+      "customize": "Customize",
+      "save": "Save preferences",
+      "essential": "Essential",
+      "essentialDesc": "Required for the platform to work (login, language, theme). Cannot be disabled.",
+      "analytics": "Analytics",
+      "analyticsDesc": "Anonymous usage stats that help us improve MediaGeek A.I.",
+      "marketing": "Marketing",
+      "marketingDesc": "Used for A/B tests and referral tracking.",
+      "learnMore": "Cookie Policy"
+    },
+    "pt": {
+      "title": "Usamos cookies 🍪",
+      "description": "Usamos cookies para mantê-lo conectado, lembrar suas preferências e melhorar a plataforma. Você pode escolher o que aceitar.",
+      "acceptAll": "Aceitar Todos",
+      "essentialOnly": "Somente Essenciais",
+      "customize": "Personalizar",
+      "save": "Salvar preferências",
+      "essential": "Essenciais",
+      "essentialDesc": "Necessários para o funcionamento da plataforma (login, idioma, tema). Não podem ser desativados.",
+      "analytics": "Analíticos",
+      "analyticsDesc": "Estatísticas anônimas de uso que nos ajudam a melhorar a MediaGeek A.I.",
+      "marketing": "Marketing",
+      "marketingDesc": "Usados para testes A/B e rastreamento de referências.",
+      "learnMore": "Política de Cookies"
+    },
+    "es": {
+      "title": "Usamos cookies 🍪",
+      "description": "Usamos cookies para mantenerle conectado, recordar sus preferencias y mejorar la plataforma. Puede elegir qué aceptar.",
+      "acceptAll": "Aceptar Todo",
+      "essentialOnly": "Solo Esenciales",
+      "customize": "Personalizar",
+      "save": "Guardar preferencias",
+      "essential": "Esenciales",
+      "essentialDesc": "Necesarias para el funcionamiento de la plataforma (inicio de sesión, idioma, tema). No se pueden deshabilitar.",
+      "analytics": "Analíticas",
+      "analyticsDesc": "Estadísticas anónimas de uso que nos ayudan a mejorar MediaGeek A.I.",
+      "marketing": "Marketing",
+      "marketingDesc": "Utilizadas para pruebas A/B y seguimiento de referidos.",
+      "learnMore": "Política de Cookies"
+    }
+  },
+
+  "legal_pages_nav": {
+    "en": {
+      "back_home": "Back to home",
+      "contact_prefix": "For inquiries, contact us: ",
+      "privacy_policy": "Privacy Policy",
+      "terms_of_service": "Terms of Service",
+      "cookie_policy": "Cookie Policy",
+      "legal": "Legal"
+    },
+    "pt": {
+      "back_home": "Voltar ao início",
+      "contact_prefix": "Para dúvidas, entre em contato: ",
+      "privacy_policy": "Política de Privacidade",
+      "terms_of_service": "Termos de Serviço",
+      "cookie_policy": "Política de Cookies",
+      "legal": "Legal"
+    },
+    "es": {
+      "back_home": "Volver al inicio",
+      "contact_prefix": "Para consultas, contáctenos: ",
+      "privacy_policy": "Política de Privacidad",
+      "terms_of_service": "Términos de Servicio",
+      "cookie_policy": "Política de Cookies",
+      "legal": "Legal"
+    }
+  },
+
+  "privacy_policy": {
+    "en": {
+      "title": "Privacy Policy",
+      "last_updated": "Last updated: July 21, 2026",
+      "intro": "MediaGeek A.I ('we', 'our', 'us') is committed to protecting your personal information. This Privacy Policy explains what data we collect, how we use it, and your rights regarding it.",
+      "s1_title": "Information We Collect",
+      "s1_1": "Account information: name, email address, and password (hashed) when you register.",
+      "s1_2": "Usage data: tools used, prompts sent, tokens consumed, and session metadata.",
+      "s1_3": "Payment data: billing details processed securely by Stripe — we never store full card numbers.",
+      "s1_4": "Device & browser data: IP address, browser type, operating system, and referral URL.",
+      "s1_5": "Cookies and local storage values used to maintain your session and preferences.",
+      "s2_title": "How We Use Your Information",
+      "s2_1": "To provide, operate, and improve the MediaGeek A.I platform and its AI tools.",
+      "s2_2": "To process payments and manage your subscription.",
+      "s2_3": "To send transactional emails (account confirmation, password reset).",
+      "s2_4": "To detect and prevent fraud, abuse, and security incidents.",
+      "s2_5": "To comply with applicable legal obligations.",
+      "s3_title": "Data Sharing",
+      "s3_body": "We do not sell your personal data. We share it only with trusted service providers necessary to operate our platform (e.g., Stripe for payments, AI model providers for generation requests). These partners are bound by confidentiality obligations.",
+      "s4_title": "Data Retention",
+      "s4_body": "We retain your account data for as long as your account is active or as needed to provide services. If you delete your account, we will delete or anonymize your personal data within 30 days, except where we are required by law to retain it longer.",
+      "s5_title": "Your Rights",
+      "s5_1": "Access: request a copy of the personal data we hold about you.",
+      "s5_2": "Correction: request correction of inaccurate data.",
+      "s5_3": "Deletion: request deletion of your personal data ('right to be forgotten').",
+      "s5_4": "Portability: request your data in a structured, machine-readable format.",
+      "s5_5": "Objection: object to certain processing activities.",
+      "s5_6": "To exercise any of these rights, email us at contato@mediageek.io.",
+      "s6_title": "Cookies",
+      "s6_body": "We use essential cookies to keep you logged in and remember your preferences. We may also use analytics cookies to understand how users interact with our platform. You can manage your cookie preferences at any time using the cookie banner.",
+      "s7_title": "Security",
+      "s7_body": "We implement industry-standard security measures including HTTPS, hashed passwords, and access controls. No system is 100% secure; please use a strong, unique password and notify us immediately of any suspected breach.",
+      "s8_title": "Changes to This Policy",
+      "s8_body": "We may update this Privacy Policy periodically. We will notify you of significant changes by email or by displaying a notice on the platform. Continued use of MediaGeek A.I after changes constitutes acceptance of the updated policy."
+    },
+    "pt": {
+      "title": "Política de Privacidade",
+      "last_updated": "Última atualização: 21 de julho de 2026",
+      "intro": "A MediaGeek A.I ('nós', 'nosso', 'nossa') está comprometida em proteger suas informações pessoais. Esta Política de Privacidade explica quais dados coletamos, como os utilizamos e quais são seus direitos.",
+      "s1_title": "Informações que Coletamos",
+      "s1_1": "Dados de conta: nome, endereço de e-mail e senha (criptografada) ao se registrar.",
+      "s1_2": "Dados de uso: ferramentas utilizadas, prompts enviados, tokens consumidos e metadados de sessão.",
+      "s1_3": "Dados de pagamento: detalhes de cobrança processados com segurança pelo Stripe — jamais armazenamos números completos de cartão.",
+      "s1_4": "Dados de dispositivo e navegador: endereço IP, tipo de navegador, sistema operacional e URL de referência.",
+      "s1_5": "Cookies e valores de armazenamento local usados para manter sua sessão e preferências.",
+      "s2_title": "Como Usamos Suas Informações",
+      "s2_1": "Para fornecer, operar e melhorar a plataforma MediaGeek A.I e suas ferramentas de IA.",
+      "s2_2": "Para processar pagamentos e gerenciar sua assinatura.",
+      "s2_3": "Para enviar e-mails transacionais (confirmação de conta, redefinição de senha).",
+      "s2_4": "Para detectar e prevenir fraudes, abusos e incidentes de segurança.",
+      "s2_5": "Para cumprir obrigações legais aplicáveis.",
+      "s3_title": "Compartilhamento de Dados",
+      "s3_body": "Não vendemos seus dados pessoais. Compartilhamos apenas com fornecedores de serviço confiáveis necessários para operar nossa plataforma (ex.: Stripe para pagamentos, provedores de modelos de IA para geração de conteúdo). Esses parceiros estão vinculados por obrigações de confidencialidade.",
+      "s4_title": "Retenção de Dados",
+      "s4_body": "Mantemos seus dados de conta enquanto sua conta estiver ativa ou conforme necessário para fornecer os serviços. Se você excluir sua conta, apagaremos ou anonimizaremos seus dados pessoais em até 30 dias, exceto quando formos obrigados por lei a retê-los por mais tempo.",
+      "s5_title": "Seus Direitos (LGPD)",
+      "s5_1": "Acesso: solicitar uma cópia dos dados pessoais que mantemos sobre você.",
+      "s5_2": "Correção: solicitar a correção de dados imprecisos.",
+      "s5_3": "Exclusão: solicitar a exclusão dos seus dados pessoais ('direito ao esquecimento').",
+      "s5_4": "Portabilidade: solicitar seus dados em formato estruturado e legível por máquina.",
+      "s5_5": "Oposição: opor-se a determinadas atividades de processamento.",
+      "s5_6": "Para exercer qualquer desses direitos, envie um e-mail para contato@mediageek.io.",
+      "s6_title": "Cookies",
+      "s6_body": "Utilizamos cookies essenciais para mantê-lo conectado e lembrar suas preferências. Também podemos usar cookies analíticos para entender como os usuários interagem com nossa plataforma. Você pode gerenciar suas preferências de cookies a qualquer momento usando o banner de cookies.",
+      "s7_title": "Segurança",
+      "s7_body": "Implementamos medidas de segurança padrão da indústria, incluindo HTTPS, senhas criptografadas e controles de acesso. Nenhum sistema é 100% seguro; por favor, use uma senha forte e única e nos notifique imediatamente sobre qualquer suspeita de violação.",
+      "s8_title": "Alterações nesta Política",
+      "s8_body": "Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos você sobre mudanças significativas por e-mail ou exibindo um aviso na plataforma. O uso contínuo da MediaGeek A.I após as alterações constitui aceitação da política atualizada."
+    },
+    "es": {
+      "title": "Política de Privacidad",
+      "last_updated": "Última actualización: 21 de julio de 2026",
+      "intro": "MediaGeek A.I ('nosotros', 'nuestro', 'nuestra') está comprometida con la protección de su información personal. Esta Política de Privacidad explica qué datos recopilamos, cómo los usamos y cuáles son sus derechos.",
+      "s1_title": "Información que Recopilamos",
+      "s1_1": "Datos de cuenta: nombre, dirección de correo electrónico y contraseña (cifrada) al registrarse.",
+      "s1_2": "Datos de uso: herramientas utilizadas, prompts enviados, tokens consumidos y metadatos de sesión.",
+      "s1_3": "Datos de pago: detalles de facturación procesados de forma segura por Stripe — nunca almacenamos números de tarjeta completos.",
+      "s1_4": "Datos de dispositivo y navegador: dirección IP, tipo de navegador, sistema operativo y URL de referencia.",
+      "s1_5": "Cookies y valores de almacenamiento local usados para mantener su sesión y preferencias.",
+      "s2_title": "Cómo Usamos Su Información",
+      "s2_1": "Para proporcionar, operar y mejorar la plataforma MediaGeek A.I y sus herramientas de IA.",
+      "s2_2": "Para procesar pagos y gestionar su suscripción.",
+      "s2_3": "Para enviar correos electrónicos transaccionales (confirmación de cuenta, restablecimiento de contraseña).",
+      "s2_4": "Para detectar y prevenir fraudes, abusos e incidentes de seguridad.",
+      "s2_5": "Para cumplir con las obligaciones legales aplicables.",
+      "s3_title": "Compartición de Datos",
+      "s3_body": "No vendemos sus datos personales. Los compartimos solo con proveedores de servicios de confianza necesarios para operar nuestra plataforma (p. ej., Stripe para pagos, proveedores de modelos de IA para solicitudes de generación). Estos socios están sujetos a obligaciones de confidencialidad.",
+      "s4_title": "Retención de Datos",
+      "s4_body": "Conservamos sus datos de cuenta mientras su cuenta esté activa o según sea necesario para prestar los servicios. Si elimina su cuenta, borraremos o anonimizaremos sus datos personales en un plazo de 30 días, excepto cuando la ley nos obligue a conservarlos por más tiempo.",
+      "s5_title": "Sus Derechos (RGPD)",
+      "s5_1": "Acceso: solicitar una cópia de los datos personales que tenemos sobre usted.",
+      "s5_2": "Rectificación: solicitar la corrección de datos inexactos.",
+      "s5_3": "Supresión: solicitar la eliminación de sus datos personales ('derecho al olvido').",
+      "s5_4": "Portabilidad: solicitar sus datos en un formato estructurado y legible por máquina.",
+      "s5_5": "Oposición: oponerse a determinadas actividades de tratamiento.",
+      "s5_6": "Para ejercer cualquiera de estos derechos, envíenos un correo a contato@mediageek.io.",
+      "s6_title": "Cookies",
+      "s6_body": "Utilizamos cookies esenciales para mantenerle conectado y recordar sus preferencias. También podemos usar cookies analíticas para entender cómo los usuarios interactúan con nuestra plataforma. Puede gestionar sus preferencias de cookies en cualquier momento usando el banner de cookies.",
+      "s7_title": "Seguridad",
+      "s7_body": "Implementamos medidas de seguridad estándar del sector, incluidos HTTPS, contraseñas cifradas y controles de acceso. Ningún sistema es 100% seguro; use una contraseña fuerte y única y notifíquenos de inmediato si sospecha de una violación.",
+      "s8_title": "Cambios en esta Política",
+      "s8_body": "Podemos actualizar esta Política de Privacidad periódicamente. Le notificaremos los cambios significativos por correo electrónico o mostrando un aviso en la plataforma. El uso continuado de MediaGeek A.I tras los cambios constituye la aceptación de la política actualizada."
+    }
+  },
+
+  "terms_of_service": {
+    "_note": "See src/views/legal/TermsPage.tsx for full EN/PT/ES content. Key strings below.",
+    "en": { "title": "Terms of Service", "last_updated": "Last updated: July 21, 2026" },
+    "pt": { "title": "Termos de Serviço", "last_updated": "Última atualização: 21 de julho de 2026" },
+    "es": { "title": "Términos de Servicio", "last_updated": "Última actualización: 21 de julio de 2026" }
+  },
+
+  "cookie_policy": {
+    "_note": "See src/views/legal/CookiePolicyPage.tsx for full EN/PT/ES content. Key strings below.",
+    "en": { "title": "Cookie Policy", "last_updated": "Last updated: July 21, 2026" },
+    "pt": { "title": "Política de Cookies", "last_updated": "Última atualização: 21 de julho de 2026" },
+    "es": { "title": "Política de Cookies", "last_updated": "Última actualización: 21 de julio de 2026" }
+  },
+
+  "_instructions_for_translators": {
+    "how_to_add_a_language": "1. Open this file. 2. For each section (cookie_consent, legal_pages_nav, privacy_policy, terms_of_service, cookie_policy) add a new key with your language code (e.g. 'fr'). 3. Copy the 'en' block as your starting point. 4. Translate every value. 5. Also open src/views/legal/PrivacyPage.tsx, TermsPage.tsx, CookiePolicyPage.tsx and add a matching entry in the 'content' object for your language code. 6. Finally, add a new language entry via the Admin panel at /admin/languages.",
+    "string_keys": "Keys ending in _title are section headings. Keys ending in _body are paragraphs. Keys like s1_1, s1_2 are bullet points inside section 1.",
+    "contact": "contato@mediageek.io"
+  }
+}
