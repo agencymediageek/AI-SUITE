@@ -171,11 +171,12 @@ export async function POST(req: NextRequest) {
 
                     const taskInput: any = {
                         prompt,
-                        duration: duration || "6",
-                        mode: mode || "normal",
-                        resolution: resolution || "480p",
+                        duration: String(duration || "5"),
                         aspect_ratio: aspect_ratio || "16:9",
                     };
+                    // Only add mode and resolution if explicitly requested
+                    if (mode && mode !== "normal") taskInput.mode = mode;
+                    if (resolution && resolution !== "480p") taskInput.resolution = resolution;
 
                     if (primaryImage) {
                         taskInput.image_urls = [primaryImage];

@@ -871,17 +871,21 @@ class SystemDB {
     }
 
     async getTotalWebsites(startDate?: Date, endDate?: Date): Promise<number> {
-        let q = supabaseAdmin.from('websites').select('*', { count: 'exact', head: true });
-        if (startDate && endDate) {
-            q = q.gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString());
-        } else if (startDate) {
-            q = q.gte('created_at', startDate.toISOString());
+        try {
+            const params: any[] = [];
+            let where = '';
+            if (startDate && endDate) {
+                where = ' WHERE created_at >= $1 AND created_at <= $2';
+                params.push(startDate.toISOString(), endDate.toISOString());
+            } else if (startDate) {
+                where = ' WHERE created_at >= $1';
+                params.push(startDate.toISOString());
+            }
+            const res = await query(`SELECT COUNT(*) FROM websites${where}`, params);
+            return parseInt(res.rows[0]?.count || '0', 10);
+        } catch {
+            return 0; // table may not exist in this environment
         }
-
-        const { count, error } = await q;
-
-        if (error) return 0;
-        return count || 0;
     }
 
     async checkSubdomainAvailability(subdomain: string, excludeId?: string): Promise<boolean> {
@@ -1256,20 +1260,27 @@ class SystemDB {
     }
 
     async getToolUsageDistribution(startDate?: Date, endDate?: Date): Promise<any[]> {
-        let q = supabaseAdmin
-            .from('token_logs')
-            .select('amount, feature')
-            .eq('action', 'consume');
-            
-        if (startDate && endDate) {
-            q = q.gte('timestamp', startDate.toISOString()).lte('timestamp', endDate.toISOString());
-        } else if (startDate) {
-            q = q.gte('timestamp', startDate.toISOString());
+        let data: any[] = [];
+        try {
+            const params: any[] = ['consume'];
+            let where = "WHERE action = $1";
+            if (startDate && endDate) {
+                where += ' AND timestamp >= $2 AND timestamp <= $3';
+                params.push(startDate.toISOString(), endDate.toISOString());
+            } else if (startDate) {
+                where += ' AND timestamp >= $2';
+                params.push(startDate.toISOString());
+            }
+            const res = await query(
+                `SELECT amount, feature FROM token_logs ${where} LIMIT 2000`,
+                params
+            );
+            data = res.rows;
+        } catch {
+            return []; // token_logs may not exist or have different schema
         }
 
-        const { data, error } = await q;
-
-        if (error || !data) return [];
+        if (!data || data.length === 0) return [];
 
         const featureMap: Record<string, number> = {};
         let totalTokens = 0;

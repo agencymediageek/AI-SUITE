@@ -474,7 +474,17 @@ export async function generateMusic(params: {
 }) {
     try {
         // Suno uses a direct /generate endpoint according to docs
-        const response = await kieClient.post('/generate', params);
+        // Build payload with required defaults
+        const sunoPayload = {
+            prompt: params.prompt,
+            mv: params.model || 'chirp-v3-5',
+            customMode: params.customMode ?? false,
+            instrumental: params.instrumental ?? true,
+            title: params.title || '',
+            tags: params.style || '',
+            callBackUrl: params.callBackUrl || '',
+        };
+        const response = await kieClient.post('/generate', sunoPayload);
 
         // Response: { code: 200, msg: "success", data: { task_id: "..." } }
         const apiResponse = response.data;
