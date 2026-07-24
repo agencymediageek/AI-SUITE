@@ -494,7 +494,7 @@ function LoginContent() {
                         <div className="mt-6 flex justify-center">
                             <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
                                 <Sparkles className="w-4 h-4 mr-2" />
-                                New users get 1,000 free tokens
+                                Novos usuários recebem 300 tokens grátis
                             </div>
                         </div>
                     </motion.div>

@@ -45,7 +45,7 @@ const features: Feature[] = [
     { icon: Zap, title: "100+ AI-powered tools" },
     { icon: Palette, title: "Generate images & websites" },
     { icon: Code, title: "Write code in any language" },
-    { icon: Sparkles, title: "1,000 free tokens to start" },
+    { icon: Sparkles, title: "300 tokens grátis para começar" },
 ];
 
 interface RegisterPageProps {
@@ -333,7 +333,7 @@ function RegisterContent({ isAdmin = false }: RegisterPageProps) {
                         <div className="text-center mb-8">
                             <h2 className="text-3xl font-bold mb-2">Create your account</h2>
                             <p className="text-muted-foreground">
-                                Get started with 1,000 free tokens
+                                Comece com 300 tokens grátis
                             </p>
                         </div>
 
@@ -532,7 +532,7 @@ function RegisterContent({ isAdmin = false }: RegisterPageProps) {
                             {[
                                 "No credit card required",
                                 "Cancel anytime",
-                                "Free 1,000 tokens",
+                                "300 tokens grátis",
                                 "Instant access",
                             ].map((benefit, index) => (
                                 <div

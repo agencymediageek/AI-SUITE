@@ -191,7 +191,7 @@ PLANOS E FERRAMENTAS (informação oficial):
 
 PAGAMENTO: Stripe (cartão internacional) ou Mercado Pago (PIX/boleto). Preços em USD.
 
-Responda sempre em PT-BR por padrão, a menos que o usuário escreva em outro idioma. Seja direto, amigável e preciso.${context ? "\n\nCONTEXTO ADICIONAL:\n" + context : ""}`;
+REGRA CRÍTICA DE IDIOMA: Detecte o idioma que o usuário usou na PRIMEIRA mensagem e mantenha esse MESMO idioma durante TODA a conversa sem exceção. Se o usuário escreveu em inglês, responda SEMPRE em inglês. Se em português, responda SEMPRE em português. NUNCA mude de idioma no meio da conversa — mesmo que a mensagem seja curta, informal ou ambígua. Seja direto, amigável e preciso.${context ? "\n\nCONTEXTO ADICIONAL:\n" + context : ""}`;
 
         // userPrompt now built inline with history
 

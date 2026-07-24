@@ -14,14 +14,14 @@ import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const cuisineTypes = [
-  "Italian", "Mexican", "Asian", "Mediterranean", "American", "French",
-  "Indian", "Thai", "Japanese", "Greek", "Spanish", "Middle Eastern"
+  "Italiana", "Mexicana", "Asiática", "Mediterrânea", "Americana", "Francesa",
+  "Indiana", "Tailandesa", "Japonesa", "Grega", "Espanhola", "Árabe"
 ];
 
-const mealTypes = ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert", "Appetizer"];
-const difficulties = ["Easy", "Medium", "Hard"];
+const mealTypes = ["Café da Manhã", "Almoço", "Jantar", "Lanche", "Sobremesa", "Entrada"];
+const difficulties = ["Fácil", "Médio", "Difícil"];
 const dietaryRestrictions = [
-  "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Keto", "Paleo", "Low-Carb", "Low-Fat"
+  "Vegetariano", "Vegano", "Sem Glúten", "Sem Lactose", "Keto", "Paleo", "Low-Carb", "Low-Fat"
 ];
 
 export default function RecipePage() {
@@ -63,47 +63,47 @@ export default function RecipePage() {
 
     if (validIngredients.length === 0) {
       toast({
-        title: "Missing Ingredients",
-        description: "Please add at least one ingredient.",
+        title: "Ingredientes Ausentes",
+        description: "Adicione pelo menos um ingrediente.",
         variant: "destructive"
       });
       return;
     }
 
     try {
-      const prompt = `Create a detailed recipe using these ingredients:
-Main ingredients: ${validIngredients.join(", ")}
+      const prompt = `Crie uma receita detalhada em PORTUGUÊS BRASILEIRO usando estes ingredientes:
+Ingredientes principais: ${validIngredients.join(", ")}
 
-Preferences:
-- Cuisine: ${formData.cuisine || "Any"}
-- Meal Type: ${formData.mealType || "Any"}
-- Difficulty: ${formData.difficulty || "Any"}
-- Cooking Time: ${formData.cookingTime || "No preference"}
-- Servings: ${formData.servings || "4"}
-- Dietary Restrictions: ${formData.dietary || "None"}
-- Special Notes: ${formData.preferences}
+Preferências:
+- Culinária: ${formData.cuisine || "Any"}
+- Tipo de Refeição: ${formData.mealType || "Any"}
+- Dificuldade: ${formData.difficulty || "Any"}
+- Tempo de Preparo: ${formData.cookingTime || "No preference"}
+- Porções: ${formData.servings || "4"}
+- Restrições Alimentares: ${formData.dietary || "None"}
+- Observações: ${formData.preferences}
 
-Please provide:
-1. Recipe name
-2. Full ingredients list with quantities
-3. Step-by-step cooking instructions
-4. Cooking time and difficulty
-5. Nutritional highlights
-6. Tips for best results
+Por favor, forneça:
+1. Nome da receita
+2. Lista completa de ingredientes com quantidades
+3. Passo a passo detalhado do preparo
+4. Tempo de preparo e dificuldade
+5. Destaques nutricionais
+6. Dicas para melhores resultados
 
-Make it clear, detailed, and easy to follow.`;
+Escreva de forma clara, detalhada e fácil de seguir.`;
 
       const response = await generateStream(systemPrompts.writer, prompt, undefined, undefined, 'recipe');
       setRecipe(response.text);
 
       toast({
-        title: "Recipe Generated!",
-        description: "Your personalized recipe is ready to cook."
+        title: "Receita Gerada!",
+        description: "Sua receita personalizada está pronta!"
       });
     } catch (error: any) {
       toast({
-        title: "Generation Failed",
-        description: "Please try again.",
+        title: "Falha na Geração",
+        description: "Por favor, tente novamente.",
         variant: "destructive"
       });
     }

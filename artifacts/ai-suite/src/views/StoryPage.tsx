@@ -13,23 +13,23 @@ import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const genres = [
-  { value: "fantasy", label: "Fantasy" },
-  { value: "sci-fi", label: "Science Fiction" },
-  { value: "mystery", label: "Mystery" },
+  { value: "fantasy", label: "Fantasia" },
+  { value: "sci-fi", label: "Ficção Científica" },
+  { value: "mystery", label: "Mistério" },
   { value: "romance", label: "Romance" },
-  { value: "thriller", label: "Thriller" },
-  { value: "horror", label: "Horror" },
-  { value: "adventure", label: "Adventure" },
+  { value: "thriller", label: "Suspense" },
+  { value: "horror", label: "Terror" },
+  { value: "adventure", label: "Aventura" },
   { value: "drama", label: "Drama" },
-  { value: "comedy", label: "Comedy" },
-  { value: "historical", label: "Historical Fiction" }
+  { value: "comedy", label: "Comédia" },
+  { value: "historical", label: "Ficção Histórica" }
 ];
 
 const lengths = [
-  { value: "short", label: "Short Story (500-1000 words)" },
-  { value: "medium", label: "Medium Story (1000-2500 words)" },
-  { value: "outline", label: "Story Outline" },
-  { value: "script", label: "Script Format" }
+  { value: "short", label: "Conto (500-1000 palavras)" },
+  { value: "medium", label: "História Média (1000-2500 palavras)" },
+  { value: "outline", label: "Esboço da História" },
+  { value: "script", label: "Formato de Roteiro" }
 ];
 
 export default function StoryPage() {
@@ -49,15 +49,15 @@ export default function StoryPage() {
   const handleGenerateStory = async () => {
     if (!genre || !plot) {
       toast({
-        title: "Error",
-        description: "Please select a genre and provide a plot description.",
+        title: "Erro",
+        description: "Selecione um gênero e forneça uma descrição do enredo.",
         variant: "destructive"
       });
       return;
     }
 
     try {
-      const prompt = `Write a creative short story with the following elements:
+      const prompt = `Escreva uma história criativa em PORTUGUÊS BRASILEIRO com os seguintes elementos (a menos que o enredo/plot esteja escrito em outro idioma, nesse caso use esse idioma):
       
 Genre: ${genre}
 Theme: ${tone || 'Match the genre appropriately'}
@@ -67,12 +67,12 @@ Plot Outlet: ${plot}
 
 Please write an engaging story with a clear beginning, middle, and end.`;
 
-      const response = await generateStream("You are a creative writing expert. Write engaging, well-structured stories with compelling characters and vivid descriptions. Follow proper storytelling techniques and maintain consistency in tone and style.", prompt);
+      const response = await generateStream("Você é um especialista em escrita criativa. Escreva histórias envolventes e bem estruturadas com personagens cativantes e descrições vívidas. Siga técnicas de narrativa adequadas e mantenha consistência no tom e estilo. Sempre escreva no mesmo idioma que foi utilizado no prompt do usuário.", prompt);
       setGeneratedContent({ ...generatedContent, story: response.text });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error?.message || "Failed to generate story. Please try again.",
+        title: "Erro",
+        description: error?.message || "Falha ao gerar história. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -81,8 +81,8 @@ Please write an engaging story with a clear beginning, middle, and end.`;
   const handleCopyStory = () => {
     navigator.clipboard.writeText(generatedContent.story);
     toast({
-      title: "Copied",
-      description: "Story copied to clipboard.",
+      title: "Copiado",
+      description: "História copiada para a área de transferência.",
     });
   }
 
@@ -301,9 +301,9 @@ Please write an engaging story with a clear beginning, middle, and end.`;
       {/* Genre Examples */}
       <Card className="ai-card">
         <CardHeader>
-          <CardTitle>Popular Genres</CardTitle>
+          <CardTitle>Gêneros Populares</CardTitle>
           <CardDescription>
-            Click on any genre to select it
+            Clique em qualquer gênero para selecioná-lo
           </CardDescription>
         </CardHeader>
         <CardContent>

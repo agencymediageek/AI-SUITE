@@ -33,11 +33,11 @@ import { Layout } from "@/components/layout/Layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const VIBES = [
-    { value: "aesthetic", label: "✨ Aesthetic" },
-    { value: "funny", label: "😂 Funny" },
-    { value: "inspirational", label: "💡 Inspirational" },
+    { value: "aesthetic", label: "✨ Estético" },
+    { value: "funny", label: "😂 Engraçado" },
+    { value: "inspirational", label: "💡 Inspiracional" },
     { value: "casual", label: "☕ Casual" },
-    { value: "promotional", label: "📣 Promotional" },
+    { value: "promotional", label: "📣 Promocional" },
 ];
 
 export function InstagramCaptionGenerator() {
@@ -55,8 +55,8 @@ export function InstagramCaptionGenerator() {
     const handleGenerate = async () => {
         if (!description.trim()) {
             toast({
-                title: "Description required",
-                description: "Please describe your photo first.",
+                title: "Descrição necessária",
+                description: "Descreva sua foto primeiro.",
                 variant: "destructive",
             });
             return;
@@ -66,11 +66,7 @@ export function InstagramCaptionGenerator() {
         setCaption("");
 
         try {
-            const prompt = `Write an Instagram caption for: "${description}".
-            Vibe: ${vibe}.
-            Emojis: ${useEmojis ? "Yes, use plenty" : "No"}.
-            Hashtags: ${useHashtags ? "Yes, add 5-10 relevant ones at the bottom" : "No"}.
-            Return ONLY the caption text.`;
+            const prompt = `Escreva uma legenda para Instagram. IMPORTANTE: Escreva SEMPRE no mesmo idioma utilizado na descrição da foto abaixo.\n\nDescrição da foto: "${description}".\nEstilo/Vibe: ${vibe}.\nEmojis: ${useEmojis ? "Sim, use bastante" : "Não"}.\nHashtags: ${useHashtags ? "Sim, adicione 5-10 relevantes ao final" : "Não"}.\nRetorne APENAS o texto da legenda.`;
 
             const response = await fetch("/api/ai/proxy", {
                 method: "POST",
@@ -93,8 +89,8 @@ export function InstagramCaptionGenerator() {
 
         } catch (error: any) {
             toast({
-                title: "Error",
-                description: error instanceof Error ? error.message : "Failed to generate caption.",
+                title: "Erro",
+                description: error instanceof Error ? error.message : "Falha ao gerar legenda.",
                 variant: "destructive",
             });
         } finally {
@@ -140,7 +136,7 @@ export function InstagramCaptionGenerator() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Vibe</Label>
+                                    <Label>Estilo</Label>
                                     <Select value={vibe} onValueChange={setVibe}>
                                         <SelectTrigger>
                                             <SelectValue />
@@ -183,7 +179,7 @@ export function InstagramCaptionGenerator() {
                                 ) : (
                                     <>
                                         <Wand2 className="w-4 h-4 mr-2" />
-                                        Generate Caption
+                                        Gerar Legenda
                                     </>
                                 )}
                             </Button>

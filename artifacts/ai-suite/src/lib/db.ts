@@ -1296,34 +1296,47 @@ class SystemDB {
 
     async getDashboardRecentActivities(startDate?: Date, endDate?: Date): Promise<any[]> {
         const activities: any[] = [];
-        
-        let usersQ = supabaseAdmin.from('users').select('email, created_at').order('created_at', { ascending: false }).limit(5);
-        if (startDate && endDate) {
-             usersQ = usersQ.gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString());
-        } else if (startDate) {
-             usersQ = usersQ.gte('created_at', startDate.toISOString());
-        }
-        
-        const { data: users } = await usersQ;
-        if (users) {
-            users.forEach((u: any) => {
+
+        try {
+            // Recent signups
+            const usersParams: any[] = [];
+            let usersWhere = '';
+            if (startDate && endDate) {
+                usersWhere = ' WHERE created_at >= $1 AND created_at <= $2';
+                usersParams.push(startDate.toISOString(), endDate.toISOString());
+            } else if (startDate) {
+                usersWhere = ' WHERE created_at >= $1';
+                usersParams.push(startDate.toISOString());
+            }
+            const usersRes = await query(
+                `SELECT email, created_at FROM users${usersWhere} ORDER BY created_at DESC LIMIT 5`,
+                usersParams
+            );
+            (usersRes.rows || []).forEach((u: any) => {
                 activities.push({
                     type: "signup",
                     user: u.email,
                     timestamp: new Date(u.created_at).getTime(),
                 });
             });
-        }
-        
-        let paymentsQ = supabaseAdmin.from('payments').select('user_email, amount, created_at').order('created_at', { ascending: false }).limit(5);
-        if (startDate && endDate) {
-             paymentsQ = paymentsQ.gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString());
-        } else if (startDate) {
-             paymentsQ = paymentsQ.gte('created_at', startDate.toISOString());
-        }
-        const { data: payments } = await paymentsQ;
-        if (payments) {
-            payments.forEach((p: any) => {
+        } catch(e) { /* ignore if users query fails */ }
+
+        try {
+            // Recent payments
+            const payParams: any[] = [];
+            let payWhere = '';
+            if (startDate && endDate) {
+                payWhere = ' WHERE created_at >= $1 AND created_at <= $2';
+                payParams.push(startDate.toISOString(), endDate.toISOString());
+            } else if (startDate) {
+                payWhere = ' WHERE created_at >= $1';
+                payParams.push(startDate.toISOString());
+            }
+            const payRes = await query(
+                `SELECT user_email, amount, created_at FROM payments${payWhere} ORDER BY created_at DESC LIMIT 5`,
+                payParams
+            );
+            (payRes.rows || []).forEach((p: any) => {
                 activities.push({
                     type: "payment",
                     user: p.user_email,
@@ -1331,7 +1344,7 @@ class SystemDB {
                     timestamp: new Date(p.created_at).getTime(),
                 });
             });
-        }
+        } catch(e) { /* ignore if payments table doesn't exist */ }
 
         activities.sort((a, b) => b.timestamp - a.timestamp);
 
