@@ -824,7 +824,7 @@ class SystemDB {
                subdomain = EXCLUDED.subdomain, messages = EXCLUDED.messages,
                preview_image = EXCLUDED.preview_image, updated_at = EXCLUDED.updated_at`,
             [project.id, project.userEmail.toLowerCase(), project.name, project.code,
-             project.subdomain, project.messages, project.previewImage, project.createdAt, project.updatedAt]
+             project.subdomain, JSON.stringify(project.messages || []), project.previewImage, project.createdAt, project.updatedAt]
         );
     }
 
