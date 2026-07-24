@@ -889,112 +889,59 @@ class SystemDB {
     }
 
     async checkSubdomainAvailability(subdomain: string, excludeId?: string): Promise<boolean> {
-        const { data, error } = await supabaseAdmin
-            .from('websites')
-            .select('id')
-            .eq('subdomain', subdomain);
-
-        if (error) return false;
-
-        if (data && data.length > 0) {
-            if (excludeId) {
-                return !data.some((w: any) => w.id !== excludeId);
-            }
+        try {
+            const res = await query(
+                'SELECT id FROM websites WHERE subdomain = $1',
+                [subdomain]
+            );
+            const rows = res.rows;
+            if (rows.length === 0) return true;
+            if (excludeId) return rows.every((w: any) => w.id === excludeId);
+            return false;
+        } catch {
             return false;
         }
-        return true;
     }
 
     // Update Website Subdomain
     async updateWebsiteSubdomain(id: string, subdomain: string): Promise<void> {
-        const { error } = await supabaseAdmin
-            .from('websites')
-            .update({ subdomain })
-            .eq('id', id);
-        if (error) throw new Error(`Error updating website subdomain: ${error.message}`);
+        await query('UPDATE websites SET subdomain = $1, updated_at = NOW() WHERE id = $2', [subdomain, id]);
     }
 
     // Custom Domains
     async addCustomDomain(domain: CustomDomain): Promise<void> {
-        const { error } = await supabaseAdmin.from('custom_domains').insert({
-            id: domain.id,
-            domain: domain.domain.toLowerCase(),
-            website_id: domain.websiteId,
-            status: domain.status,
-            created_at: domain.createdAt,
-            updated_at: domain.updatedAt
-        });
-        if (error) throw new Error(`Error adding custom domain: ${error.message}`);
+        await query(
+            `INSERT INTO custom_domains (id, domain, website_id, status, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [domain.id, domain.domain.toLowerCase(), domain.websiteId, domain.status, domain.createdAt, domain.updatedAt]
+        );
     }
 
     async getCustomDomain(domain: string): Promise<CustomDomain | null> {
-        const { data, error } = await supabaseAdmin
-            .from('custom_domains')
-            .select('*')
-            .eq('domain', domain.toLowerCase())
-            .single();
-
-        if (error || !data) return null;
-
-        return {
-            id: data.id,
-            domain: data.domain,
-            websiteId: data.website_id,
-            status: data.status,
-            createdAt: data.created_at,
-            updatedAt: data.updated_at
-        };
+        const res = await query('SELECT * FROM custom_domains WHERE domain = $1', [domain.toLowerCase()]);
+        const data = res.rows[0];
+        if (!data) return null;
+        return { id: data.id, domain: data.domain, websiteId: data.website_id, status: data.status, createdAt: data.created_at, updatedAt: data.updated_at };
     }
 
     async getCustomDomainById(id: string): Promise<CustomDomain | null> {
-        const { data, error } = await supabaseAdmin
-            .from('custom_domains')
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        if (error || !data) return null;
-
-        return {
-            id: data.id,
-            domain: data.domain,
-            websiteId: data.website_id,
-            status: data.status,
-            createdAt: data.created_at,
-            updatedAt: data.updated_at
-        };
+        const res = await query('SELECT * FROM custom_domains WHERE id = $1', [id]);
+        const data = res.rows[0];
+        if (!data) return null;
+        return { id: data.id, domain: data.domain, websiteId: data.website_id, status: data.status, createdAt: data.created_at, updatedAt: data.updated_at };
     }
 
     async listCustomDomainsByWebsite(websiteId: string): Promise<CustomDomain[]> {
-        const { data, error } = await supabaseAdmin
-            .from('custom_domains')
-            .select('*')
-            .eq('website_id', websiteId)
-            .order('created_at', { ascending: false });
-
-        if (error || !data) return [];
-
-        return data.map((d: any) => ({
-            id: d.id,
-            domain: d.domain,
-            websiteId: d.website_id,
-            status: d.status,
-            createdAt: d.created_at,
-            updatedAt: d.updated_at
-        }));
+        const res = await query('SELECT * FROM custom_domains WHERE website_id = $1 ORDER BY created_at DESC', [websiteId]);
+        return (res.rows || []).map((d: any) => ({ id: d.id, domain: d.domain, websiteId: d.website_id, status: d.status, createdAt: d.created_at, updatedAt: d.updated_at }));
     }
 
     async updateCustomDomainStatus(id: string, status: CustomDomain['status']): Promise<void> {
-        const { error } = await supabaseAdmin
-            .from('custom_domains')
-            .update({ status, updated_at: new Date().toISOString() })
-            .eq('id', id);
-        if (error) throw new Error(`Error updating custom domain status: ${error.message}`);
+        await query('UPDATE custom_domains SET status = $1, updated_at = NOW() WHERE id = $2', [status, id]);
     }
 
     async deleteCustomDomain(id: string): Promise<void> {
-        const { error } = await supabaseAdmin.from('custom_domains').delete().eq('id', id);
-        if (error) throw new Error(`Error deleting custom domain: ${error.message}`);
+        await query('DELETE FROM custom_domains WHERE id = $1', [id]);
     }
 
     // Subscriptions
