@@ -246,6 +246,33 @@ export const HTML_TEMPLATE = `
 </head>
 <body id="root">
   <!-- __CODE_PLACEHOLDER__ -->
+
+  <!-- Auto-init: Flowbite, AOS, GSAP, Swiper after DOM ready -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Flowbite: re-init interactive components (dropdowns, modals, accordions)
+      if (typeof initFlowbite === 'function') { try { initFlowbite(); } catch(e){} }
+      // AOS scroll animations
+      if (typeof AOS !== 'undefined') { try { AOS.init({ once: true, duration: 700, easing: 'ease-out-cubic' }); } catch(e){} }
+      // GSAP fade-in for elements with data-gsap="fadeIn"
+      if (typeof gsap !== 'undefined') {
+        try {
+          gsap.utils.toArray('[data-gsap="fadeIn"]').forEach(function(el) {
+            gsap.from(el, { opacity: 0, y: 24, duration: 0.7, ease: 'power2.out' });
+          });
+        } catch(e){}
+      }
+      // Swiper: auto-init any .swiper containers
+      if (typeof Swiper !== 'undefined') {
+        try {
+          document.querySelectorAll('.swiper:not(.swiper-initialized)').forEach(function(el) {
+            new Swiper(el, { loop: true, autoplay: { delay: 4000 }, pagination: { el: '.swiper-pagination', clickable: true } });
+          });
+        } catch(e){}
+      }
+    });
+  </script>
+
 </body>
 </html>
 `;
@@ -379,8 +406,23 @@ function fixImageSources(html: string) {
   });
 }
 
+
+/**
+ * Fix broken tags emitted by AI models when a tag name is separated from its
+ * attributes by a newline and the extraction regex drops the name.
+ * e.g.  "< class="...">"  →  "<div class="...">"
+ *       "< id="...">"     →  "<div id="...">"
+ */
+function sanitizeBrokenTags(html: string): string {
+  if (!html) return html;
+  // Pattern: "<" followed by optional whitespace then a known HTML attribute keyword
+  // Replace with "<div" so the element is at least valid
+  return html.replace(/<\s+(class=|id=|style=|data-|aria-)/g, '<div $1');
+}
+
 export const constructFullHtml = (bodyContent: string): string => {
   bodyContent = fixImageSources(bodyContent);
+  bodyContent = sanitizeBrokenTags(bodyContent);
   if (!bodyContent) return "";
   // If it already looks like full HTML, return as is
   if (bodyContent.trim().toLowerCase().startsWith("<!doctype") || bodyContent.trim().toLowerCase().includes("<html")) {
