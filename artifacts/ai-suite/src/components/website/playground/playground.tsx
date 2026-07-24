@@ -93,6 +93,27 @@ Tailwind CSS code”), then:
         * Do not add any extra text before or after the 
           HTML code EXCEPT for the required "Up Next" suggestion (see rule 4).
 
+    JAVASCRIPT RULES (MANDATORY — never break these):
+    - Every onclick="fn()" MUST have a fully implemented function in a <script> block.
+      NEVER write stub functions that only show alerts or fake success messages.
+    - Interactive features MUST work end-to-end:
+        * QR code generators: use QRCode library (already loaded):
+            new QRCode(element, { text: url, width: 200, height: 200 })
+          Always capture input values BEFORE wiping the modal/container.
+          Add a working download button: canvas.toDataURL() → <a download>.
+        * Modals: show/hide by toggling CSS class "hidden" / "flex".
+        * Accordions/FAQs: toggle the target's "hidden" class on click.
+        * Tabs: hide all panels, show only the active one.
+        * Counters/timers: use setInterval with real DOM updates.
+        * Form submissions: validate fields, show real feedback inline.
+        * Smooth scroll: anchor links use scrollIntoView({ behavior: "smooth" }).
+        * Copy to clipboard: navigator.clipboard.writeText(text).
+    - Available libraries (already in the template, use them):
+        Flowbite, Chart.js, Swiper.js, AOS, GSAP, Tippy.js,
+        Font Awesome icons, QRCode (qrcodejs), Alpine.js
+    - If a feature requires a real backend (auth, database), implement a
+      realistic local simulation with localStorage so it appears functional.
+
 2. If the user asks to **modify, change, or update** the 
     existing design (e.g., “Change the color to red”, 
     “Add a button”, “Update the text”), then:
