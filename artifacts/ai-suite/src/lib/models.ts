@@ -211,7 +211,7 @@ export const AVAILABLE_MODELS: AIModel[] = [
     },
 ];
 
-export const DEFAULT_MODEL_ID = 'gemini-2.5-flash';
+export const DEFAULT_MODEL_ID = "grok-3-fast";
 
 // Primary fallback when Gemini quota is hit → Grok 3 Fast (ultra-cheap)
 export const FALLBACK_MODEL_ID = 'grok-3-fast';

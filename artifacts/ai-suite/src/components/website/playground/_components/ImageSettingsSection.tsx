@@ -32,14 +32,23 @@ const transformOptions = [
     { label: "BG Remove", value: "bgremove", icon: <ImageMinus />, tranformation: 'e-bgremove' },
 ];
 
-console.log("process.env.NEXT_PUBLIC_VITE_IMAGEKIT_PUBLIC_KEY", process.env.NEXT_PUBLIC_VITE_IMAGEKIT_PUBLIC_KEY);
-
-
-var imagekit = new ImageKit({
-    publicKey: process.env.NEXT_PUBLIC_VITE_IMAGEKIT_PUBLIC_KEY,
-    privateKey: process.env.NEXT_PUBLIC_VITE_IMAGEKIT_PRIVATE_KEY,
-    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
-});
+// Lazy init — only instantiate when all keys are present to avoid module-level crash
+let imagekit: any = null;
+try {
+    if (
+        process.env.NEXT_PUBLIC_VITE_IMAGEKIT_PUBLIC_KEY &&
+        process.env.NEXT_PUBLIC_VITE_IMAGEKIT_PRIVATE_KEY &&
+        process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+    ) {
+        imagekit = new ImageKit({
+            publicKey: process.env.NEXT_PUBLIC_VITE_IMAGEKIT_PUBLIC_KEY,
+            privateKey: process.env.NEXT_PUBLIC_VITE_IMAGEKIT_PRIVATE_KEY,
+            urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+        });
+    }
+} catch (e) {
+    console.warn("ImageKit not configured — image upload features disabled.");
+}
 
 function ImageSettingSection({ selectedEl, clearSelection }: Props) {
     const [altText, setAltText] = useState(selectedEl.alt || "");
