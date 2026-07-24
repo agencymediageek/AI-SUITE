@@ -13,12 +13,12 @@ import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const emailTypes = [
-  { value: "cold-outreach", label: "Cold Outreach" },
-  { value: "follow-up", label: "Follow Up" },
-  { value: "response", label: "Response" },
-  { value: "introduction", label: "Introduction" },
-  { value: "thank-you", label: "Thank You" },
-  { value: "meeting-request", label: "Meeting Request" }
+  { value: "cold-outreach", label: "Prospecção Fria" },
+  { value: "follow-up", label: "Acompanhamento" },
+  { value: "response", label: "Resposta" },
+  { value: "introduction", label: "Apresentação" },
+  { value: "thank-you", label: "Agradecimento" },
+  { value: "meeting-request", label: "Solicitar Reunião" }
 ];
 
 export default function EmailPage() {
@@ -34,8 +34,8 @@ export default function EmailPage() {
   const handleGenerateEmail = async () => {
     if (!emailType || !recipient || !context) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields.",
+        title: "Erro",
+        description: "Por favor, preencha todos os campos obrigatórios.",
         variant: "destructive"
       });
       return;
@@ -54,8 +54,8 @@ Please create a professional, engaging, and appropriate email.`;
       setGeneratedEmail(response.text);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error?.message || "Failed to generate email. Please try again.",
+        title: "Erro",
+        description: error?.message || "Falha ao gerar e-mail. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -64,9 +64,9 @@ Please create a professional, engaging, and appropriate email.`;
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold ai-gradient-text">AI Email Assistant</h1>
+        <h1 className="text-3xl font-bold ai-gradient-text">Assistente de E-mails IA</h1>
         <p className="text-muted-foreground mt-2">
-          Craft professional emails for various purposes including cold outreach, responses, and follow-ups.
+          Crie e-mails profissionais para prospecção, acompanhamento, respostas e muito mais.
         </p>
       </div>
 
@@ -76,18 +76,18 @@ Please create a professional, engaging, and appropriate email.`;
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="w-5 h-5 text-ai-primary" />
-              Email Details
+              Detalhes do E-mail
             </CardTitle>
             <CardDescription>
-              Fill in the details to generate your professional email.
+              Preencha os detalhes para gerar seu e-mail profissional.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email-type">Email Type *</Label>
+              <Label htmlFor="email-type">Tipo de E-mail *</Label>
               <Select value={emailType} onValueChange={setEmailType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select email type" />
+                  <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
                   {emailTypes.map((type) => (
@@ -100,30 +100,30 @@ Please create a professional, engaging, and appropriate email.`;
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="recipient">Recipient *</Label>
+              <Label htmlFor="recipient">Destinatário *</Label>
               <Input
                 id="recipient"
-                placeholder="e.g., John Smith, CEO of TechCorp"
+                placeholder="Ex: João Silva, CEO da TechCorp"
                 value={recipient}
                 onChange={(e) => setRecipient(e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="subject">Subject (Optional)</Label>
+              <Label htmlFor="subject">Assunto (Opcional)</Label>
               <Input
                 id="subject"
-                placeholder="Email subject line"
+                placeholder="Assunto do e-mail"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="context">Context/Purpose *</Label>
+              <Label htmlFor="context">Contexto/Objetivo *</Label>
               <Textarea
                 id="context"
-                placeholder="Describe the purpose of your email, what you want to achieve, any relevant background information..."
+                placeholder="Descreva o objetivo do e-mail, o que quer alcançar e informações relevantes..."
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
                 className="min-h-[150px] resize-none"
@@ -143,7 +143,7 @@ Please create a professional, engaging, and appropriate email.`;
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Generate Email
+                  Gerar E-mail
                 </>
               )}
             </Button>
@@ -155,7 +155,7 @@ Please create a professional, engaging, and appropriate email.`;
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Send className="w-5 h-5 text-ai-secondary" />
-              Generated Email
+              E-mail Gerado
             </CardTitle>
             <CardDescription>
               Your AI-generated professional email will appear here.
@@ -191,7 +191,7 @@ Please create a professional, engaging, and appropriate email.`;
                   <div className="h-full flex items-center justify-center text-muted-foreground">
                     <div className="text-center">
                       <Mail className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>Your professional email will appear here</p>
+                      <p>Seu e-mail profissional aparecerá aqui</p>
                     </div>
                   </div>
                 )}
@@ -204,7 +204,7 @@ Please create a professional, engaging, and appropriate email.`;
       {/* Email Types Info */}
       <Card className="ai-card">
         <CardHeader>
-          <CardTitle>Email Types</CardTitle>
+          <CardTitle>Tipos de E-mail</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -213,12 +213,12 @@ Please create a professional, engaging, and appropriate email.`;
                 <Mail className="w-8 h-8 mx-auto mb-2 text-ai-primary" />
                 <h3 className="font-semibold mb-1">{type.label}</h3>
                 <p className="text-xs text-muted-foreground">
-                  {type.value === "cold-outreach" && "Reach out to new contacts"}
-                  {type.value === "follow-up" && "Follow up on previous conversations"}
-                  {type.value === "response" && "Reply to received emails"}
-                  {type.value === "introduction" && "Introduce yourself or others"}
-                  {type.value === "thank-you" && "Express gratitude professionally"}
-                  {type.value === "meeting-request" && "Request meetings or calls"}
+                  {type.value === "cold-outreach" && "Contate novos clientes ou parceiros"}
+                  {type.value === "follow-up" && "Retome conversas anteriores"}
+                  {type.value === "response" && "Responda e-mails recebidos"}
+                  {type.value === "introduction" && "Apresente-se ou apresente alguém"}
+                  {type.value === "thank-you" && "Expresse gratidão de forma profissional"}
+                  {type.value === "meeting-request" && "Solicite reuniões ou ligações"}
                 </p>
               </div>
             ))}

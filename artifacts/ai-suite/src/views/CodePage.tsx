@@ -29,11 +29,11 @@ const languages = [
 ];
 
 const taskTypes = [
-  { value: "generate", label: "Generate Code" },
-  { value: "debug", label: "Debug Code" },
-  { value: "explain", label: "Explain Code" },
-  { value: "optimize", label: "Optimize Code" },
-  { value: "convert", label: "Convert Language" },
+  { value: "generate", label: "Gerar Código" },
+  { value: "debug", label: "Depurar Código" },
+  { value: "explain", label: "Explicar Código" },
+  { value: "optimize", label: "Otimizar Código" },
+  { value: "convert", label: "Converter Linguagem" },
 ];
 
 export default function CodePage() {
@@ -49,8 +49,8 @@ export default function CodePage() {
   const handleGenerate = async () => {
     if (!description.trim() || !language || !taskType) {
       toast({
-        title: "Missing Information",
-        description: "Please provide a description, select a language and task type.",
+        title: "Informação Faltando",
+        description: "Por favor, forneça uma descrição, selecione a linguagem e o tipo de tarefa.",
         variant: "destructive"
       });
       return;
@@ -80,21 +80,21 @@ export default function CodePage() {
 
       if (response.error) {
         toast({
-          title: "Error",
+          title: "Erro",
           description: response.error,
           variant: "destructive"
         });
       } else {
         setOutput(response.text);
         toast({
-          title: "Code Generated!",
-          description: "Your code has been successfully generated.",
+          title: "Código Gerado!",
+          description: "Seu código foi gerado com sucesso.",
         });
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error?.message || "Failed to generate code. Please try again.",
+        title: "Erro",
+        description: error?.message || "Falha ao gerar o código. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -103,8 +103,8 @@ export default function CodePage() {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(output);
     toast({
-      title: "Copied!",
-      description: "Code copied to clipboard.",
+      title: "Copiado!",
+      description: "Código copiado para a área de transferência.",
     });
   };
 
@@ -158,7 +158,7 @@ export default function CodePage() {
               <Label htmlFor="task-type">Task Type *</Label>
               <Select value={taskType} onValueChange={setTaskType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select task type" />
+                  <SelectValue placeholder="Selecione o tipo de tarefa" />
                 </SelectTrigger>
                 <SelectContent>
                   {taskTypes.map((type) => (
@@ -174,7 +174,7 @@ export default function CodePage() {
               <Label htmlFor="language">Programming Language *</Label>
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select language" />
+                  <SelectValue placeholder="Selecione a linguagem" />
                 </SelectTrigger>
                 <SelectContent>
                   {languages.map((lang) => (
@@ -188,7 +188,7 @@ export default function CodePage() {
 
             <div className="space-y-2">
               <Label htmlFor="description">
-                {taskType === "generate" ? "Description *" : "Problem/Requirements *"}
+                {taskType === "generate" ? "Descrição *" : "Problema/Requisitos *"}
               </Label>
               <Textarea
                 id="description"
@@ -210,7 +210,7 @@ export default function CodePage() {
                   id="existing-code"
                   value={existingCode}
                   onChange={(e) => setExistingCode(e.target.value)}
-                  placeholder="Paste your existing code here..."
+                  placeholder="Cole seu código existente aqui..."
                   className="min-h-[150px] font-mono text-sm"
                 />
               </div>
@@ -247,8 +247,8 @@ export default function CodePage() {
             <Tabs defaultValue="preview" className="flex-1 flex flex-col">
               <div className="flex justify-end mb-2">
                 <TabsList>
-                  <TabsTrigger value="preview">Preview</TabsTrigger>
-                  <TabsTrigger value="edit">Edit</TabsTrigger>
+                  <TabsTrigger value="preview">Visualizar</TabsTrigger>
+                  <TabsTrigger value="edit">Editar</TabsTrigger>
                 </TabsList>
               </div>
 
@@ -263,7 +263,7 @@ export default function CodePage() {
                         value={isStreaming ? streamedText : output}
                         onChange={(e) => setOutput(e.target.value)}
                         className="h-full resize-none border-0 focus-visible:ring-0 p-0 font-mono text-sm"
-                        placeholder="Your generated code will appear here..."
+                        placeholder="Seu código aparecerá aqui..."
                         readOnly={isStreaming}
                       />
                     </TabsContent>
@@ -272,8 +272,8 @@ export default function CodePage() {
                   <div className="h-full flex items-center justify-center text-muted-foreground">
                     <div className="text-center">
                       <Code className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>Generated code will appear here</p>
-                      <p className="text-sm mt-2">Select a task type and provide details to start</p>
+                      <p>O código gerado aparecerá aqui</p>
+                      <p className="text-sm mt-2">Selecione o tipo de tarefa e forneça detalhes para começar</p>
                     </div>
                   </div>
                 )}

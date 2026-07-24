@@ -13,15 +13,15 @@ import { systemPrompts } from "@/config/prompts";
 import { useToast } from "@/hooks/use-toast";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
-const jobLevels = ["Entry Level", "Mid Level", "Senior Level", "Executive", "Intern"];
+const jobLevels = ["Júnior", "Pleno", "Sênior", "Executivo", "Estágio"];
 const industries = [
-  "Technology", "Finance", "Healthcare", "Marketing", "Sales", "Education",
-  "Engineering", "Design", "Consulting", "Retail", "Manufacturing", "Legal"
+  "Tecnologia", "Finanças", "Saúde", "Marketing", "Vendas", "Educação",
+  "Engenharia", "Design", "Consultoria", "Varejo", "Manufatura", "Jurídico"
 ];
 
 const questionTypes = [
-  "Technical Questions", "Behavioral Questions", "Situational Questions",
-  "Company Culture Fit", "Leadership Questions", "Problem Solving"
+  "Questões Técnicas", "Questões Comportamentais", "Questões Situacionais",
+  "Fit Cultural", "Questões de Liderança", "Resolução de Problemas"
 ];
 
 interface Question {
@@ -59,8 +59,8 @@ export default function InterviewPage() {
   const generateQuestions = async () => {
     if (!formData.jobTitle) {
       toast({
-        title: "Missing Information",
-        description: "Please provide at least a job title.",
+        title: "Informação Faltando",
+        description: "Por favor, informe pelo menos o cargo.",
         variant: "destructive"
       });
       return;
@@ -112,7 +112,7 @@ Make the questions realistic and relevant to the specific role and industry.`;
 
       toast({
         title: "Questions Generated!",
-        description: `${parsedQuestions.length} interview questions are ready.`
+        description: `${parsedQuestions.length} perguntas de entrevista prontas.`
       });
     } catch (error: any) {
       toast({
@@ -201,10 +201,10 @@ Be constructive and specific in your feedback.`;
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <UserCheck className="w-8 h-8 text-ai-primary" />
-          <h1 className="text-3xl font-bold ai-gradient-text">AI Interview Prep Tool</h1>
+          <h1 className="text-3xl font-bold ai-gradient-text">Preparação para Entrevistas IA</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Practice interviews with AI-generated questions and get personalized feedback to ace your next interview
+          Pratique com perguntas geradas por IA e receba feedback personalizado para arrasar na próxima entrevista
         </p>
       </div>
 
@@ -223,17 +223,17 @@ Be constructive and specific in your feedback.`;
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="jobTitle">Job Title *</Label>
+                <Label htmlFor="jobTitle">Cargo *</Label>
                 <Input
                   id="jobTitle"
                   value={formData.jobTitle}
                   onChange={(e) => handleInputChange("jobTitle", e.target.value)}
-                  placeholder="Software Engineer, Product Manager, Data Scientist..."
+                  placeholder="Engenheiro de Software, Gerente de Produto, Cientista de Dados..."
                 />
               </div>
 
               <div>
-                <Label htmlFor="company">Target Company</Label>
+                <Label htmlFor="company">Empresa Alvo</Label>
                 <Input
                   id="company"
                   value={formData.company}
@@ -244,10 +244,10 @@ Be constructive and specific in your feedback.`;
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="jobLevel">Job Level</Label>
+                  <Label htmlFor="jobLevel">Nível do Cargo</Label>
                   <Select value={formData.jobLevel} onValueChange={(value) => handleInputChange("jobLevel", value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select level" />
+                      <SelectValue placeholder="Selecione o nível" />
                     </SelectTrigger>
                     <SelectContent>
                       {jobLevels.map((level) => (
@@ -260,10 +260,10 @@ Be constructive and specific in your feedback.`;
                 </div>
 
                 <div>
-                  <Label htmlFor="industry">Industry</Label>
+                  <Label htmlFor="industry">Setor</Label>
                   <Select value={formData.industry} onValueChange={(value) => handleInputChange("industry", value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select industry" />
+                      <SelectValue placeholder="Selecione o setor" />
                     </SelectTrigger>
                     <SelectContent>
                       {industries.map((industry) => (
@@ -277,20 +277,20 @@ Be constructive and specific in your feedback.`;
               </div>
 
               <div>
-                <Label htmlFor="skillsRequired">Key Skills Required</Label>
+                <Label htmlFor="skillsRequired">Habilidades Necessárias</Label>
                 <Input
                   id="skillsRequired"
                   value={formData.skillsRequired}
                   onChange={(e) => handleInputChange("skillsRequired", e.target.value)}
-                  placeholder="JavaScript, React, Leadership, Problem Solving..."
+                  placeholder="JavaScript, React, Liderança, Resolução de Problemas..."
                 />
               </div>
 
               <div>
-                <Label htmlFor="questionTypes">Question Focus</Label>
+                <Label htmlFor="questionTypes">Foco das Perguntas</Label>
                 <Select value={formData.questionTypes} onValueChange={(value) => handleInputChange("questionTypes", value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select question type" />
+                    <SelectValue placeholder="Selecione o tipo de pergunta" />
                   </SelectTrigger>
                   <SelectContent>
                     {questionTypes.map((type) => (
@@ -303,12 +303,12 @@ Be constructive and specific in your feedback.`;
               </div>
 
               <div>
-                <Label htmlFor="customRequirements">Special Requirements</Label>
+                <Label htmlFor="customRequirements">Requisitos Especiais</Label>
                 <Textarea
                   id="customRequirements"
                   value={formData.customRequirements}
                   onChange={(e) => handleInputChange("customRequirements", e.target.value)}
-                  placeholder="Any specific areas to focus on, company values, or interview format preferences..."
+                  placeholder="Áreas específicas para focar, valores da empresa ou preferências de formato..."
                   rows={3}
                 />
               </div>
@@ -364,7 +364,7 @@ Be constructive and specific in your feedback.`;
                 <div className="text-center text-muted-foreground py-12">
                   <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p className="text-lg mb-2">Ready to Practice?</p>
-                  <p>Fill in the job details and generate customized interview questions</p>
+                  <p>Preencha os detalhes do cargo e gere perguntas de entrevista personalizadas</p>
                 </div>
               )}
             </CardContent>
@@ -396,12 +396,12 @@ Be constructive and specific in your feedback.`;
               </div>
 
               <div>
-                <Label htmlFor="userAnswer">Your Answer</Label>
+                <Label htmlFor="userAnswer">Sua Resposta</Label>
                 <Textarea
                   id="userAnswer"
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  placeholder="Type your answer here... Take your time to think and provide a detailed response."
+                  placeholder="Digite sua resposta aqui... Tome seu tempo para pensar e forneça uma resposta detalhada."
                   rows={8}
                   className="min-h-[200px]"
                 />
@@ -489,18 +489,18 @@ Be constructive and specific in your feedback.`;
               <TabsContent value="sample">
                 <Card className="ai-card">
                   <CardHeader>
-                    <CardTitle>Sample Answer & Tips</CardTitle>
+                    <CardTitle>Resposta Modelo e Dicas</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <h4 className="font-medium mb-2">Sample Response:</h4>
+                      <h4 className="font-medium mb-2">Resposta Modelo:</h4>
                       <div className="bg-muted/30 p-4 rounded-lg text-sm">
                         <MarkdownRenderer content={currentQuestion?.sampleAnswer} />
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="font-medium mb-2">Key Tips:</h4>
+                      <h4 className="font-medium mb-2">Dicas Importantes:</h4>
                       <ul className="space-y-1">
                         {currentQuestion?.tips.map((tip, index) => (
                           <li key={index} className="text-sm flex items-start gap-2">
@@ -527,7 +527,7 @@ Be constructive and specific in your feedback.`;
                   </div>
                   <Button variant="outline" onClick={() => setSessionStarted(false)}>
                     <Pause className="w-4 h-4 mr-2" />
-                    End Session
+                    Encerrar Sessão
                   </Button>
                 </div>
               </CardContent>

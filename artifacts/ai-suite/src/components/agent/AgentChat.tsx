@@ -50,10 +50,10 @@ export const AgentChat: React.FC<AgentChatProps> = ({ role, onSendMessage, messa
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Type your instruction..."
+                    placeholder="Digite sua instrução..."
                     disabled={isLoading}
                 />
-                <Button onClick={handleSend} disabled={isLoading}>Send</Button>
+                <Button onClick={handleSend} disabled={isLoading}>Enviar</Button>
             </div>
         </div>
     );

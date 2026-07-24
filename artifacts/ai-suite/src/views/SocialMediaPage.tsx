@@ -21,25 +21,25 @@ const platforms = [
 ];
 
 const contentTypes = [
-  "Promotional",
-  "Educational",
-  "Inspirational",
-  "Behind-the-scenes",
-  "User-generated content",
-  "Announcement",
-  "Question/Poll",
-  "Tips & Tricks"
+  "Promocional",
+  "Educacional",
+  "Inspiracional",
+  "Bastidores",
+  "Conteúdo do Usuário",
+  "Anúncio",
+  "Pergunta/Enquete",
+  "Dicas e Truques"
 ];
 
 const tones = [
-  "Professional",
+  "Profissional",
   "Casual",
-  "Funny",
-  "Inspiring",
-  "Friendly",
-  "Bold",
-  "Minimalist",
-  "Storytelling"
+  "Engraçado",
+  "Inspirador",
+  "Amigável",
+  "Ousado",
+  "Minimalista",
+  "Narrativo"
 ];
 
 export default function SocialMediaPage() {
@@ -68,8 +68,8 @@ export default function SocialMediaPage() {
   const generateContent = async () => {
     if (!formData.platform || !formData.topic) {
       toast({
-        title: "Missing Information",
-        description: "Please select a platform and enter a topic.",
+        title: "Informação Faltando",
+        description: "Por favor, selecione uma plataforma e informe um tópico.",
         variant: "destructive"
       });
       return;
@@ -110,8 +110,8 @@ Make it engaging and platform-appropriate.`;
       });
 
       toast({
-        title: "Content Generated!",
-        description: "Your social media content is ready."
+        title: "Conteúdo Gerado!",
+        description: "Seu conteúdo para redes sociais está pronto."
       });
     } catch (error: any) {
       toast({
@@ -138,7 +138,7 @@ Make it engaging and platform-appropriate.`;
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <Hash className="w-8 h-8 text-ai-primary" />
-          <h1 className="text-3xl font-bold ai-gradient-text">AI Social Media Post Generator</h1>
+          <h1 className="text-3xl font-bold ai-gradient-text">Gerador de Posts para Redes Sociais IA</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Generate engaging captions, hashtags, and content ideas for all social media platforms
@@ -162,7 +162,7 @@ Make it engaging and platform-appropriate.`;
               <Label htmlFor="platform">Platform *</Label>
               <Select value={formData.platform} onValueChange={(value) => handleInputChange("platform", value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select social media platform" />
+                  <SelectValue placeholder="Selecione a plataforma" />
                 </SelectTrigger>
                 <SelectContent>
                   {platforms.map((platform) => (
@@ -182,7 +182,7 @@ Make it engaging and platform-appropriate.`;
                 <Label htmlFor="contentType">Content Type</Label>
                 <Select value={formData.contentType} onValueChange={(value) => handleInputChange("contentType", value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select content type" />
+                    <SelectValue placeholder="Selecione o tipo de conteúdo" />
                   </SelectTrigger>
                   <SelectContent>
                     {contentTypes.map((type) => (
@@ -197,7 +197,7 @@ Make it engaging and platform-appropriate.`;
                 <Label htmlFor="tone">Tone</Label>
                 <Select value={formData.tone} onValueChange={(value) => handleInputChange("tone", value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select tone" />
+                    <SelectValue placeholder="Selecione o tom" />
                   </SelectTrigger>
                   <SelectContent>
                     {tones.map((tone) => (
@@ -211,7 +211,7 @@ Make it engaging and platform-appropriate.`;
             </div>
 
             <div>
-              <Label htmlFor="topic">Topic/Theme *</Label>
+              <Label htmlFor="topic">Tópico/Tema *</Label>
               <Input
                 id="topic"
                 value={formData.topic}
@@ -242,7 +242,7 @@ Make it engaging and platform-appropriate.`;
             </div>
 
             <div>
-              <Label htmlFor="targetAudience">Target Audience</Label>
+              <Label htmlFor="targetAudience">Público-alvo</Label>
               <Input
                 id="targetAudience"
                 value={formData.targetAudience}
@@ -343,7 +343,7 @@ Make it engaging and platform-appropriate.`;
                     </div>
                   ) : (
                     <div className="text-center text-muted-foreground py-8">
-                      Generate content to get relevant hashtags for your post
+                      Gere o conteúdo para obter hashtags relevantes para o seu post
                     </div>
                   )}
                 </CardContent>
@@ -353,7 +353,7 @@ Make it engaging and platform-appropriate.`;
             <TabsContent value="ideas">
               <Card className="ai-card">
                 <CardHeader>
-                  <CardTitle>Content Variations</CardTitle>
+                  <CardTitle>Variações de Conteúdo</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {results.tweetIdeas.length > 0 ? (
@@ -370,7 +370,7 @@ Make it engaging and platform-appropriate.`;
                     </div>
                   ) : (
                     <div className="text-center text-muted-foreground py-8">
-                      Generate content to get alternative ideas and variations
+                      Gere o conteúdo para obter variações e ideias alternativas
                     </div>
                   )}
                 </CardContent>

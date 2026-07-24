@@ -146,7 +146,7 @@ export default function ChatWidget({ embedded = false, supportEmail }: { embedde
             "flex flex-col bg-background/95 backdrop-blur-md border border-border shadow-2xl transition-all duration-300 overflow-hidden",
             embedded
                 ? "w-full h-full"
-                : "fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] h-[min(600px,calc(100dvh-5rem))] max-h-[min(600px,calc(100dvh-5rem))] rounded-2xl z-[9999]"
+                : "fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-[400px] lg:w-[700px] xl:w-[1000px] h-[min(600px,calc(100dvh-5rem))] max-h-[min(600px,calc(100dvh-5rem))] rounded-2xl z-[9999]"
         )}>
             {/* Header */}
             <div className="p-4 border-b bg-teal-600 flex items-center justify-between text-white flex-shrink-0">

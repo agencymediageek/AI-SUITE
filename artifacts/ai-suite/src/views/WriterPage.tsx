@@ -54,7 +54,7 @@ export default function WriterPage() {
 
       if (response.error) {
         toast({
-          title: "Error",
+          title: "Erro",
           description: response.error,
           variant: "destructive"
         });
@@ -67,8 +67,8 @@ export default function WriterPage() {
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error?.message || "Failed to generate content. Please try again.",
+        title: "Erro",
+        description: error?.message || "Falha ao gerar o conteúdo. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -120,7 +120,7 @@ export default function WriterPage() {
                 id="topic"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g., Benefits of Remote Work"
+                placeholder="Ex: Benefícios do Trabalho Remoto"
               />
             </div>
 
@@ -128,7 +128,7 @@ export default function WriterPage() {
               <Label htmlFor="content-type">Tipo de Conteúdo *</Label>
               <Select value={contentType} onValueChange={setContentType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select content type" />
+                  <SelectValue placeholder="Selecione o tipo de conteúdo" />
                 </SelectTrigger>
                 <SelectContent>
                   {contentTypes.map((type) => (
@@ -146,7 +146,7 @@ export default function WriterPage() {
                 id="keywords"
                 value={keywords}
                 onChange={(e) => setKeywords(e.target.value)}
-                placeholder="e.g., productivity, efficiency, work-life balance"
+                placeholder="Ex: produtividade, eficiência, equilíbrio trabalho-vida"
               />
             </div>
 
@@ -154,7 +154,7 @@ export default function WriterPage() {
               <Label htmlFor="tone">Tom (Opcional)</Label>
               <Select value={tone} onValueChange={setTone}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select tone" />
+                  <SelectValue placeholder="Selecione o tom" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="professional">Profissional</SelectItem>

@@ -181,7 +181,7 @@ export default function MusicGeneratorPage() {
         }
     };
 
-    const handleIsolate = async (url: string) => {
+    const handleIsolar = async (url: string) => {
         toast({
             title: "Starting Isolation",
             description: "Processing your audio with ElevenLabs...",
@@ -318,7 +318,7 @@ export default function MusicGeneratorPage() {
                                         <Label htmlFor="style" className="text-sm font-semibold">Style / Genre</Label>
                                         <Input
                                             id="style"
-                                            placeholder="e.g. Synthwave, 80s, Dark"
+                                            placeholder="Ex: Synthwave, Pop, Eletrônico"
                                             value={style}
                                             onChange={(e) => setStyle(e.target.value)}
                                             className="bg-background/50"
@@ -328,7 +328,7 @@ export default function MusicGeneratorPage() {
                                         <Label htmlFor="title" className="text-sm font-semibold">Title</Label>
                                         <Input
                                             id="title"
-                                            placeholder="Track Name"
+                                            placeholder="Nome da Faixa"
                                             value={title}
                                             onChange={(e) => setTitle(e.target.value)}
                                             className="bg-background/50"
@@ -340,7 +340,7 @@ export default function MusicGeneratorPage() {
                                 <div className="pt-4 border-t border-muted space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-0.5">
-                                            <Label className="text-sm font-semibold">Instrumental Mode</Label>
+                                            <Label className="text-sm font-semibold">Modo Instrumental</Label>
                                             <p className="text-xs text-muted-foreground">Generate without any vocals</p>
                                         </div>
                                         <Switch 
@@ -488,7 +488,7 @@ export default function MusicGeneratorPage() {
                                                             size="icon" 
                                                             className="text-blue-600 border-blue-200 hover:bg-blue-50"
                                                             title="Audio Isolation"
-                                                            onClick={() => handleIsolate(url)}
+                                                            onClick={() => handleIsolar(url)}
                                                         >
                                                             <Wand2 className="w-4 h-4" />
                                                         </Button>
@@ -661,13 +661,13 @@ export default function MusicGeneratorPage() {
                                                                 className="hover:text-purple-600 transition-colors flex items-center gap-1"
                                                                 onClick={() => window.open(asset.url, '_blank')}
                                                             >
-                                                                <Download className="w-3 h-3" /> Save
+                                                                <Download className="w-3 h-3" /> Salvar
                                                             </button>
                                                             <button 
                                                                 className="hover:text-blue-600 transition-colors flex items-center gap-1"
-                                                                onClick={() => handleIsolate(asset.url)}
+                                                                onClick={() => handleIsolar(asset.url)}
                                                             >
-                                                                <Wand2 className="w-3 h-3" /> Isolate
+                                                                <Wand2 className="w-3 h-3" /> Isolar
                                                             </button>
                                                         </div>
                                                     </div>
@@ -680,9 +680,9 @@ export default function MusicGeneratorPage() {
                         ) : (
                             <Card className="border-dashed border-2 bg-muted/20 flex flex-col items-center justify-center py-20 text-center">
                                 <Music2 className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                                <h3 className="text-lg font-semibold text-muted-foreground">No creations yet</h3>
+                                <h3 className="text-lg font-semibold text-muted-foreground">Nenhuma criação ainda</h3>
                                 <p className="text-sm text-muted-foreground/70 max-w-xs mx-auto">
-                                    Start by generating your first track in Normal or Custom mode.
+                                    Comece gerando sua primeira faixa no modo Normal ou Personalizado.
                                 </p>
                             </Card>
                         )}

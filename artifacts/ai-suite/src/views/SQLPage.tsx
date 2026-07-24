@@ -19,11 +19,11 @@ const databaseTypes = [
 ];
 
 const queryExamples = [
-  "Find all customers who placed orders in the last 30 days",
-  "Get the top 10 products by sales revenue",
-  "Show users who haven't logged in for more than 6 months",
-  "Calculate average order value by month",
-  "Find duplicate email addresses in the users table"
+  "Encontre todos os clientes que fizeram pedidos nos últimos 30 dias",
+  "Liste os 10 produtos com maior receita de vendas",
+  "Mostre usuários que não acessam há mais de 6 meses",
+  "Calcule o valor médio de pedidos por mês",
+  "Encontre e-mails duplicados na tabela de usuários"
 ];
 
 export default function SQLPage() {
@@ -38,8 +38,8 @@ export default function SQLPage() {
   const handleGenerateSQL = async () => {
     if (!naturalQuery.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a query description.",
+        title: "Erro",
+        description: "Por favor, insira uma descrição da consulta.",
         variant: "destructive"
       });
       return;
@@ -60,11 +60,11 @@ Please provide:
       // Parse response to separate SQL and explanation
       const parts = response.text.split('\n\n');
       setSqlQuery(response.text);
-      setExplanation("Query generated successfully. Review the SQL statement above.");
+      setExplanation("Consulta gerada com sucesso. Revise o SQL acima.");
 
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Erro",
         description: error?.message || "Failed to generate SQL query. Please try again.",
         variant: "destructive"
       });
@@ -75,8 +75,8 @@ Please provide:
     if (sqlQuery) {
       navigator.clipboard.writeText(sqlQuery);
       toast({
-        title: "Copied",
-        description: "SQL query copied to clipboard.",
+        title: "Copiado",
+        description: "SQL copiado para a área de transferência.",
       });
     }
   };
@@ -88,9 +88,9 @@ Please provide:
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold ai-gradient-text">AI SQL Builder</h1>
+        <h1 className="text-3xl font-bold ai-gradient-text">Construtor de SQL IA</h1>
         <p className="text-muted-foreground mt-2">
-          Convert plain English queries into optimized SQL statements for database operations.
+          Converta linguagem natural em consultas SQL otimizadas.
         </p>
       </div>
 
@@ -100,18 +100,18 @@ Please provide:
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="w-5 h-5 text-ai-primary" />
-              Query Builder
+              Construtor de Consultas
             </CardTitle>
             <CardDescription>
-              Describe what you want to query in plain English.
+              Descreva em português o que você deseja consultar.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Database Type (Optional)</label>
+              <label className="text-sm font-medium">Banco de Dados (Opcional)</label>
               <Select value={databaseType} onValueChange={setDatabaseType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select database type" />
+                  <SelectValue placeholder="Selecione o banco" />
                 </SelectTrigger>
                 <SelectContent>
                   {databaseTypes.map((db) => (
@@ -217,7 +217,7 @@ Please provide:
                             className="w-full shrink-0"
                           >
                             <Copy className="w-4 h-4 mr-2" />
-                            Copy SQL
+                            Copiar SQL
                           </Button>
                         )}
                       </div>
@@ -227,7 +227,7 @@ Please provide:
                   <div className="h-full flex items-center justify-center text-muted-foreground">
                     <div className="text-center">
                       <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>Your SQL query will appear here</p>
+                      <p>Seu SQL aparecerá aqui</p>
                     </div>
                   </div>
                 )}
@@ -240,9 +240,9 @@ Please provide:
       {/* More Examples Section */}
       <Card className="ai-card">
         <CardHeader>
-          <CardTitle>Example Queries</CardTitle>
+          <CardTitle>Exemplos de Consultas</CardTitle>
           <CardDescription>
-            Click on any example to try it out
+            Clique em um exemplo para experimentar
           </CardDescription>
         </CardHeader>
         <CardContent>

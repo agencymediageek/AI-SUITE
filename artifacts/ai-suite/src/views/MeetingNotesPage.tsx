@@ -14,12 +14,12 @@ import { useToast } from "@/hooks/use-toast";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 const meetingTypes = [
-  "Team Standup", "Project Review", "Client Meeting", "Board Meeting",
-  "One-on-One", "Brainstorming", "Strategy Session", "Training Session"
+  "Standup de Equipe", "Revisão de Projeto", "Reunião com Cliente", "Reunião de Diretoria",
+  "1:1", "Brainstorming", "Sessão de Estratégia", "Sessão de Treinamento"
 ];
 
 const outputFormats = [
-  "Executive Summary", "Detailed Notes", "Action Items Focus", "Decision Log"
+  "Resumo Executivo", "Notas Detalhadas", "Foco em Ações", "Registro de Decisões"
 ];
 
 export default function MeetingNotesPage() {
@@ -49,8 +49,8 @@ export default function MeetingNotesPage() {
   const generateNotes = async () => {
     if (!formData.transcript.trim()) {
       toast({
-        title: "Missing Transcript",
-        description: "Please provide the meeting transcript or notes.",
+        title: "Transcrição Ausente",
+        description: "Por favor, forneça a transcrição ou notas da reunião.",
         variant: "destructive"
       });
       return;
@@ -65,7 +65,7 @@ MEETING DETAILS:
 - Participants: ${formData.participants || "Not specified"}
 - Date: ${formData.date || "Not specified"}
 - Duration: ${formData.duration || "Not specified"}
-- Output Format: ${formData.outputFormat || "Detailed Notes"}
+- Output Format: ${formData.outputFormat || "Notas Detalhadas"}
 
 TRANSCRIPT/NOTES:
 ${formData.transcript}
@@ -93,13 +93,13 @@ Format the output clearly with bullet points and organize by sections. Be concis
       });
 
       toast({
-        title: "Meeting Notes Generated!",
-        description: "Your structured meeting notes are ready."
+        title: "Ata Gerada com Sucesso!",
+        description: "Suas notas estruturadas estão prontas."
       });
     } catch (error: any) {
       toast({
-        title: "Generation Failed",
-        description: "Please try again.",
+        title: "Falha na Geração",
+        description: "Por favor, tente novamente.",
         variant: "destructive"
       });
     }
@@ -108,8 +108,8 @@ Format the output clearly with bullet points and organize by sections. Be concis
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
-      title: "Copied!",
-      description: "Content copied to clipboard."
+      title: "Copiado!",
+      description: "Conteúdo copiado para a área de transferência."
     });
   };
 
@@ -119,7 +119,7 @@ Format the output clearly with bullet points and organize by sections. Be concis
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <FileText className="w-8 h-8 text-ai-primary" />
-          <h1 className="text-3xl font-bold ai-gradient-text">AI Meeting Notes Generator</h1>
+          <h1 className="text-3xl font-bold ai-gradient-text">Gerador de Atas IA</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Transform meeting transcripts into structured, actionable notes with AI-powered analysis
@@ -140,21 +140,21 @@ Format the output clearly with bullet points and organize by sections. Be concis
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="meetingTitle">Meeting Title</Label>
+              <Label htmlFor="meetingTitle">Título da Reunião</Label>
               <Input
                 id="meetingTitle"
                 value={formData.meetingTitle}
                 onChange={(e) => handleInputChange("meetingTitle", e.target.value)}
-                placeholder="Weekly Team Standup"
+                placeholder="Standup Semanal da Equipe"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="meetingType">Meeting Type</Label>
+                <Label htmlFor="meetingType">Tipo de Reunião</Label>
                 <Select value={formData.meetingType} onValueChange={(value) => handleInputChange("meetingType", value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
                     {meetingTypes.map((type) => (
@@ -167,10 +167,10 @@ Format the output clearly with bullet points and organize by sections. Be concis
               </div>
 
               <div>
-                <Label htmlFor="outputFormat">Output Format</Label>
+                <Label htmlFor="outputFormat">Formato de Saída</Label>
                 <Select value={formData.outputFormat} onValueChange={(value) => handleInputChange("outputFormat", value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select format" />
+                    <SelectValue placeholder="Selecione o formato" />
                   </SelectTrigger>
                   <SelectContent>
                     {outputFormats.map((format) => (
@@ -184,18 +184,18 @@ Format the output clearly with bullet points and organize by sections. Be concis
             </div>
 
             <div>
-              <Label htmlFor="participants">Participants</Label>
+              <Label htmlFor="participants">Participantes</Label>
               <Input
                 id="participants"
                 value={formData.participants}
                 onChange={(e) => handleInputChange("participants", e.target.value)}
-                placeholder="John Doe, Jane Smith, Alex Johnson"
+                placeholder="João Silva, Maria Santos, Carlos Oliveira"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="date">Meeting Date</Label>
+                <Label htmlFor="date">Data da Reunião</Label>
                 <Input
                   id="date"
                   type="date"
@@ -205,23 +205,23 @@ Format the output clearly with bullet points and organize by sections. Be concis
               </div>
 
               <div>
-                <Label htmlFor="duration">Duration</Label>
+                <Label htmlFor="duration">Duração</Label>
                 <Input
                   id="duration"
                   value={formData.duration}
                   onChange={(e) => handleInputChange("duration", e.target.value)}
-                  placeholder="1 hour"
+                  placeholder="1 hora"
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="transcript">Meeting Transcript/Notes *</Label>
+              <Label htmlFor="transcript">Transcrição/Notas da Reunião *</Label>
               <Textarea
                 id="transcript"
                 value={formData.transcript}
                 onChange={(e) => handleInputChange("transcript", e.target.value)}
-                placeholder="Paste your meeting transcript, audio transcription, or rough notes here..."
+                placeholder="Cole aqui a transcrição, gravação de áudio ou rascunho das notas da reunião..."
                 rows={12}
                 className="min-h-[300px]"
               />
@@ -441,7 +441,7 @@ Format the output clearly with bullet points and organize by sections. Be concis
                     </Tabs>
                   ) : (
                     <div className="text-center text-muted-foreground py-8">
-                      Generate notes to plan follow-up actions and next meetings
+                      Gere as notas para planejar ações de acompanhamento e próximas reuniões
                     </div>
                   )}
                 </CardContent>

@@ -54,7 +54,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                     return 0;
                 }}
             >
-                <CommandInput placeholder="Search for tools, features, templates..." className="border-0 focus:ring-0 outline-none shadow-none" />
+                <CommandInput placeholder="Buscar ferramentas, recursos, modelos..." className="border-0 focus:ring-0 outline-none shadow-none" />
                 <CommandList className="scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
                     <CommandEmpty className="py-12 text-center text-sm flex flex-col items-center gap-3">
                         <Search className="h-10 w-10 text-muted-foreground/30" />

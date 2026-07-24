@@ -14,8 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Smile, Frown, Meh, Heart, MessageSquare, BarChart3 } from "lucide-react";
 
 const analysisTypes = [
-  "Product Reviews", "Customer Feedback", "Social Media Posts", "Survey Responses",
-  "Email Content", "Chat Messages", "News Articles", "General Text"
+  "Avaliações de Produto", "Feedback de Clientes", "Posts em Redes Sociais", "Respostas de Pesquisa",
+  "Conteúdo de E-mail", "Mensagens de Chat", "Artigos de Notícias", "Texto Geral"
 ];
 
 const sentimentIcons = {
@@ -53,8 +53,8 @@ export default function SentimentPage() {
   const analyzeSentiment = async () => {
     if (!formData.text.trim()) {
       toast({
-        title: "Missing Text",
-        description: "Please provide text to analyze.",
+        title: "Texto Ausente",
+        description: "Por favor, forneça o texto para análise.",
         variant: "destructive"
       });
       return;
@@ -63,7 +63,7 @@ export default function SentimentPage() {
     try {
       const prompt = `Perform comprehensive sentiment analysis on the following text:
 
-ANALYSIS TYPE: ${formData.analysisType || "General Text"}
+ANALYSIS TYPE: ${formData.analysisType || "Texto Geral"}
 LANGUAGE: ${formData.language}
 
 TEXT TO ANALYZE:
@@ -149,7 +149,7 @@ Format your response clearly with specific percentages and scores.`;
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <Heart className="w-8 h-8 text-ai-primary" />
-          <h1 className="text-3xl font-bold ai-gradient-text">AI Sentiment Analyzer</h1>
+          <h1 className="text-3xl font-bold ai-gradient-text">Analisador de Sentimentos IA</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Analyze emotions, opinions, and sentiment in text with advanced AI-powered natural language processing
@@ -165,15 +165,15 @@ Format your response clearly with specific percentages and scores.`;
               Text Analysis
             </CardTitle>
             <CardDescription>
-              Paste your text for comprehensive sentiment analysis
+              Cole seu texto para análise de sentimento abrangente
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="analysisType">Content Type</Label>
+              <Label htmlFor="analysisType">Tipo de Conteúdo</Label>
               <Select value={formData.analysisType} onValueChange={(value) => handleInputChange("analysisType", value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select content type" />
+                  <SelectValue placeholder="Selecione o tipo de conteúdo" />
                 </SelectTrigger>
                 <SelectContent>
                   {analysisTypes.map((type) => (
@@ -186,7 +186,7 @@ Format your response clearly with specific percentages and scores.`;
             </div>
 
             <div>
-              <Label htmlFor="language">Language</Label>
+              <Label htmlFor="language">Idioma</Label>
               <Select value={formData.language} onValueChange={(value) => handleInputChange("language", value)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -208,7 +208,7 @@ Format your response clearly with specific percentages and scores.`;
                 id="text"
                 value={formData.text}
                 onChange={(e) => handleInputChange("text", e.target.value)}
-                placeholder="Paste your text here... (reviews, feedback, social media posts, emails, etc.)"
+                placeholder="Cole seu texto aqui... (avaliações, feedbacks, posts, e-mails, etc.)"
                 rows={12}
                 className="min-h-[300px]"
               />
@@ -222,7 +222,7 @@ Format your response clearly with specific percentages and scores.`;
               disabled={isStreaming}
               className="w-full"
             >
-              {isStreaming ? "Analyzing Sentiment..." : "Analyze Sentiment"}
+              {isStreaming ? "Analyzing Sentiment..." : "Analisar Sentimento"}
             </Button>
           </CardContent>
         </Card>
@@ -347,7 +347,7 @@ Format your response clearly with specific percentages and scores.`;
             <TabsContent value="summary">
               <Card className="ai-card">
                 <CardHeader>
-                  <CardTitle>Analysis Summary</CardTitle>
+                  <CardTitle>Resumo da Análise</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {results?.summary ? (
@@ -356,7 +356,7 @@ Format your response clearly with specific percentages and scores.`;
                     </div>
                   ) : (
                     <div className="text-center text-muted-foreground py-8">
-                      Analyze text to get detailed sentiment insights
+                      Analise o texto para obter insights detalhados de sentimento
                     </div>
                   )}
                 </CardContent>
@@ -368,9 +368,9 @@ Format your response clearly with specific percentages and scores.`;
             <Card className="ai-card">
               <CardContent className="text-center py-12">
                 <Heart className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg mb-2">Ready to Analyze Sentiment?</p>
+                <p className="text-lg mb-2">Pronto para Analisar?</p>
                 <p className="text-muted-foreground">
-                  Paste your text and click "Analyze Sentiment" to get comprehensive emotional insights
+                  Cole seu texto e clique em "Analisar Sentimento" para obter uma análise emocional completa
                 </p>
               </CardContent>
             </Card>
