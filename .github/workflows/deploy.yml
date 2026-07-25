@@ -1,0 +1,30 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 179.197.229.207
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /var/www/mediageek
+            git pull origin main
+            cd artifacts/ai-suite
+            npm install --legacy-peer-deps --silent
+            npm run build
+            pm2 restart mediageek --update-env
+            pm2 save
+            echo "✅ Deploy concluído: $(date)"
