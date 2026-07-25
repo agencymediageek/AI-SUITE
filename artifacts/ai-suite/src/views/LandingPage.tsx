@@ -585,9 +585,7 @@ export default function LandingPage() {
 
             {/* Hero Section */}
             <section className="relative pt-32 pb-20 lg:pt-44 lg:pb-32 overflow-hidden">
-                <motion.div
-                    style={{ opacity: heroOpacity, scale: heroScale }}
-                    className="container mx-auto px-4 text-center relative z-10"
+                <div className="container mx-auto px-4 text-center relative z-10"
                 >
                     {/* Announcement Badge */}
                     <motion.div
@@ -670,7 +668,8 @@ export default function LandingPage() {
                             </div>
                         ))}
                     </motion.div>
-                </motion.div>
+
+                </div>
 
                 {/* Floating Elements */}
                 <div className="absolute top-1/4 left-10 hidden lg:block">
