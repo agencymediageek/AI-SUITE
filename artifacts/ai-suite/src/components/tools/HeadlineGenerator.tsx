@@ -121,7 +121,7 @@ export function HeadlineGenerator() {
                     <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
                 </div>
 
-                <div className="container max-w-4xl py-12 space-y-12">
+                <div className="w-full max-w-4xl mx-auto py-8 space-y-8">
 
                     {/* Header Section */}
                     <div className="text-center space-y-4">
@@ -204,19 +204,19 @@ export function HeadlineGenerator() {
                         </div>
 
                         {/* Advanced settings (Quantity) */}
-                        <div className="px-6 pb-4 pt-2 flex items-center gap-6 text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800/50 mt-2">
+                        <div className="px-4 pb-4 pt-2 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800/50 mt-2">
                             <div className="flex items-center gap-3">
-                                <span className="font-medium">Quantity: {count}</span>
+                                <span className="font-medium">Quantidade: {count}</span>
                                 <Slider
                                     value={[count]}
                                     onValueChange={(v) => setCount(v[0])}
                                     min={1}
                                     max={10}
                                     step={1}
-                                    className="w-32"
+                                    className="w-28"
                                 />
                             </div>
-                            <div className="flex items-center gap-2 ml-auto">
+                            <div className="flex items-center gap-2">
                                 <Sparkles className="w-4 h-4 text-amber-500" />
                                 <span>Usa 10 tokens</span>
                             </div>

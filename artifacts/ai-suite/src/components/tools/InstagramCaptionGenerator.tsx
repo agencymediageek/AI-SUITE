@@ -107,7 +107,7 @@ export function InstagramCaptionGenerator() {
 
     return (
         <Layout>
-            <div className="container max-w-6xl py-8 lg:py-12">
+            <div className="w-full max-w-6xl mx-auto py-6 lg:py-10">
                 <div className="grid lg:grid-cols-2 gap-12 items-start">
 
                     {/* Left Column: Controls */}
