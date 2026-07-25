@@ -29,7 +29,7 @@ export function Layout({ children, fullHeight = false, noPadding = false }: Layo
     return (
         <div className="flex lg:h-full w-full lg:overflow-hidden bg-background">
             {/* Ambient background effects - Refined */}
-            <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+            <div className="hidden lg:block fixed inset-0 -z-10 overflow-hidden pointer-events-none">
                 {/* Primary gradient - top left */}
                 <div
                     className="absolute -top-[30%] -left-[15%] w-[50%] h-[50%] rounded-full opacity-40 dark:opacity-30"

@@ -149,19 +149,19 @@ export function ToolPage({
                     animate={{ opacity: 1 }}
                     className="space-y-4"
                 >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         <div className={cn(
-                            "w-14 h-14 rounded-2xl flex items-center justify-center",
+                            "w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center shrink-0",
                             `bg-gradient-to-br ${gradient}`
                         )}>
-                            <Icon className="w-7 h-7 text-white" />
+                            <Icon className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-3xl font-bold">{title}</h1>
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">{title}</h1>
                                 <Badge variant="secondary">{category}</Badge>
                             </div>
-                            <p className="text-muted-foreground">{description}</p>
+                            <p className="text-muted-foreground text-sm lg:text-base">{description}</p>
                         </div>
                     </div>
 
