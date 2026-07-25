@@ -61,3 +61,5 @@ attached_assets/
 dist/
 build/
 *.tsbuildinfo
+.agents/deploy_key
+.agents/deploy_key.pub
