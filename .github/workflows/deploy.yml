@@ -18,13 +18,19 @@ jobs:
           host: 179.197.229.207
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 15m
           script: |
+            export PATH="/usr/bin:/usr/local/bin:$PATH"
             set -e
+            echo "=== git pull ==="
             cd /var/www/mediageek
             git pull origin main
+            echo "=== npm install ==="
             cd artifacts/ai-suite
-            npm install --legacy-peer-deps --silent
-            npm run build
+            npm install --legacy-peer-deps 2>&1 | tail -5
+            echo "=== npm build ==="
+            npm run build 2>&1 | tail -10
+            echo "=== pm2 restart ==="
             pm2 restart mediageek --update-env
             pm2 save
             echo "✅ Deploy concluído: $(date)"
