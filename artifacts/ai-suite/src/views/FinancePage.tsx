@@ -402,7 +402,7 @@ Make it practical and actionable.`;
                       id="financialConcerns"
                       value={financialData.financialConcerns}
                       onChange={(e) => handleInputChange("financialConcerns", e.target.value)}
-                      placeholder="Debt management, investment advice, budget optimization..."
+                      placeholder="Gestão de dívidas, orientação de investimentos, otimização de orçamento..."
                       rows={3}
                     />
                   </div>

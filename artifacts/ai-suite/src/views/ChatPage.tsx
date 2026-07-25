@@ -145,7 +145,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="p-4 lg:p-6 flex flex-col min-h-full">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <MessageSquare className="w-6 h-6 text-ai-primary" />

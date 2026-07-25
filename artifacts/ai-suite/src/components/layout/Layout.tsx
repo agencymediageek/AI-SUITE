@@ -27,7 +27,7 @@ export function Layout({ children, fullHeight = false, noPadding = false }: Layo
     }, []);
 
     return (
-        <div className="flex h-full w-full overflow-hidden bg-background">
+        <div className="flex lg:h-full w-full lg:overflow-hidden bg-background">
             {/* Ambient background effects - Refined */}
             <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
                 {/* Primary gradient - top left */}
@@ -77,18 +77,18 @@ export function Layout({ children, fullHeight = false, noPadding = false }: Layo
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 lg:overflow-hidden">
                 <Header
                     onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
                 />
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-auto">
+                <main className="flex-1 lg:overflow-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                        className={`${fullHeight ? 'h-full' : 'min-h-full'} ${noPadding ? '' : 'p-4 lg:p-6 xl:p-8'}`}
+                        className={`${fullHeight ? 'lg:h-full' : 'min-h-full'} ${noPadding ? '' : 'p-4 lg:p-6 xl:p-8'}`}
                     >
                         {children}
                     </motion.div>

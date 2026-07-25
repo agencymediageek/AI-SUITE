@@ -102,7 +102,7 @@ IMPROVEMENTS:
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
-              placeholder="Enter your text here..."
+              placeholder="Digite ou cole seu texto aqui..."
               value={originalText}
               onChange={(e) => setOriginalText(e.target.value)}
               className="min-h-[250px] resize-none"

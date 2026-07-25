@@ -273,7 +273,7 @@ function ForgotPasswordContent() {
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                   type="email"
-                                  placeholder="Enter your email"
+                                  placeholder="Digite seu e-mail"
                                   className="pl-10"
                                   {...field}
                                 />
@@ -388,7 +388,7 @@ function ForgotPasswordContent() {
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                   type={showPassword ? "text" : "password"}
-                                  placeholder="Enter new password"
+                                  placeholder="Digite a nova senha"
                                   className="pl-10 pr-10"
                                   {...field}
                                 />
@@ -421,7 +421,7 @@ function ForgotPasswordContent() {
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                   type={showConfirmPassword ? "text" : "password"}
-                                  placeholder="Confirm new password"
+                                  placeholder="Confirme a nova senha"
                                   className="pl-10 pr-10"
                                   {...field}
                                 />

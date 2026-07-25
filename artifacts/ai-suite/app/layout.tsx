@@ -134,10 +134,10 @@ export default function RootLayout({
                     crossOrigin="anonymous"
                 />
             </head>
-            <body className={`${inter.className} antialiased flex flex-col h-dvh overflow-hidden`}>
+            <body className={`${inter.className} antialiased flex flex-col lg:h-dvh lg:overflow-hidden`}>
                 <Providers>
                     <AnnouncementBanner />
-                    <div className="flex-1 min-h-0 flex flex-col overflow-auto" id="main-scroll-container">
+                    <div className="flex-1 min-h-0 flex flex-col lg:overflow-auto" id="main-scroll-container">
                         {children}
                     </div>
                 </Providers>

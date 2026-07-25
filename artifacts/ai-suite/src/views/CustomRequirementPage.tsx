@@ -419,7 +419,7 @@ export default function CustomRequirementPage() {
                                                         id="budget"
                                                         type="number"
                                                         min="1"
-                                                        placeholder="Enter amount (e.g. 1500)"
+                                                        placeholder="Digite o valor (ex: 1500)"
                                                         className={`bg-background/40 pl-8 py-6 text-base ${
                                                             errors.budget ? "border-destructive focus-visible:ring-destructive" : ""
                                                         }`}
@@ -451,7 +451,7 @@ export default function CustomRequirementPage() {
                                                 </div>
                                                 <Textarea
                                                     id="requirement"
-                                                    placeholder="Please explain the details of the custom feature or implementation you are looking for in depth. Provide any context on technologies, APIs, and business cases..."
+                                                    placeholder="Descreva em detalhes a funcionalidade personalizada que você precisa, incluindo tecnologias, APIs e casos de uso..."
                                                     className={`bg-background/40 min-h-[160px] p-4 text-base leading-relaxed ${
                                                         errors.requirement ? "border-destructive focus-visible:ring-destructive" : ""
                                                     }`}

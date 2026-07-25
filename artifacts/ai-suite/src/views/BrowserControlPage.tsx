@@ -634,7 +634,7 @@ IMPORTANT RULES:
                             <div className="relative group">
                                 <Textarea
                                     className="min-h-[110px] resize-none text-xs rounded-xl border-border/30 bg-muted/10 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:border-primary/50 placeholder:text-muted-foreground/50 transition-all p-3.5 pr-8"
-                                    placeholder="Enter natural language research task... (e.g. 'Compare pricing of Apple Vision Pro on Best Buy vs Amazon')"
+                                    placeholder="Descreva a tarefa de pesquisa em linguagem natural... (ex: Compare preços do iPhone 15 no Mercado Livre vs Amazon)"
                                     value={agentPrompt}
                                     onChange={(e) => setAgentPrompt(e.target.value)}
                                     onKeyDown={(e) => {
@@ -946,7 +946,7 @@ IMPORTANT RULES:
                                     onChange={(e) => setDisplayUrl(e.target.value)}
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleManualNavigate(displayUrl); }}
                                     className="flex-1 bg-transparent text-[11px] text-foreground focus:outline-none browser-mono truncate placeholder:text-muted-foreground/30 select-all"
-                                    placeholder="Enter URL to navigate manually..."
+                                    placeholder="Digite a URL para navegar manualmente..."
                                 />
                                 {isLoadingPage && <Loader2 className="w-3.5 h-3.5 text-primary animate-spin shrink-0" />}
                             </div>
@@ -1045,7 +1045,7 @@ IMPORTANT RULES:
                                         <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-2.5" />
                                         <input
                                             type="text"
-                                            placeholder="Filter text content..."
+                                            placeholder="Filtrar conteúdo de texto..."
                                             value={readerSearch}
                                             onChange={(e) => setReaderSearch(e.target.value)}
                                             className="w-full pl-9 pr-4 py-1.5 rounded-lg border border-border/20 bg-muted/10 text-xs focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 browser-mono"
@@ -1081,7 +1081,7 @@ IMPORTANT RULES:
                                         <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-2.5" />
                                         <input
                                             type="text"
-                                            placeholder="Search links or anchor text..."
+                                            placeholder="Buscar links ou texto âncora..."
                                             value={linksSearch}
                                             onChange={(e) => setLinksSearch(e.target.value)}
                                             className="w-full pl-9 pr-4 py-1.5 rounded-lg border border-border/20 bg-muted/10 text-xs focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 browser-mono"

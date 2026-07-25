@@ -244,6 +244,27 @@
     background-attachment: fixed;
   }
 
+
+  /* Mobile: scroll natural ao nível da página — sem container interno */
+  @media (max-width: 1023px) {
+    body {
+      height: auto !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    #main-scroll-container {
+      overflow: visible !important;
+      height: auto !important;
+    }
+  }
+
+  /* Desktop: touch-scroll suave em containers internos */
+  @media (min-width: 1024px) {
+    main {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
   /* Selection */
   ::selection {
     background: hsl(var(--ai-primary) / 0.25);
