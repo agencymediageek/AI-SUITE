@@ -1435,9 +1435,9 @@ export default function LandingPage() {
                     !isBubbleMinimized ? (
                         <motion.div
                             key="expanded-bubble"
-                            initial={{ opacity: 0, x: -100, y: 100, scale: 0.9 }}
-                            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, x: -100, y: 100, scale: 0.9 }}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ type: "spring", stiffness: 260, damping: 25 }}
                             className="fixed bottom-6 left-6 z-50 max-w-sm w-[90%] sm:w-[350px] rounded-2xl border border-border bg-card shadow-2xl overflow-hidden backdrop-blur-xl"
                         >

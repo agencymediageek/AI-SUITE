@@ -558,7 +558,7 @@ export default function VoiceAgentPage() {
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-6 space-y-6">
+                  <CardContent className="p-4 lg:p-6 space-y-6">
                     {/* Live Waveform Display */}
                     <div className="h-32 bg-muted/20 border rounded-xl flex flex-col items-center justify-center p-6 relative overflow-hidden">
                       {isCalling ? (

@@ -90,7 +90,7 @@ export default function OCRPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 lg:p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold ai-gradient-text">AI OCR Tool</h1>
         <p className="text-muted-foreground mt-2">

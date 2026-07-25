@@ -175,7 +175,7 @@ export default function WebsiteWikiPage() {
 
             {/* Input Section */}
             <Card className="border-primary/20 bg-card/50 backdrop-blur-sm overflow-hidden">
-                <CardContent className="p-6">
+                <CardContent className="p-4 lg:p-6">
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="relative flex-1">
                             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

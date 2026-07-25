@@ -101,7 +101,7 @@ export default function TranslatorPage() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 lg:p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold ai-gradient-text">AI Translation Tool</h1>
         <p className="text-muted-foreground mt-2">
@@ -118,7 +118,7 @@ export default function TranslatorPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             <div className="flex-1 space-y-2">
               <label className="text-sm font-medium">From (Optional)</label>
               <Select value={sourceLang} onValueChange={setSourceLang}>
@@ -140,7 +140,7 @@ export default function TranslatorPage() {
               size="icon"
               onClick={handleSwapLanguages}
               disabled={!sourceLang || !targetLang}
-              className="mt-6"
+              className="self-center"
             >
               <ArrowRightLeft className="w-4 h-4" />
             </Button>

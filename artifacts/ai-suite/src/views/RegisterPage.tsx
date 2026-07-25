@@ -228,8 +228,8 @@ function RegisterContent({ isAdmin = false }: RegisterPageProps) {
                             {features.map((feature, index) => (
                                 <motion.div
                                     key={index}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
                                     transition={{ delay: 0.2 + index * 0.1 }}
                                     className="flex items-center gap-3 text-white/90"
                                 >

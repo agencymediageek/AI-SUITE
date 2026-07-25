@@ -249,9 +249,9 @@ function ForgotPasswordContent() {
               {step === "EMAIL" && (
                 <motion.div
                   key="email"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   className="space-y-6"
                 >
                   <div className="text-center">
@@ -296,9 +296,9 @@ function ForgotPasswordContent() {
               {step === "OTP" && (
                 <motion.div
                   key="otp"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   className="space-y-6"
                 >
                   <div className="text-center">
@@ -364,9 +364,9 @@ function ForgotPasswordContent() {
               {step === "RESET" && (
                 <motion.div
                   key="reset"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   className="space-y-6"
                 >
                   <div className="text-center">

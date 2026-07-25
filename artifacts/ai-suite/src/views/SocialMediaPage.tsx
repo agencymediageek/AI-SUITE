@@ -133,7 +133,7 @@ Make it engaging and platform-appropriate.`;
   const selectedPlatform = platforms.find(p => p.id === formData.platform);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-2">

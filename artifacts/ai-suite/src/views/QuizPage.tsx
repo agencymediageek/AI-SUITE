@@ -184,7 +184,7 @@ Make the questions educational, engaging, and appropriate for the ${difficulty} 
     const percentage = Math.round((score / quiz.length) * 100);
 
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-4 lg:p-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold ai-gradient-text">Quiz Results</h1>
           <p className="text-muted-foreground mt-2">
