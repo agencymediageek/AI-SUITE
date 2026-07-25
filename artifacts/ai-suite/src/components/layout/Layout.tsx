@@ -27,7 +27,7 @@ export function Layout({ children, fullHeight = false, noPadding = false }: Layo
     }, []);
 
     return (
-        <div className="flex lg:h-full w-full overflow-x-hidden lg:overflow-hidden bg-background">
+        <div className="flex lg:h-full w-full lg:overflow-hidden bg-background">
             {/* Ambient background effects - Refined */}
             <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
                 {/* Primary gradient - top left */}
@@ -77,7 +77,7 @@ export function Layout({ children, fullHeight = false, noPadding = false }: Layo
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden lg:overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 lg:overflow-hidden">
                 <Header
                     onMobileMenuToggle={() => setIsMobileMenuOpen(true)}
                 />

@@ -81,8 +81,8 @@ interface Feature {
 
 // Animation variants
 const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.4 } },
 };
 
 const staggerContainer = {
@@ -737,7 +737,7 @@ export default function LandingPage() {
             </section>
 
             {/* Features Section */}
-            <section id="features" className="py-24 overflow-hidden">
+            <section id="features" className="py-24">
                 <div className="container mx-auto px-4">
                     <motion.div
                         className="text-center mb-16"
@@ -855,8 +855,8 @@ export default function LandingPage() {
                         {/* Marketing Dashboard Mockup */}
                         <motion.div
                             className="relative"
-                            initial={{ opacity: 0, x: 40 }}
-                            whileInView={{ opacity: 1, x: 0 }}
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.6, delay: 0.2 }}
                         >
@@ -976,8 +976,8 @@ export default function LandingPage() {
                     {/* Music Player Mockup */}
                     <motion.div
                         className="max-w-3xl mx-auto mb-16"
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6 }}
                     >
@@ -1124,7 +1124,7 @@ export default function LandingPage() {
             <div className="section-divider-glow" />
 
             {/* Tools Grid Section */}
-            <section id="tools" className="py-24 bg-muted/30 relative overflow-hidden">
+            <section id="tools" className="py-24 bg-muted/30 relative">
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
                 <div className="container mx-auto px-4 relative z-10">
                     <motion.div
@@ -1190,7 +1190,7 @@ export default function LandingPage() {
             </section>
 
             {/* Testimonials Section */}
-            <section className="py-24 overflow-hidden">
+            <section className="py-24">
                 <div className="container mx-auto px-4">
                     <motion.div
                         className="text-center mb-16"
@@ -1241,7 +1241,7 @@ export default function LandingPage() {
             </section>
 
             {/* Pricing Section */}
-            <section id="pricing" className="py-24 bg-muted/30 overflow-hidden">
+            <section id="pricing" className="py-24 bg-muted/30">
                 <div className="container mx-auto px-4">
                     <motion.div
                         className="text-center mb-16"
