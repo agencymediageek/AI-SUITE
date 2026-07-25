@@ -142,7 +142,7 @@ export function ToolPage({
 
     return (
         <Layout>
-            <div className="container max-w-5xl py-8 space-y-6">
+            <div className="w-full max-w-5xl mx-auto py-6 space-y-6">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0 }}
