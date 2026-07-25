@@ -3,3 +3,5 @@
 - [AI generation](ai-generation.md) — Direct Gemini 2.0 Flash fallback; N8N webhook if tool has n8nWebhookUrl configured
 - [DB schema tables](db-schema.md) — users, generations, favorites, plans, tools_config — all in lib/db/src/schema/
 - [Tools data](tools-data.md) — 80+ tools in artifacts/api-server/src/lib/tools-data.ts; no DB, static with DB config overlay
+- [VPS deploy](vps-deploy.md) — SSH key at .agents/deploy_key (gitignored); GitHub Actions auto-deploys on push to main; fallback: sshpass with VPS_ROOT_PASSWORD
+- [Supabase → PostgreSQL](supabase-complete.md) — 100% migrated; zero supabaseAdmin calls in production; documents/upload uses local /tmp storage
