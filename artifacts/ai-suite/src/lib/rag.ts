@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { db } from './db';
-import { supabaseAdmin } from './supabase';
+import { query as pgQuery } from './pg';
+
 import { extractTextFromFile, chunkText } from './docProcessor';
 import fs from 'fs';
 
@@ -16,7 +17,7 @@ function debugLog(msg: string) {
     } catch (e) {}
 }
 
-const RAW_KEY = process.env.GEMINI || process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+const RAW_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 const GEMINI_API_KEY = RAW_KEY;
 
 const client = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -123,19 +124,13 @@ export async function getRAGContext(userEmail: string, query: string, limit = 4)
 
         // 4. Emergency Latest Chunks Fallback
         if (matches.length === 0) {
-            const { data: latest, error: latestErr } = await supabaseAdmin
-                .from('document_chunks')
-                .select('id, document_id, content')
-                .limit(limit);
-            
-            if (latest && latest.length > 0) {
-                debugLog(`[getRAGContext] Latest chunks fallback: ${latest.length}`);
-                matches = latest.map((c: any) => ({
-                    id: c.id,
-                    documentId: c.document_id,
-                    content: c.content
-                }));
-            }
+            try {
+                const latestRes = await pgQuery('SELECT id, document_id, content FROM document_chunks LIMIT $1', [limit]);
+                if (latestRes.rows.length > 0) {
+                    debugLog(`[getRAGContext] Latest chunks fallback: ${latestRes.rows.length}`);
+                    matches = latestRes.rows.map((c: any) => ({ id: c.id, documentId: c.document_id, content: c.content }));
+                }
+            } catch { /* ignore */ }
         }
 
         if (matches.length === 0) {
@@ -150,97 +145,55 @@ export async function getRAGContext(userEmail: string, query: string, limit = 4)
     }
 }
 
-export async function generateGroundedResponseV3(userEmail: string, query: string, history: { role: string; content: string }[] = []): Promise<string> {
+export async function generateGroundedResponseV3(userEmail: string, query: string): Promise<string> {
     try {
         const context = await getRAGContext(userEmail, query);
+        
+        const systemPrompt = "You are a professional support assistant. Use the provided context to answer the user's question.";
+        
+        const userPrompt = `
+CONTEXT FROM DOCUMENTS:
+---
+${context || "No specific document context found for this query."}
+---
 
-        const systemPrompt = `Você é o assistente de suporte da MediaGeek AI (mediageek.io) — plataforma SaaS brasileira de inteligência artificial.
+USER QUESTION: ${query}`;
 
-REGRAS DE CONDUTA:
-- Responda com base nestas informações. Se não souber algo específico, diga que não tem certeza e oriente o usuário a verificar o site.
-- NUNCA concorde com o usuário se ele afirmar algo incorreto sobre a plataforma. Corrija educadamente com os dados corretos abaixo.
-- Não invente informações. Prefira "não tenho certeza" a dar uma resposta errada.
+        const modelNames = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp"];
+        let answer = "";
+        let lastErr: any = null;
 
-PLANOS E FERRAMENTAS (informação oficial):
-
-🆓 PLANO FREE — R$0 (sem cartão):
-- 300 tokens válidos por 14 dias
-- Acesso a APENAS 10 ferramentas básicas:
-  1. AI Chat
-  2. Tradutor (50+ idiomas)
-  3. Corretor Gramatical
-  4. Resumidor de Texto
-  5. Content Writer
-  6. Instagram Caption
-  7. Hashtag Generator
-  8. Gerador de Receitas
-  9. Story Generator
-  10. Gerador de Piadas
-
-⚡ PLANO STARTER — $9/mês · 5.000 tokens:
-- Tudo do Free + 23 ferramentas a mais (33 no total)
-- Inclui: Image Generator, Code Generator, Blog Post, Article Writer, Content Improver, Headline Generator, Poem Generator, Paraphraser, Tone Converter, Social Media Suite, Twitter Thread, LinkedIn Post, YouTube Description, Content Calendar, Email Writer, Currículo, Interview Prep, Story Ideas, Song Lyrics, Character Creator, Name Generator, Sentiment, Quiz
-
-🚀 PLANO PRO — $29/mês · 25.000 tokens:
-- Tudo do Starter + 78 ferramentas a mais (111 no total)
-- Inclui ferramentas avançadas: Reel Generator (IA de vídeo), Music Generator, Website Builder, Game Maker, Logo Generator, Avatar Studio, SQL Generator, OCR, ferramentas jurídicas, SEO, negócios, saúde e mais
-
-🏢 PLANO ENTERPRISE — $99/mês · 100.000 tokens:
-- Tudo do Pro + 6 ferramentas exclusivas (117 no total)
-- Exclusivo: Browser Control, Trading Terminal, AI Agents (Research, Writing, Code, Marketing)
-
-PAGAMENTO: Stripe (cartão internacional) ou Mercado Pago (PIX/boleto). Preços em USD.
-
-REGRA CRÍTICA DE IDIOMA: Detecte o idioma que o usuário usou na PRIMEIRA mensagem e mantenha esse MESMO idioma durante TODA a conversa sem exceção. Se o usuário escreveu em inglês, responda SEMPRE em inglês. Se em português, responda SEMPRE em português. NUNCA mude de idioma no meio da conversa — mesmo que a mensagem seja curta, informal ou ambígua. Seja direto, amigável e preciso.${context ? "\n\nCONTEXTO ADICIONAL:\n" + context : ""}`;
-
-        // userPrompt now built inline with history
-
-        const xaiKey = process.env.GROK || process.env.XAI_API_KEY;
-        if (!xaiKey) {
-            debugLog("[generateGroundedResponseV3] No xAI key found");
-            return "Support assistant is not configured. Please contact the administrator.";
-        }
-
-        for (const model of ["grok-3-fast", "grok-3-mini"]) {
+        for (const modelId of modelNames) {
             try {
-                debugLog(`[generateGroundedResponseV3] Trying ${model}`);
-                const res = await fetch("https://api.x.ai/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${xaiKey}`
-                    },
-                    body: JSON.stringify({
-                        model,
-                        messages: [
-                            { role: "system", content: systemPrompt },
-                            ...history.map(h => ({ role: h.role === 'assistant' ? 'assistant' : 'user', content: h.content })),
-                            { role: "user", content: query }
-                        ],
-                        max_tokens: 1024,
-                        temperature: 0.3
-                    })
+                debugLog(`[generateGroundedResponseV3] Attempting with ${modelId}`);
+                const result = await client.models.generateContent({
+                    model: modelId,
+                    contents: [
+                        { role: "user", parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }
+                    ],
+                    config: {
+                        temperature: 0.1,
+                        maxOutputTokens: 1024
+                    }
                 });
-
-                if (!res.ok) {
-                    const err = await res.text();
-                    debugLog(`[generateGroundedResponseV3] ${model} error ${res.status}: ${err.slice(0, 200)}`);
-                    continue;
-                }
-
-                const data = await res.json();
-                const answer = data.choices?.[0]?.message?.content || "";
-                if (answer) {
-                    debugLog(`[generateGroundedResponseV3] ${model} OK, length=${answer.length}`);
-                    return answer;
-                }
+                answer = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                if (answer) break;
             } catch (err: any) {
-                debugLog(`[generateGroundedResponseV3] ${model} threw: ${err.message}`);
+                lastErr = err;
+                debugLog(`[generateGroundedResponseV3] Model ${modelId} failed: ${err.message}`);
                 continue;
             }
         }
 
-        return "I could not generate a response at this time. Please try again.";
+        if (!answer && lastErr) {
+            // Check if it's a quota error to show a better message
+            if (lastErr.message?.includes("429") || lastErr.message?.includes("RESOURCE_EXHAUSTED")) {
+                return "I found relevant information in your documents, but my AI generation quota is currently exhausted. Please try again in 1 minute.";
+            }
+            return `I found information in your documents, but had trouble generating a summary: \n\n${context.substring(0, 500)}...`;
+        }
+
+        return answer || "I'm sorry, I found information but couldn't generate a clear answer.";
 
     } catch (error: any) {
         debugLog(`[generateGroundedResponseV3] ERROR: ${error.message}`);

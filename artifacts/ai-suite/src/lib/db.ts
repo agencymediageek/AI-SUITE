@@ -1,6 +1,4 @@
-import { supabaseAdmin } from './supabase';
-import { pool as pgPool } from './pg';
-import { query, getClient } from './pg';
+import { query, getClient, pool as pgPool } from './pg';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
 import { DEMO_PRICING_PLANS, PricingPlan } from './pricing-defaults';
@@ -76,7 +74,6 @@ export interface SystemSettings {
     paystackSecretKey?: string;
     paystackCurrency?: string;
     showAiSettings?: boolean;
-    mercadoPagoAccessToken?: string;
 
     metadata?: Record<string, any>;
 }
@@ -376,15 +373,6 @@ class SystemDB {
                 return { email, balance: settings.defaultTokens, updatedAt: new Date().toISOString() };
             }
 
-            // Tokens gratuitos expirados após 14 dias
-            if (data.free_expires_at && new Date(data.free_expires_at) < new Date()) {
-                return {
-                    email: data.email,
-                    balance: 0,
-                    updatedAt: data.updated_at instanceof Date ? data.updated_at.toISOString() : (data.updated_at || new Date().toISOString())
-                };
-            }
-
             return {
                 email: data.email,
                 balance: data.balance,
@@ -394,35 +382,6 @@ class SystemDB {
             console.error("Error in getTokenBalance:", error);
             const settings = await this.getSettings();
             return { email, balance: settings.defaultTokens, updatedAt: new Date().toISOString() };
-        }
-    }
-
-    // Inicia saldo gratuito com expiração de 14 dias (chamado no cadastro)
-    async initFreeBalance(email: string): Promise<void> {
-        try {
-            const settings = await this.getSettings();
-            const freeExpiry = new Date();
-            freeExpiry.setDate(freeExpiry.getDate() + 14);
-            await query(
-                `INSERT INTO user_balances (email, balance, free_expires_at, updated_at)
-                 VALUES ($1, $2, $3, NOW())
-                 ON CONFLICT (email) DO NOTHING`,
-                [email.toLowerCase(), settings.defaultTokens, freeExpiry.toISOString()]
-            );
-        } catch (error) {
-            console.error("Error in initFreeBalance:", error);
-        }
-    }
-
-    // Remove expiração após upgrade para plano pago
-    async clearFreeTokenExpiry(email: string): Promise<void> {
-        try {
-            await query(
-                'UPDATE user_balances SET free_expires_at = NULL, updated_at = NOW() WHERE LOWER(email) = LOWER($1)',
-                [email.toLowerCase()]
-            );
-        } catch (error) {
-            console.error("Error in clearFreeTokenExpiry:", error);
         }
     }
 
@@ -601,7 +560,6 @@ class SystemDB {
                 razorpayKeySecret: data.razorpay_key_secret,
                 paystackSecretKey: data.paystack_secret_key,
                 paystackCurrency: data.paystack_currency,
-                mercadoPagoAccessToken: data.metadata?.mercadoPagoAccessToken || process.env.MERCADO_PAGO_ACCESS_TOKEN,
 
                 metadata: {
                     ...(data.metadata || {}),
@@ -622,11 +580,6 @@ class SystemDB {
         delete storedMetadata.siteName;
         delete storedMetadata.siteUrl;
         delete storedMetadata.smtp;
-        // Persist Mercado Pago token in metadata
-        if (settings.mercadoPagoAccessToken) {
-            storedMetadata.mercadoPagoAccessToken = settings.mercadoPagoAccessToken;
-            storedMetadata.mercadoPagoEnabled = true;
-        }
 
         await query(`
             INSERT INTO system_settings (
@@ -824,7 +777,7 @@ class SystemDB {
                subdomain = EXCLUDED.subdomain, messages = EXCLUDED.messages,
                preview_image = EXCLUDED.preview_image, updated_at = EXCLUDED.updated_at`,
             [project.id, project.userEmail.toLowerCase(), project.name, project.code,
-             project.subdomain, JSON.stringify(project.messages || []), project.previewImage, project.createdAt, project.updatedAt]
+             project.subdomain, project.messages, project.previewImage, project.createdAt, project.updatedAt]
         );
     }
 
@@ -872,40 +825,32 @@ class SystemDB {
 
     async getTotalWebsites(startDate?: Date, endDate?: Date): Promise<number> {
         try {
+            let queryStr = 'SELECT COUNT(*) FROM websites';
             const params: any[] = [];
-            let where = '';
             if (startDate && endDate) {
-                where = ' WHERE created_at >= $1 AND created_at <= $2';
-                params.push(startDate.toISOString(), endDate.toISOString());
+                queryStr += ' WHERE created_at >= $1 AND created_at <= $2';
+                params.push(startDate, endDate);
             } else if (startDate) {
-                where = ' WHERE created_at >= $1';
-                params.push(startDate.toISOString());
+                queryStr += ' WHERE created_at >= $1';
+                params.push(startDate);
             }
-            const res = await query(`SELECT COUNT(*) FROM websites${where}`, params);
-            return parseInt(res.rows[0]?.count || '0', 10);
-        } catch {
-            return 0; // table may not exist in this environment
-        }
+            const res = await query(queryStr, params);
+            return parseInt(res.rows[0].count, 10) || 0;
+        } catch { return 0; }
     }
 
     async checkSubdomainAvailability(subdomain: string, excludeId?: string): Promise<boolean> {
         try {
-            const res = await query(
-                'SELECT id FROM websites WHERE subdomain = $1',
-                [subdomain]
-            );
-            const rows = res.rows;
-            if (rows.length === 0) return true;
-            if (excludeId) return rows.every((w: any) => w.id === excludeId);
+            const res = await query('SELECT id FROM websites WHERE subdomain = $1', [subdomain]);
+            if (res.rows.length === 0) return true;
+            if (excludeId) return !res.rows.some((w: any) => w.id !== excludeId);
             return false;
-        } catch {
-            return false;
-        }
+        } catch { return false; }
     }
 
     // Update Website Subdomain
     async updateWebsiteSubdomain(id: string, subdomain: string): Promise<void> {
-        await query('UPDATE websites SET subdomain = $1, updated_at = NOW() WHERE id = $2', [subdomain, id]);
+        await query('UPDATE websites SET subdomain = $1 WHERE id = $2', [subdomain, id]);
     }
 
     // Custom Domains
@@ -919,25 +864,29 @@ class SystemDB {
 
     async getCustomDomain(domain: string): Promise<CustomDomain | null> {
         const res = await query('SELECT * FROM custom_domains WHERE domain = $1', [domain.toLowerCase()]);
-        const data = res.rows[0];
-        if (!data) return null;
-        return { id: data.id, domain: data.domain, websiteId: data.website_id, status: data.status, createdAt: data.created_at, updatedAt: data.updated_at };
+        const d = res.rows[0];
+        if (!d) return null;
+        return { id: d.id, domain: d.domain, websiteId: d.website_id, status: d.status, createdAt: d.created_at, updatedAt: d.updated_at };
     }
 
     async getCustomDomainById(id: string): Promise<CustomDomain | null> {
         const res = await query('SELECT * FROM custom_domains WHERE id = $1', [id]);
-        const data = res.rows[0];
-        if (!data) return null;
-        return { id: data.id, domain: data.domain, websiteId: data.website_id, status: data.status, createdAt: data.created_at, updatedAt: data.updated_at };
+        const d = res.rows[0];
+        if (!d) return null;
+        return { id: d.id, domain: d.domain, websiteId: d.website_id, status: d.status, createdAt: d.created_at, updatedAt: d.updated_at };
     }
 
     async listCustomDomainsByWebsite(websiteId: string): Promise<CustomDomain[]> {
         const res = await query('SELECT * FROM custom_domains WHERE website_id = $1 ORDER BY created_at DESC', [websiteId]);
-        return (res.rows || []).map((d: any) => ({ id: d.id, domain: d.domain, websiteId: d.website_id, status: d.status, createdAt: d.created_at, updatedAt: d.updated_at }));
+        return res.rows.map((d: any) => ({
+            id: d.id, domain: d.domain, websiteId: d.website_id,
+            status: d.status, createdAt: d.created_at, updatedAt: d.updated_at
+        }));
     }
 
     async updateCustomDomainStatus(id: string, status: CustomDomain['status']): Promise<void> {
-        await query('UPDATE custom_domains SET status = $1, updated_at = NOW() WHERE id = $2', [status, id]);
+        await query('UPDATE custom_domains SET status = $1, updated_at = $2 WHERE id = $3',
+            [status, new Date().toISOString(), id]);
     }
 
     async deleteCustomDomain(id: string): Promise<void> {
@@ -1022,117 +971,86 @@ class SystemDB {
 
     // Documents & RAG
     async saveDocument(doc: Partial<Document> & { userEmail: string; name: string }): Promise<Document> {
-        const { data, error } = await supabaseAdmin
-            .from('documents')
-            .insert({
-                user_email: doc.userEmail.toLowerCase(),
-                name: doc.name,
-                status: doc.status || 'processing',
-                metadata: doc.metadata || {}
-            })
-            .select()
-            .single();
-
-        if (error) throw new Error(`Error saving document: ${error.message}`);
-        return {
-            id: data.id,
-            userEmail: data.user_email,
-            name: data.name,
-            status: data.status,
-            metadata: data.metadata,
-            createdAt: data.created_at
-        };
+        const res = await query(
+            `INSERT INTO documents (user_email, name, status, metadata, created_at)
+             VALUES ($1, $2, $3, $4, NOW())
+             RETURNING *`,
+            [doc.userEmail.toLowerCase(), doc.name, doc.status || 'processing', JSON.stringify(doc.metadata || {})]
+        );
+        const d = res.rows[0];
+        return { id: d.id, userEmail: d.user_email, name: d.name, status: d.status, metadata: d.metadata, createdAt: d.created_at };
     }
 
     async updateDocumentStatus(id: string, status: Document['status']): Promise<void> {
-        const { error } = await supabaseAdmin
-            .from('documents')
-            .update({ status })
-            .eq('id', id);
-
-        if (error) throw new Error(`Error updating document status: ${error.message}`);
+        await query('UPDATE documents SET status = $1 WHERE id = $2', [status, id]);
     }
 
     async listDocuments(userEmail: string): Promise<Document[]> {
-        const { data, error } = await supabaseAdmin
-            .from('documents')
-            .select('*')
-            .eq('user_email', userEmail.toLowerCase())
-            .order('created_at', { ascending: false });
-
-        if (error || !data) return [];
-        return data.map(d => ({
-            id: d.id,
-            userEmail: d.user_email,
-            name: d.name,
-            status: d.status,
-            metadata: d.metadata,
-            createdAt: d.created_at
+        const res = await query('SELECT * FROM documents WHERE user_email = $1 ORDER BY created_at DESC', [userEmail.toLowerCase()]);
+        return res.rows.map((d: any) => ({
+            id: d.id, userEmail: d.user_email, name: d.name,
+            status: d.status, metadata: d.metadata, createdAt: d.created_at
         }));
     }
 
     async deleteDocument(id: string): Promise<void> {
-        const { error } = await supabaseAdmin
-            .from('documents')
-            .delete()
-            .eq('id', id);
-        if (error) throw new Error(`Error deleting document: ${error.message}`);
+        await query('DELETE FROM document_chunks WHERE document_id = $1', [id]);
+        await query('DELETE FROM documents WHERE id = $1', [id]);
     }
 
     async saveDocumentChunks(chunks: { documentId: string; content: string; embedding: number[] }[]): Promise<void> {
-        const { error } = await supabaseAdmin
-            .from('document_chunks')
-            .insert(chunks.map(c => ({
-                document_id: c.documentId,
-                content: (c.content || "").replace(/\u0000/g, ""), // Final safety check for null characters
-                embedding: c.embedding
-            })));
-
-        if (error) throw new Error(`Error saving document chunks: ${error.message}`);
+        for (const c of chunks) {
+            const safeContent = (c.content || "").replace(/\u0000/g, "");
+            const embeddingStr = `[${c.embedding.join(',')}]`;
+            await query(
+                `INSERT INTO document_chunks (document_id, content, embedding) VALUES ($1, $2, $3::vector)`,
+                [c.documentId, safeContent, embeddingStr]
+            );
+        }
     }
 
     async matchDocumentChunks(userEmail: string, embedding: number[], limit = 5, threshold = 0.5): Promise<DocumentChunk[]> {
         debugLog(`matchDocumentChunks: email=${userEmail}, limit=${limit}, threshold=${threshold}`);
-        const { data, error } = await supabaseAdmin.rpc('match_document_chunks', {
-            query_embedding: embedding,
-            match_threshold: threshold,
-            match_count: limit,
-            p_user_email: userEmail.toLowerCase()
-        });
-
-        if (error) {
-            debugLog(`matchDocumentChunks ERROR: ${error.message}`);
-            throw new Error(`Error matching document chunks: ${error.message}`);
+        try {
+            const embeddingStr = `[${embedding.join(',')}]`;
+            const res = await query(
+                `SELECT dc.id, dc.document_id, dc.content,
+                        1 - (dc.embedding <=> $1::vector) AS similarity
+                 FROM document_chunks dc
+                 JOIN documents d ON d.id = dc.document_id
+                 WHERE LOWER(d.user_email) = LOWER($2)
+                   AND 1 - (dc.embedding <=> $1::vector) > $3
+                 ORDER BY similarity DESC
+                 LIMIT $4`,
+                [embeddingStr, userEmail, threshold, limit]
+            );
+            debugLog(`matchDocumentChunks: Found ${res.rows.length} matches`);
+            return res.rows.map((d: any) => ({ id: d.id, documentId: d.document_id, content: d.content, similarity: d.similarity }));
+        } catch (err: any) {
+            debugLog(`matchDocumentChunks ERROR: ${err.message}`);
+            throw err;
         }
-
-        debugLog(`matchDocumentChunks: Found ${data?.length || 0} matches`);
-        return (data || []).map((d: any) => ({
-            id: d.id,
-            documentId: d.document_id,
-            content: d.content,
-            similarity: d.similarity
-        }));
     }
 
-    async keywordSearchChunks(userEmail: string, query: string, limit = 5): Promise<DocumentChunk[]> {
-        debugLog(`keywordSearchChunks: email=${userEmail}, query=${query}, limit=${limit}`);
-        const { data, error } = await supabaseAdmin.rpc('keyword_search_chunks', {
-            query_text: query,
-            match_count: limit,
-            p_user_email: userEmail.toLowerCase()
-        });
-
-        if (error) {
-            debugLog(`keywordSearchChunks ERROR: ${error.message}`);
+    async keywordSearchChunks(userEmail: string, queryText: string, limit = 5): Promise<DocumentChunk[]> {
+        debugLog(`keywordSearchChunks: email=${userEmail}, query=${queryText}, limit=${limit}`);
+        try {
+            const res = await query(
+                `SELECT dc.id, dc.document_id, dc.content,
+                        ts_rank(to_tsvector('english', dc.content), plainto_tsquery('english', $1)) AS similarity
+                 FROM document_chunks dc
+                 JOIN documents d ON d.id = dc.document_id
+                 WHERE LOWER(d.user_email) = LOWER($2)
+                   AND to_tsvector('english', dc.content) @@ plainto_tsquery('english', $1)
+                 ORDER BY similarity DESC
+                 LIMIT $3`,
+                [queryText, userEmail, limit]
+            );
+            return res.rows.map((d: any) => ({ id: d.id, documentId: d.document_id, content: d.content, similarity: d.similarity }));
+        } catch (err: any) {
+            debugLog(`keywordSearchChunks ERROR: ${err.message}`);
             return [];
         }
-
-        return (data || []).map((d: any) => ({
-            id: d.id,
-            documentId: d.document_id,
-            content: d.content,
-            similarity: d.similarity
-        }));
     }
 
     // Dashboard Analytics & Aggregation
@@ -1207,102 +1125,63 @@ class SystemDB {
     }
 
     async getToolUsageDistribution(startDate?: Date, endDate?: Date): Promise<any[]> {
-        let data: any[] = [];
         try {
-            const params: any[] = ['consume'];
-            let where = "WHERE action = $1";
+            let queryStr = `SELECT amount, feature FROM token_logs WHERE action = 'consume'`;
+            const params: any[] = [];
             if (startDate && endDate) {
-                where += ' AND timestamp >= $2 AND timestamp <= $3';
-                params.push(startDate.toISOString(), endDate.toISOString());
+                queryStr += ` AND timestamp >= $1 AND timestamp <= $2`;
+                params.push(startDate, endDate);
             } else if (startDate) {
-                where += ' AND timestamp >= $2';
-                params.push(startDate.toISOString());
+                queryStr += ` AND timestamp >= $1`;
+                params.push(startDate);
             }
-            const res = await query(
-                `SELECT amount, feature FROM token_logs ${where} LIMIT 2000`,
-                params
-            );
-            data = res.rows;
-        } catch {
-            return []; // token_logs may not exist or have different schema
-        }
+            const res = await query(queryStr, params);
+            const data = res.rows;
+            if (!data || data.length === 0) return [];
 
-        if (!data || data.length === 0) return [];
+            const featureMap: Record<string, number> = {};
+            let totalTokens = 0;
+            data.forEach((log: any) => {
+                const feature = log.feature || 'Other';
+                featureMap[feature] = (featureMap[feature] || 0) + log.amount;
+                totalTokens += log.amount;
+            });
 
-        const featureMap: Record<string, number> = {};
-        let totalTokens = 0;
-        data.forEach((log: any) => {
-            const feature = log.feature || 'Other';
-            featureMap[feature] = (featureMap[feature] || 0) + log.amount;
-            totalTokens += log.amount;
-        });
+            const colors = ["#8b5cf6", "#10b981", "#f59e0b", "#ec4899", "#6b7280", "#3b82f6", "#ef4444"];
+            let i = 0;
 
-        const colors = ["#8b5cf6", "#10b981", "#f59e0b", "#ec4899", "#6b7280", "#3b82f6", "#ef4444"];
-        let i = 0;
+            const toolUsageData = Object.keys(featureMap).map(name => {
+                const percentage = totalTokens > 0 ? Math.round((featureMap[name] / totalTokens) * 100) : 0;
+                return {
+                    name: name.charAt(0).toUpperCase() + name.slice(1),
+                    value: percentage,
+                    color: colors[i++ % colors.length]
+                };
+            });
 
-        const toolUsageData = Object.keys(featureMap).map(name => {
-            const percentage = totalTokens > 0 ? Math.round((featureMap[name] / totalTokens) * 100) : 0;
-            return {
-                name: name.charAt(0).toUpperCase() + name.slice(1),
-                value: percentage,
-                color: colors[i++ % colors.length]
-            };
-        });
-
-        return toolUsageData.sort((a, b) => b.value - a.value);
+            return toolUsageData.sort((a, b) => b.value - a.value);
+        } catch { return []; }
     }
 
     async getDashboardRecentActivities(startDate?: Date, endDate?: Date): Promise<any[]> {
         const activities: any[] = [];
-
         try {
-            // Recent signups
-            const usersParams: any[] = [];
-            let usersWhere = '';
-            if (startDate && endDate) {
-                usersWhere = ' WHERE created_at >= $1 AND created_at <= $2';
-                usersParams.push(startDate.toISOString(), endDate.toISOString());
-            } else if (startDate) {
-                usersWhere = ' WHERE created_at >= $1';
-                usersParams.push(startDate.toISOString());
-            }
-            const usersRes = await query(
-                `SELECT email, created_at FROM users${usersWhere} ORDER BY created_at DESC LIMIT 5`,
-                usersParams
-            );
-            (usersRes.rows || []).forEach((u: any) => {
-                activities.push({
-                    type: "signup",
-                    user: u.email,
-                    timestamp: new Date(u.created_at).getTime(),
-                });
-            });
-        } catch(e) { /* ignore if users query fails */ }
+            let usersQueryStr = 'SELECT email, created_at FROM users';
+            const uParams: any[] = [];
+            if (startDate && endDate) { usersQueryStr += ' WHERE created_at >= $1 AND created_at <= $2'; uParams.push(startDate, endDate); }
+            else if (startDate) { usersQueryStr += ' WHERE created_at >= $1'; uParams.push(startDate); }
+            usersQueryStr += ' ORDER BY created_at DESC LIMIT 5';
+            const usersRes = await query(usersQueryStr, uParams);
+            usersRes.rows.forEach((u: any) => activities.push({ type: "signup", user: u.email, timestamp: new Date(u.created_at).getTime() }));
 
-        try {
-            // Recent payments
-            const payParams: any[] = [];
-            let payWhere = '';
-            if (startDate && endDate) {
-                payWhere = ' WHERE created_at >= $1 AND created_at <= $2';
-                payParams.push(startDate.toISOString(), endDate.toISOString());
-            } else if (startDate) {
-                payWhere = ' WHERE created_at >= $1';
-                payParams.push(startDate.toISOString());
-            }
-            const payRes = await query(
-                `SELECT user_email, amount, created_at FROM payments${payWhere} ORDER BY created_at DESC LIMIT 5`,
-                payParams
-            );
-            (payRes.rows || []).forEach((p: any) => {
-                activities.push({
-                    type: "payment",
-                    user: p.user_email,
-                    amount: `$${p.amount}`,
-                    timestamp: new Date(p.created_at).getTime(),
-                });
-            });
-        } catch(e) { /* ignore if payments table doesn't exist */ }
+            let paymentsQueryStr = 'SELECT user_email, amount, created_at FROM payments';
+            const pParams: any[] = [];
+            if (startDate && endDate) { paymentsQueryStr += ' WHERE created_at >= $1 AND created_at <= $2'; pParams.push(startDate, endDate); }
+            else if (startDate) { paymentsQueryStr += ' WHERE created_at >= $1'; pParams.push(startDate); }
+            paymentsQueryStr += ' ORDER BY created_at DESC LIMIT 5';
+            const paymentsRes = await query(paymentsQueryStr, pParams);
+            paymentsRes.rows.forEach((p: any) => activities.push({ type: "payment", user: p.user_email, amount: `$${p.amount}`, timestamp: new Date(p.created_at).getTime() }));
+        } catch { /* return whatever we have */ }
 
         activities.sort((a, b) => b.timestamp - a.timestamp);
 
@@ -1332,246 +1211,116 @@ class SystemDB {
     // ==================== i18n: Languages ====================
 
     async getLanguages(): Promise<Language[]> {
-        // Fallback to direct pg when Supabase is not configured
-        if (!supabaseAdmin) {
-            const res = await pgPool.query('SELECT * FROM languages ORDER BY created_at ASC');
-            return (res.rows || []).map((l: any) => ({
-                id: l.id,
-                code: l.code,
-                name: l.name,
-                direction: l.direction,
-                isEnabled: l.is_enabled,
-                createdAt: l.created_at
-            }));
-        }
-
-        const { data, error } = await supabaseAdmin
-            .from('languages')
-            .select('*')
-            .order('created_at', { ascending: true });
-
-        if (error || !data) return [];
-
-        return data.map((l: any) => ({
-            id: l.id,
-            code: l.code,
-            name: l.name,
-            direction: l.direction,
-            isEnabled: l.is_enabled,
-            createdAt: l.created_at
+        const res = await query('SELECT * FROM languages ORDER BY created_at ASC');
+        return (res.rows || []).map((l: any) => ({
+            id: l.id, code: l.code, name: l.name,
+            direction: l.direction, isEnabled: l.is_enabled, createdAt: l.created_at
         }));
     }
 
     async saveLanguage(language: Language): Promise<Language> {
-        const { data, error } = await supabaseAdmin
-            .from('languages')
-            .upsert({
-                ...(language.id ? { id: language.id } : {}),
-                code: language.code,
-                name: language.name,
-                direction: language.direction,
-                is_enabled: language.isEnabled
-            }, { onConflict: 'code' })
-            .select()
-            .single();
-
-        if (error) throw new Error(`Error saving language: ${error.message}`);
-
-        return {
-            id: data.id,
-            code: data.code,
-            name: data.name,
-            direction: data.direction,
-            isEnabled: data.is_enabled,
-            createdAt: data.created_at
-        };
+        const res = await query(
+            `INSERT INTO languages (${language.id ? 'id, ' : ''}code, name, direction, is_enabled, created_at)
+             VALUES (${language.id ? '$1, $2, $3, $4, $5, NOW()' : '$1, $2, $3, $4, NOW()'})
+             ON CONFLICT (code) DO UPDATE SET
+                 name = EXCLUDED.name,
+                 direction = EXCLUDED.direction,
+                 is_enabled = EXCLUDED.is_enabled
+             RETURNING *`,
+            language.id
+                ? [language.id, language.code, language.name, language.direction, language.isEnabled]
+                : [language.code, language.name, language.direction, language.isEnabled]
+        );
+        const d = res.rows[0];
+        return { id: d.id, code: d.code, name: d.name, direction: d.direction, isEnabled: d.is_enabled, createdAt: d.created_at };
     }
 
     async toggleLanguage(id: string, isEnabled: boolean): Promise<void> {
-        const { error } = await supabaseAdmin
-            .from('languages')
-            .update({ is_enabled: isEnabled })
-            .eq('id', id);
-
-        if (error) throw new Error(`Error toggling language: ${error.message}`);
+        await query('UPDATE languages SET is_enabled = $1 WHERE id = $2', [isEnabled, id]);
     }
 
     async deleteLanguage(id: string): Promise<void> {
-        const { error } = await supabaseAdmin
-            .from('languages')
-            .delete()
-            .eq('id', id);
-
-        if (error) throw new Error(`Error deleting language: ${error.message}`);
+        await query('DELETE FROM languages WHERE id = $1', [id]);
     }
 
     // ==================== i18n: Translations ====================
 
     async getTranslationKeys(): Promise<string[]> {
-        const { data, error } = await supabaseAdmin
-            .from('translations')
-            .select('translation_key')
-            .order('translation_key', { ascending: true });
-
-        if (error || !data) return [];
-
-        // Deduplicate keys
-        return [...new Set(data.map((d: any) => d.translation_key))];
+        const res = await query('SELECT DISTINCT translation_key FROM translations ORDER BY translation_key ASC');
+        return res.rows.map((d: any) => d.translation_key);
     }
 
     async getTranslationsForLanguage(languageCode: string): Promise<Record<string, string>> {
-        // Fallback to direct pg when Supabase is not configured
-        if (!supabaseAdmin) {
-            const res = await pgPool.query(
-                'SELECT translation_key, value FROM translations WHERE language_code = $1',
-                [languageCode]
-            );
-            const result: Record<string, string> = {};
-            (res.rows || []).forEach((d: any) => { result[d.translation_key] = d.value; });
-            return result;
-        }
-
-        const { data, error } = await supabaseAdmin
-            .from('translations')
-            .select('translation_key, value')
-            .eq('language_code', languageCode);
-
-        if (error || !data) return {};
-
+        const res = await query(
+            'SELECT translation_key, value FROM translations WHERE language_code = $1',
+            [languageCode]
+        );
         const result: Record<string, string> = {};
-        data.forEach((d: any) => {
-            result[d.translation_key] = d.value;
-        });
+        (res.rows || []).forEach((d: any) => { result[d.translation_key] = d.value; });
         return result;
     }
 
     async getAllTranslations(): Promise<Translation[]> {
-        const { data, error } = await supabaseAdmin
-            .from('translations')
-            .select('*')
-            .order('translation_key', { ascending: true });
-
-        if (error || !data) return [];
-
-        return data.map((d: any) => ({
-            id: d.id,
-            translationKey: d.translation_key,
-            languageCode: d.language_code,
-            value: d.value,
-            updatedAt: d.updated_at
+        const res = await query('SELECT * FROM translations ORDER BY translation_key ASC');
+        return res.rows.map((d: any) => ({
+            id: d.id, translationKey: d.translation_key,
+            languageCode: d.language_code, value: d.value, updatedAt: d.updated_at
         }));
     }
 
     async saveTranslation(translation: Translation): Promise<void> {
-        const { error } = await supabaseAdmin
-            .from('translations')
-            .upsert({
-                translation_key: translation.translationKey,
-                language_code: translation.languageCode,
-                value: translation.value,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'translation_key,language_code' })
-            .select();
-
-        if (error) throw new Error(`Error saving translation: ${error.message}`);
+        await query(
+            `INSERT INTO translations (translation_key, language_code, value, updated_at)
+             VALUES ($1, $2, $3, NOW())
+             ON CONFLICT (translation_key, language_code) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
+            [translation.translationKey, translation.languageCode, translation.value]
+        );
     }
 
     async bulkSaveTranslations(translations: Translation[]): Promise<void> {
-        const rows = translations.map(t => ({
-            translation_key: t.translationKey,
-            language_code: t.languageCode,
-            value: t.value,
-            updated_at: new Date().toISOString()
-        }));
-
-        const { error } = await supabaseAdmin
-            .from('translations')
-            .upsert(rows, { onConflict: 'translation_key,language_code' });
-
-        if (error) throw new Error(`Error bulk saving translations: ${error.message}`);
+        for (const t of translations) {
+            await query(
+                `INSERT INTO translations (translation_key, language_code, value, updated_at)
+                 VALUES ($1, $2, $3, NOW())
+                 ON CONFLICT (translation_key, language_code) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
+                [t.translationKey, t.languageCode, t.value]
+            );
+        }
     }
 
     async deleteTranslationKey(key: string): Promise<void> {
-        const { error } = await supabaseAdmin
-            .from('translations')
-            .delete()
-            .eq('translation_key', key);
-
-        if (error) throw new Error(`Error deleting translation key: ${error.message}`);
+        await query('DELETE FROM translations WHERE translation_key = $1', [key]);
     }
 
     // ==================== Meetings ====================
 
     async createMeeting(id: string, title: string, hostEmail: string): Promise<{ id: string; title: string; hostEmail: string; status: string; createdAt: string }> {
-        const { data, error } = await supabaseAdmin
-            .from('meetings')
-            .insert({
-                id,
-                title,
-                host_email: hostEmail.toLowerCase(),
-                status: 'active',
-                created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-
-        if (error) throw new Error(`Error creating meeting: ${error.message}`);
-
-        return {
-            id: data.id,
-            title: data.title,
-            hostEmail: data.host_email,
-            status: data.status,
-            createdAt: data.created_at
-        };
+        const res = await query(
+            `INSERT INTO meetings (id, title, host_email, status, created_at)
+             VALUES ($1, $2, $3, 'active', NOW()) RETURNING *`,
+            [id, title, hostEmail.toLowerCase()]
+        );
+        const d = res.rows[0];
+        return { id: d.id, title: d.title, hostEmail: d.host_email, status: d.status, createdAt: d.created_at };
     }
 
     async getMeeting(id: string): Promise<{ id: string; title: string; hostEmail: string; status: string; maxParticipants: number; createdAt: string; endedAt: string | null } | null> {
-        const { data, error } = await supabaseAdmin
-            .from('meetings')
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        if (error || !data) return null;
-
-        return {
-            id: data.id,
-            title: data.title,
-            hostEmail: data.host_email,
-            status: data.status,
-            maxParticipants: data.max_participants,
-            createdAt: data.created_at,
-            endedAt: data.ended_at
-        };
+        const res = await query('SELECT * FROM meetings WHERE id = $1', [id]);
+        const d = res.rows[0];
+        if (!d) return null;
+        return { id: d.id, title: d.title, hostEmail: d.host_email, status: d.status, maxParticipants: d.max_participants, createdAt: d.created_at, endedAt: d.ended_at };
     }
 
     async endMeeting(id: string): Promise<void> {
-        const { error } = await supabaseAdmin
-            .from('meetings')
-            .update({ status: 'ended', ended_at: new Date().toISOString() })
-            .eq('id', id);
-
-        if (error) throw new Error(`Error ending meeting: ${error.message}`);
+        await query(`UPDATE meetings SET status = 'ended', ended_at = NOW() WHERE id = $1`, [id]);
     }
 
     async listUserMeetings(email: string, limit = 20): Promise<{ id: string; title: string; status: string; createdAt: string; endedAt: string | null }[]> {
-        const { data, error } = await supabaseAdmin
-            .from('meetings')
-            .select('*')
-            .eq('host_email', email.toLowerCase())
-            .order('created_at', { ascending: false })
-            .limit(limit);
-
-        if (error || !data) return [];
-
-        return data.map((m: any) => ({
-            id: m.id,
-            title: m.title,
-            status: m.status,
-            createdAt: m.created_at,
-            endedAt: m.ended_at
-        }));
+        const res = await query(
+            'SELECT * FROM meetings WHERE host_email = $1 ORDER BY created_at DESC LIMIT $2',
+            [email.toLowerCase(), limit]
+        );
+        return res.rows.map((m: any) => ({ id: m.id, title: m.title, status: m.status, createdAt: m.created_at, endedAt: m.ended_at }));
     }
 
     // ==================== Games ====================
