@@ -283,7 +283,7 @@ export function ToolPage({
                             </CardHeader>
                             <CardContent>
                                 {isStreaming || displayContent ? (
-                                    <div className="min-h-[200px] max-h-[500px] overflow-auto rounded-lg border bg-muted/30 p-4">
+                                    <div className="min-h-[200px] max-h-[500px] overflow-y-auto overflow-x-hidden rounded-lg border bg-muted/30 p-4">
                                         <MarkdownRenderer content={displayContent} />
                                         {isStreaming && (
                                             <div className="flex gap-1 mt-2">

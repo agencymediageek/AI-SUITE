@@ -82,7 +82,7 @@ IMPROVEMENTS:
   return (
     <div className="p-4 lg:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold ai-gradient-text">AI Grammar Check</h1>
+        <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">AI Grammar Check</h1>
         <p className="text-muted-foreground mt-2">
           Improve grammar, style, and readability of your text while maintaining your voice.
         </p>
@@ -116,10 +116,10 @@ IMPROVEMENTS:
                     key={index}
                     variant="outline"
                     size="sm"
-                    className="w-full text-left justify-start text-xs h-auto p-2"
+                    className="w-full text-left justify-start text-xs h-auto p-2 overflow-hidden"
                     onClick={() => setOriginalText(example)}
                   >
-                    {example}
+                    {example.length > 60 ? example.slice(0, 60) + "..." : example}
                   </Button>
                 ))}
               </div>
@@ -165,7 +165,7 @@ IMPROVEMENTS:
                 </TabsList>
               </div>
 
-              <div className="flex-1 min-h-[250px] border rounded-md p-4 bg-background overflow-auto">
+              <div className="flex-1 min-h-[250px] border rounded-md p-4 bg-background overflow-y-auto overflow-x-hidden">
                 {(isStreaming ? streamedText : correctedText) ? (
                   <>
                     <TabsContent value="preview" className="mt-0 h-full">

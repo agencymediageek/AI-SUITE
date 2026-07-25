@@ -201,7 +201,7 @@ Be constructive and specific in your feedback.`;
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <UserCheck className="w-8 h-8 text-ai-primary" />
-          <h1 className="text-3xl font-bold ai-gradient-text">Preparação para Entrevistas IA</h1>
+          <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">Preparação para Entrevistas IA</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Pratique com perguntas geradas por IA e receba feedback personalizado para arrasar na próxima entrevista

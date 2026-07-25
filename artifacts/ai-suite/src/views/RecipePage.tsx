@@ -115,7 +115,7 @@ Escreva de forma clara, detalhada e fácil de seguir.`;
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <ChefHat className="w-8 h-8 text-ai-primary" />
-          <h1 className="text-3xl font-bold ai-gradient-text">AI Recipe Generator</h1>
+          <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">AI Recipe Generator</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Transform your available ingredients into delicious recipes with AI-powered cooking assistance
@@ -301,7 +301,7 @@ Escreva de forma clara, detalhada e fácil de seguir.`;
                 </TabsList>
               </div>
 
-              <div className="flex-1 min-h-[400px] border rounded-md p-4 bg-background overflow-auto">
+              <div className="flex-1 min-h-[400px] border rounded-md p-4 bg-background overflow-y-auto overflow-x-hidden">
                 {(isStreaming ? streamedText : recipe) ? (
                   <>
                     <TabsContent value="preview" className="mt-0 h-full">

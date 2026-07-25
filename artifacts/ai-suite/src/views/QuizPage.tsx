@@ -186,7 +186,7 @@ Make the questions educational, engaging, and appropriate for the ${difficulty} 
     return (
       <div className="p-4 lg:p-6 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold ai-gradient-text">Quiz Results</h1>
+          <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">Quiz Results</h1>
           <p className="text-muted-foreground mt-2">
             Here's how you performed on the {subject} quiz
           </p>
@@ -262,7 +262,7 @@ Make the questions educational, engaging, and appropriate for the ${difficulty} 
       <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold ai-gradient-text">Quiz in Progress</h1>
+            <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">Quiz in Progress</h1>
             <p className="text-muted-foreground">Question {currentQuestion + 1} of {quiz.length}</p>
           </div>
           <Button variant="outline" onClick={resetQuiz}>
@@ -320,7 +320,7 @@ Make the questions educational, engaging, and appropriate for the ${difficulty} 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold ai-gradient-text">AI Knowledge Quiz Generator</h1>
+        <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">AI Knowledge Quiz Generator</h1>
         <p className="text-muted-foreground mt-2">
           Create custom quizzes on any topic to test your knowledge and study effectively.
         </p>

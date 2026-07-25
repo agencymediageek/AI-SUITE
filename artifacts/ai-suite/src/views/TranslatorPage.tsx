@@ -103,7 +103,7 @@ export default function TranslatorPage() {
   return (
     <div className="p-4 lg:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold ai-gradient-text">AI Translation Tool</h1>
+        <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">AI Translation Tool</h1>
         <p className="text-muted-foreground mt-2">
           Translate text between multiple languages with high accuracy and natural language processing.
         </p>
@@ -243,7 +243,7 @@ export default function TranslatorPage() {
                 </TabsList>
               </div>
 
-              <div className="flex-1 min-h-[300px] border rounded-md p-4 bg-background overflow-auto">
+              <div className="flex-1 min-h-[300px] border rounded-md p-4 bg-background overflow-y-auto overflow-x-hidden">
                 {(isStreaming ? streamedText : translatedText) ? (
                   <>
                     <TabsContent value="preview" className="mt-0 h-full">

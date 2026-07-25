@@ -64,7 +64,7 @@ Please create a professional, engaging, and appropriate email.`;
   return (
     <div className="p-4 lg:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold ai-gradient-text">Assistente de E-mails IA</h1>
+        <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">Assistente de E-mails IA</h1>
         <p className="text-muted-foreground mt-2">
           Crie e-mails profissionais para prospecção, acompanhamento, respostas e muito mais.
         </p>
@@ -170,7 +170,7 @@ Please create a professional, engaging, and appropriate email.`;
                 </TabsList>
               </div>
 
-              <div className="flex-1 min-h-[400px] border rounded-md p-4 bg-background overflow-auto">
+              <div className="flex-1 min-h-[400px] border rounded-md p-4 bg-background overflow-y-auto overflow-x-hidden">
                 {(isStreaming ? streamedText : generatedEmail) ? (
                   <>
                     <TabsContent value="preview" className="mt-0 h-full">

@@ -88,7 +88,7 @@ Please provide:
   return (
     <div className="p-4 lg:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold ai-gradient-text">Construtor de SQL IA</h1>
+        <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">Construtor de SQL IA</h1>
         <p className="text-muted-foreground mt-2">
           Converta linguagem natural em consultas SQL otimizadas.
         </p>
@@ -190,7 +190,7 @@ Please provide:
                 </TabsList>
               </div>
 
-              <div className="flex-1 min-h-[300px] border rounded-md p-4 bg-background overflow-auto">
+              <div className="flex-1 min-h-[300px] border rounded-md p-4 bg-background overflow-y-auto overflow-x-hidden">
                 {(isStreaming ? streamedText : sqlQuery) ? (
                   <>
                     <TabsContent value="preview" className="mt-0 h-full">

@@ -89,7 +89,7 @@ export default function ImageGeneratorPage() {
   return (
     <div className="container mx-auto p-4 lg:p-6 max-w-7xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Gerador de Imagens IA</h1>
+        <h1 className="text-xl lg:text-3xl font-bold mb-2">Gerador de Imagens IA</h1>
         <p className="text-muted-foreground">
           Crie imagens impressionantes com geração por IA usando Gemini
         </p>

@@ -252,6 +252,8 @@
       overflow-x: hidden !important;
       /* Remove fixed background — causa flash de repaint no scroll em mobile */
       background-attachment: scroll !important;
+      /* Prevent horizontal drift on touch — only vertical panning allowed */
+      touch-action: pan-y;
     }
     #main-scroll-container {
       overflow: visible !important;

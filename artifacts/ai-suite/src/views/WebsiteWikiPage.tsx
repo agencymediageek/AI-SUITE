@@ -167,7 +167,7 @@ export default function WebsiteWikiPage() {
                         <BookMarked className="w-8 h-8" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Website Wiki</h1>
+                        <h1 className="text-xl lg:text-3xl font-bold tracking-tight">Website Wiki</h1>
                         <p className="text-muted-foreground">Transform any website into a structured, editable Wiki document.</p>
                     </div>
                 </div>

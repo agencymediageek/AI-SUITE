@@ -119,7 +119,7 @@ Format the output clearly with bullet points and organize by sections. Be concis
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <FileText className="w-8 h-8 text-ai-primary" />
-          <h1 className="text-3xl font-bold ai-gradient-text">Gerador de Atas IA</h1>
+          <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">Gerador de Atas IA</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Transform meeting transcripts into structured, actionable notes with AI-powered analysis

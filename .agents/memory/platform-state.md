@@ -30,3 +30,28 @@ description: Status de cada área após a sessão de refinamento mobile + tradu�
 3. Documentação técnica completa
 4. Sistema de redundância / failover
 5. Rebuild limpo pós-apresentação (decidido na sessão anterior)
+
+## Lições aprendidas — fixes mobile (julho 2026)
+
+### Causa raiz do overflow horizontal
+- Classe `container` do Tailwind tem `padding: "2rem"` no config do projeto
+- Layout.tsx já adiciona `p-4 lg:p-6 xl:p-8` ao content area
+- Qualquer componente dentro de Layout que use `container` sem override de padding = double-padding
+- Fix: substituir `container max-w-X` por `w-full max-w-X mx-auto` (remove o padding extra do container)
+- Afeta: ToolPage, HeadlineGenerator, InstagramCaptionGenerator
+
+### Ícone "tic-tac" (oval) em flex containers
+- Sem `shrink-0`, flex comprime a largura do wrapper de ícone mas mantém a altura → oval
+- Fix: sempre adicionar `shrink-0` em wrappers de ícone com dimensões fixas (w-14 h-14 etc.)
+- Título grande (`text-3xl`) ao lado do ícone piora o problema → usar `text-xl sm:text-2xl lg:text-3xl`
+- Div de texto precisa de `min-w-0` para wrapping correto
+
+### Flash no scroll da home page (mobile)
+- Causa: elementos com `position: fixed` + `filter: blur(N px)` causam GPU repaint em cada scroll
+- Afeta: Layout.tsx (3 orbs `blur-80px`) e LandingPage.tsx (3 blobs `blur-3xl`)
+- Fix: `hidden lg:block` nesses containers — desktop mantém efeito, mobile sem repaint
+
+### overflow-x mobile (universal)
+- `overflow-x: hidden` no body: CSS spec força `overflow-y: auto` = body vira scroll container
+- Mais confiável que `overflow-x: clip` (suporte limitado em browsers antigos)
+- x-transforms Framer Motion (x: ±N) causam horizontal overflow durante animação → remover todos

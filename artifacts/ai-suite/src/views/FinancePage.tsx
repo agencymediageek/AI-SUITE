@@ -441,7 +441,7 @@ Make it practical and actionable.`;
                 </TabsList>
               </div>
 
-              <div className="flex-1 min-h-[400px] border rounded-md p-4 bg-background overflow-auto">
+              <div className="flex-1 min-h-[400px] border rounded-md p-4 bg-background overflow-y-auto overflow-x-hidden">
                 {(isStreaming ? streamedText : results.budget) ? (
                   <>
                     <TabsContent value="preview" className="mt-0 h-full">

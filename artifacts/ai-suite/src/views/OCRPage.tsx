@@ -92,7 +92,7 @@ export default function OCRPage() {
   return (
     <div className="p-4 lg:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold ai-gradient-text">AI OCR Tool</h1>
+        <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">AI OCR Tool</h1>
         <p className="text-muted-foreground mt-2">
           Extract text from images and documents with high accuracy using advanced OCR technology.
         </p>
@@ -170,7 +170,7 @@ export default function OCRPage() {
           <CardContent>
             {streamedText ? (
               <div className="space-y-4">
-                <div className="bg-background border p-4 rounded-lg min-h-[300px] max-h-[500px] overflow-auto shadow-inner">
+                <div className="bg-background border p-4 rounded-lg min-h-[300px] max-h-[500px] overflow-y-auto overflow-x-hidden shadow-inner">
                   <MarkdownRenderer content={streamedText} />
                   {isStreaming && (
                     <div className="flex gap-1 mt-2">

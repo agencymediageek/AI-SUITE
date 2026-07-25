@@ -138,7 +138,7 @@ Make it engaging and platform-appropriate.`;
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <Hash className="w-8 h-8 text-ai-primary" />
-          <h1 className="text-3xl font-bold ai-gradient-text">Gerador de Posts para Redes Sociais IA</h1>
+          <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">Gerador de Posts para Redes Sociais IA</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Generate engaging captions, hashtags, and content ideas for all social media platforms

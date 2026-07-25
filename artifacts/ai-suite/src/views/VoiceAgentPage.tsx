@@ -490,7 +490,7 @@ export default function VoiceAgentPage() {
               <Phone className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold ai-gradient-text">
+              <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">
                 AI Voice Calling Agent
               </h1>
               <p className="text-muted-foreground text-sm mt-1">

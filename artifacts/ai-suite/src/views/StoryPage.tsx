@@ -102,7 +102,7 @@ Please write an engaging story with a clear beginning, middle, and end.`;
   return (
     <div className="p-4 lg:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold ai-gradient-text">AI Story Writer</h1>
+        <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">AI Story Writer</h1>
         <p className="text-muted-foreground mt-2">
           Create compelling stories and scripts with AI assistance. Choose your genre, characters, and plot elements.
         </p>
@@ -257,7 +257,7 @@ Please write an engaging story with a clear beginning, middle, and end.`;
                 </TabsList>
               </div>
 
-              <div className="flex-1 min-h-[400px] border rounded-md p-4 bg-background overflow-auto">
+              <div className="flex-1 min-h-[400px] border rounded-md p-4 bg-background overflow-y-auto overflow-x-hidden">
                 {(isStreaming ? streamedText : generatedContent.story) ? (
                   <>
                     <TabsContent value="preview" className="mt-0 h-full">

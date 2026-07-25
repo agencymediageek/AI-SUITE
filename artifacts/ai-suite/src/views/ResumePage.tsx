@@ -163,7 +163,7 @@ Make it compelling and tailored to the position.`;
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <Briefcase className="w-8 h-8 text-ai-primary" />
-          <h1 className="text-3xl font-bold ai-gradient-text">AI Resume & Cover Letter Builder</h1>
+          <h1 className="text-xl lg:text-3xl font-bold ai-gradient-text">AI Resume & Cover Letter Builder</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Create professional resumes and personalized cover letters with AI assistance
