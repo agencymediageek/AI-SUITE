@@ -591,8 +591,8 @@ export default function LandingPage() {
                 >
                     {/* Announcement Badge */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{ duration: 0.5 }}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
                     >
@@ -609,8 +609,8 @@ export default function LandingPage() {
                     {/* Main Heading */}
                     <motion.h1
                         className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight mb-6"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
                     >
                         <span className="text-foreground">The Ultimate</span>
@@ -623,8 +623,8 @@ export default function LandingPage() {
                     {/* Subheading */}
                     <motion.p
                         className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.2 }}
                     >
                         {t("Access")} {TOOLS_COUNT_DISPLAY} {t("powerful AI tools. Generate content, code, images, websites, and more with cutting-edge AI technology.")}
@@ -633,8 +633,8 @@ export default function LandingPage() {
                     {/* CTA Buttons */}
                     <motion.div
                         className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.3 }}
                     >
                         <Link href="/login" target="_blank" rel="noopener noreferrer">
@@ -657,8 +657,8 @@ export default function LandingPage() {
                     {/* Stats */}
                     <motion.div
                         className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.4 }}
                     >
                         {stats.map((stat, index) => (

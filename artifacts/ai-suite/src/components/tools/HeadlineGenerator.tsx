@@ -229,9 +229,9 @@ export function HeadlineGenerator() {
                             {headlines.map((headline, index) => (
                                 <motion.div
                                     key={index}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 20 }}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
                                     transition={{ delay: index * 0.1 }}
                                 >
                                     <Card className="group relative overflow-hidden border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500/50 transition-colors bg-white dark:bg-slate-900">

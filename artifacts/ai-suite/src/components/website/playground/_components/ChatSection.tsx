@@ -93,8 +93,8 @@ const ActionIcon = ({ type }: { type: ThinkingAction['type'] }) => {
 
 const ActionRow = ({ action, index }: { action: ThinkingAction; index: number }) => (
   <motion.div
-    initial={{ opacity: 0, x: -8 }}
-    animate={{ opacity: 1, x: 0 }}
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
     transition={{ delay: index * 0.07 }}
     className="flex items-center gap-2 py-0.5"
   >
@@ -265,8 +265,8 @@ const AiMessageCard = ({ msg, onSend }: { msg: Messages, onSend?: (input: string
             {summaryLines.map((line, i) => (
               <motion.li
                 key={i}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{ delay: i * 0.06 }}
                 className="flex items-start gap-2 text-[12px] text-gray-600 dark:text-zinc-400"
               >

@@ -245,16 +245,13 @@
   }
 
 
-  /* Mobile: scroll natural — html overflow-x bloqueia scroll horizontal no viewport level */
+  /* Mobile: scroll natural de página com bloqueio horizontal universal */
   @media (max-width: 1023px) {
-    html, body {
-      overflow-x: clip; /* clip não cria BFC nem afeta overflow-y implícito */
-      background-attachment: scroll !important; /* fixed causa flash/repaint em mobile */
-    }
     body {
-      height: auto !important;
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch;
+      /* overflow-x:hidden forces overflow-y:auto per CSS spec = body is the scroll container */
+      overflow-x: hidden !important;
+      /* Remove fixed background — causa flash de repaint no scroll em mobile */
+      background-attachment: scroll !important;
     }
     #main-scroll-container {
       overflow: visible !important;

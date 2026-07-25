@@ -145,8 +145,8 @@ export function ToolPage({
             <div className="container max-w-5xl py-8 space-y-6">
                 {/* Header */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     className="space-y-4"
                 >
                     <div className="flex items-center gap-4">
@@ -183,8 +183,8 @@ export function ToolPage({
                 <div className="grid gap-6 lg:grid-cols-2">
                     {/* Input Section */}
                     <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{ delay: 0.1 }}
                     >
                         <Card className="h-full">
@@ -254,8 +254,8 @@ export function ToolPage({
 
                     {/* Output Section */}
                     <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                     >
                         <Card className="h-full">
