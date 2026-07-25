@@ -133,7 +133,7 @@ export default function CodePage() {
   };
 
   return (
-    <div className="p-6 h-full">
+    <div className="p-4 lg:p-6">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <Code className="w-6 h-6 text-ai-primary" />
@@ -144,7 +144,7 @@ export default function CodePage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100%-120px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[600px]">
         {/* Input Section */}
         <Card className="ai-card">
           <CardHeader>

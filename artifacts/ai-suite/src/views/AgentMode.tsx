@@ -60,7 +60,7 @@ const AgentMode = () => {
     };
 
     return (
-        <div className="flex h-[calc(100vh-4rem)] w-full flex-col bg-background p-4 md:p-8 gap-4">
+        <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col bg-background p-4 md:p-8 gap-4">
             <div className="flex items-center justify-between">
                 <h1 className="font-semibold text-2xl">Agent Mode</h1>
                 <div className="w-[200px]">

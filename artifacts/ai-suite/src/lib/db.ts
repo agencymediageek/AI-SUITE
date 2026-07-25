@@ -769,15 +769,20 @@ class SystemDB {
     }
 
     async saveWebsite(project: WebsiteProject): Promise<void> {
+        // Normalize messages: pg driver may mis-handle arrays for jsonb columns.
+        // Always pass a valid JSON string and cast explicitly with ::jsonb.
+        let msgs = project.messages ?? [];
+        const messagesJson = typeof msgs === 'string' ? msgs : JSON.stringify(msgs);
+
         await query(
             `INSERT INTO websites (id, user_email, name, code, subdomain, messages, preview_image, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)
              ON CONFLICT (id) DO UPDATE SET
                user_email = EXCLUDED.user_email, name = EXCLUDED.name, code = EXCLUDED.code,
                subdomain = EXCLUDED.subdomain, messages = EXCLUDED.messages,
                preview_image = EXCLUDED.preview_image, updated_at = EXCLUDED.updated_at`,
             [project.id, project.userEmail.toLowerCase(), project.name, project.code,
-             project.subdomain, project.messages, project.previewImage, project.createdAt, project.updatedAt]
+             project.subdomain, messagesJson, project.previewImage, project.createdAt, project.updatedAt]
         );
     }
 

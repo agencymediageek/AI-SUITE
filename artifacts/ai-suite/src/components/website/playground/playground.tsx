@@ -240,6 +240,7 @@ const PlayGroundContent = () => {
   const [subdomainInput, setSubdomainInput] = useState<string>("")
   const [liveThinking, setLiveThinking] = useState<string>("")
   const [showBanner, setShowBanner] = useState<boolean>(false)
+  const [mobileTab, setMobileTab] = useState<'chat' | 'preview'>('chat')
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -692,40 +693,59 @@ User Modification Request: ${input}
           </button>
         </div>
       )}
-      <div className='flex flex-1 overflow-hidden min-w-0'>
-        {/* chatSection */}
-        <ChatSection
-          messages={messages}
-          chatLoader={chatLoader}
-          onSend={(input: string, image: string | null) => SendMessage(input, image)}
-          loading={loading}
-          liveThinking={liveThinking}
-          visualEditsActive={visualEditsActive}
-          setVisualEditsActive={setVisualEditsActive}
-          selectedElementTag={selectedElementTag}
-          clearSelection={() => {
-            setSelectedElementPath(null);
-            setSelectedElementTag(null);
-          }}
-        />
-        {/* websiteDesign */}
-        <WebsiteDesign
-          generatedCode={generatedCode}
-          onSave={() => SaveGeneratedCode(generatedCode)}
-          onPublish={() => setShowSubdomainModal(true)}
-          onUnpublish={UnpublishGeneratedCode}
-          isSaving={isSaving}
-          isPublishing={isPublishing}
-          loading={loading}
-          projectSubdomain={projectSubdomain}
-          visualEditsActive={visualEditsActive}
-          selectedElementPath={selectedElementPath}
-          setSelectedElementPath={setSelectedElementPath}
-          setSelectedElementTag={setSelectedElementTag}
-          onCodeChange={(newHtml: string) => setGeneratedCode(newHtml)}
-          onSendTargetedPrompt={(prompt: string) => SendMessage(prompt, null)}
-        />
+      {/* Mobile tab toggle — only visible on small screens */}
+      <div className="lg:hidden flex border-b border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 shrink-0">
+        <button
+          onClick={() => setMobileTab('chat')}
+          className={`flex-1 py-2.5 text-[13px] font-semibold transition-colors ${mobileTab === 'chat' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 dark:text-zinc-400'}`}
+        >
+          💬 Chat
+        </button>
+        <button
+          onClick={() => setMobileTab('preview')}
+          className={`flex-1 py-2.5 text-[13px] font-semibold transition-colors ${mobileTab === 'preview' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 dark:text-zinc-400'}`}
+        >
+          🖥️ Preview
+        </button>
+      </div>
 
+      <div className='flex flex-col lg:flex-row flex-1 overflow-hidden min-w-0'>
+        {/* chatSection */}
+        <div className={`${mobileTab === 'chat' ? 'flex' : 'hidden'} lg:flex flex-col flex-1 lg:flex-none min-w-0`} style={{ flexBasis: '38%', maxWidth: '100%' }}>
+          <ChatSection
+            messages={messages}
+            chatLoader={chatLoader}
+            onSend={(input: string, image: string | null) => SendMessage(input, image)}
+            loading={loading}
+            liveThinking={liveThinking}
+            visualEditsActive={visualEditsActive}
+            setVisualEditsActive={setVisualEditsActive}
+            selectedElementTag={selectedElementTag}
+            clearSelection={() => {
+              setSelectedElementPath(null);
+              setSelectedElementTag(null);
+            }}
+          />
+        </div>
+        {/* websiteDesign */}
+        <div className={`${mobileTab === 'preview' ? 'flex' : 'hidden'} lg:flex flex-col flex-1 min-w-0`}>
+          <WebsiteDesign
+            generatedCode={generatedCode}
+            onSave={() => SaveGeneratedCode(generatedCode)}
+            onPublish={() => setShowSubdomainModal(true)}
+            onUnpublish={UnpublishGeneratedCode}
+            isSaving={isSaving}
+            isPublishing={isPublishing}
+            loading={loading}
+            projectSubdomain={projectSubdomain}
+            visualEditsActive={visualEditsActive}
+            selectedElementPath={selectedElementPath}
+            setSelectedElementPath={setSelectedElementPath}
+            setSelectedElementTag={setSelectedElementTag}
+            onCodeChange={(newHtml: string) => setGeneratedCode(newHtml)}
+            onSendTargetedPrompt={(prompt: string) => SendMessage(prompt, null)}
+          />
+        </div>
       </div>
 
       <Dialog open={showSubdomainModal} onOpenChange={setShowSubdomainModal}>
