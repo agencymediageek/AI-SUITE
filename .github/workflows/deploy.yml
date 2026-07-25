@@ -18,7 +18,9 @@ jobs:
           host: 179.197.229.207
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 15m
+          port: 22
+          timeout: 60s
+          command_timeout: 20m
           script: |
             export PATH="/usr/bin:/usr/local/bin:$PATH"
             set -e
