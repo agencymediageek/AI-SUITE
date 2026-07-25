@@ -537,6 +537,10 @@ SECTION 11: TABLES
 
             content = {
                 contents,
+                generationConfig: {
+                    temperature: body.temperature !== undefined ? Number(body.temperature) : 1.0,
+                    maxOutputTokens: 8192,
+                }
             };
 
             if (body.systemPrompt) {

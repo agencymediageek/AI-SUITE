@@ -244,7 +244,7 @@ Make it practical and actionable.`;
                           onValueChange={(value) => updateIncomeItem(index, "category", value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Category" />
+                            <SelectValue placeholder="Categoria" />
                           </SelectTrigger>
                           <SelectContent>
                             {incomeCategories.map((cat) => (
@@ -256,13 +256,13 @@ Make it practical and actionable.`;
                         </Select>
                         <Input
                           type="number"
-                          placeholder="Amount"
+                          placeholder="Valor"
                           value={item.amount}
                           onChange={(e) => updateIncomeItem(index, "amount", e.target.value)}
                         />
                       </div>
                       <Input
-                        placeholder="Description (optional)"
+                        placeholder="Descrição (opcional)"
                         value={item.description}
                         onChange={(e) => updateIncomeItem(index, "description", e.target.value)}
                       />
@@ -305,7 +305,7 @@ Make it practical and actionable.`;
                           onValueChange={(value) => updateExpenseItem(index, "category", value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Category" />
+                            <SelectValue placeholder="Categoria" />
                           </SelectTrigger>
                           <SelectContent>
                             {expenseCategories.map((cat) => (
@@ -317,13 +317,13 @@ Make it practical and actionable.`;
                         </Select>
                         <Input
                           type="number"
-                          placeholder="Amount"
+                          placeholder="Valor"
                           value={item.amount}
                           onChange={(e) => updateExpenseItem(index, "amount", e.target.value)}
                         />
                       </div>
                       <Input
-                        placeholder="Description (optional)"
+                        placeholder="Descrição (opcional)"
                         value={item.description}
                         onChange={(e) => updateExpenseItem(index, "description", e.target.value)}
                       />
@@ -361,7 +361,7 @@ Make it practical and actionable.`;
                       <Label htmlFor="goalCategory">Goal Type</Label>
                       <Select value={financialData.goalCategory} onValueChange={(value) => handleInputChange("goalCategory", value)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select goal type" />
+                          <SelectValue placeholder="Selecione o tipo de meta" />
                         </SelectTrigger>
                         <SelectContent>
                           {financialGoals.map((goal) => (

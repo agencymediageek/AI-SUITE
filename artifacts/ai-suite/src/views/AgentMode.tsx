@@ -66,7 +66,7 @@ const AgentMode = () => {
                 <div className="w-[200px]">
                     <Select value={role} onValueChange={(v) => handleRoleChange(v as AgentRole)}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select Agent Role" />
+                            <SelectValue placeholder="Selecione o papel do agente" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="developer">Developer Agent</SelectItem>

@@ -150,12 +150,12 @@ export default function CodePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Terminal className="w-5 h-5" />
-              Code Settings
+              Configurações de Código
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="task-type">Task Type *</Label>
+              <Label htmlFor="task-type">Tipo de Tarefa *</Label>
               <Select value={taskType} onValueChange={setTaskType}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo de tarefa" />
@@ -171,7 +171,7 @@ export default function CodePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="language">Programming Language *</Label>
+              <Label htmlFor="language">Linguagem de Programação *</Label>
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a linguagem" />
@@ -196,8 +196,8 @@ export default function CodePage() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={
                   taskType === "generate"
-                    ? "e.g., Create a function that validates email addresses"
-                    : "e.g., The function throws an error when handling null values"
+                    ? "Ex: Crie uma função que valide endereços de e-mail"
+                    : "Ex: A função lança um erro ao lidar com valores nulos"
                 }
                 className="min-h-[100px]"
               />
@@ -205,7 +205,7 @@ export default function CodePage() {
 
             {(taskType === "debug" || taskType === "explain" || taskType === "optimize" || taskType === "convert") && (
               <div className="space-y-2">
-                <Label htmlFor="existing-code">Existing Code</Label>
+                <Label htmlFor="existing-code">Código Existente</Label>
                 <Textarea
                   id="existing-code"
                   value={existingCode}
@@ -221,7 +221,7 @@ export default function CodePage() {
               disabled={isStreaming}
               className="w-full"
             >
-              {isStreaming ? "Processing..." : "Generate Code"}
+              {isStreaming ? "Gerando..." : "Gerar Código"}
             </Button>
           </CardContent>
         </Card>
@@ -230,7 +230,7 @@ export default function CodePage() {
         <Card className="ai-card flex flex-col h-full">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              Generated Code
+              Código Gerado
               {output && (
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={copyToClipboard}>

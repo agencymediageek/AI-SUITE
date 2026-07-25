@@ -110,7 +110,7 @@ export default function WriterPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Wand2 className="w-5 h-5" />
-              Content Settings
+              Configurações de Conteúdo
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

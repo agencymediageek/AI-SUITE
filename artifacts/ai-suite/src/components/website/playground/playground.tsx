@@ -46,12 +46,19 @@ export type Messages = {
 const prompt: string = `
 userInput: {userInput}
 
+CONSISTENCY RULES (OBRIGATÓRIO — nunca ignore):
+- SEMPRE use azul (#2563EB / blue-600) como cor primária. Nunca mude a cor primária sem solicitação explícita.
+- SEMPRE gere HTML completo com a MESMA estrutura base: 1) Header/Nav, 2) Hero, 3) Features/Content, 4) CTA, 5) Footer.
+- NUNCA gere layouts radicalmente diferentes para o mesmo tipo de prompt. Mantenha consistência visual entre sessões.
+- Use SOMENTE classes Tailwind CSS. Zero CSS customizado ou inline styles.
+- Cada elemento interativo DEVE ter implementação JavaScript 100% funcional.
+
 Instructions:
 
 1. If the user input is explicitly asking to generate 
-code, design, or HTML/CSS/JS output (e.g., “Create a 
-landing page”, “Build a dashboard”, “Generate HTML 
-Tailwind CSS code”), then:
+code, design, or HTML/CSS/JS output (e.g., "Create a 
+landing page", "Build a dashboard", "Generate HTML 
+Tailwind CSS code"), then:
 
     - Generate a complete HTML Tailwind CSS code using 
       Flowbite UI components.

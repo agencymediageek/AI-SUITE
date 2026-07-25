@@ -43,9 +43,9 @@ export default function SummarizerPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold ai-gradient-text">AI Document Summarizer</h1>
+        <h1 className="text-3xl font-bold ai-gradient-text">Resumidor de Documentos IA</h1>
         <p className="text-muted-foreground mt-2">
-          Quickly summarize long documents, articles, or text content while preserving key information.
+          Resuma rapidamente documentos longos, artigos ou textos preservando as informações principais.
         </p>
       </div>
 
@@ -55,15 +55,15 @@ export default function SummarizerPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="w-5 h-5 text-ai-primary" />
-              Input Text
+              Texto de Entrada
             </CardTitle>
             <CardDescription>
-              Paste your text content below to get a comprehensive summary.
+              Cole seu conteúdo abaixo para obter um resumo completo.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
-              placeholder="Paste your long text, article, or document content here..."
+              placeholder="Cole seu texto longo, artigo ou conteúdo aqui..."
               value={text}
               onChange={(e) => setText(e.target.value)}
               className="min-h-[300px] resize-none"
@@ -76,12 +76,12 @@ export default function SummarizerPage() {
               {isStreaming ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Summarizing...
+                  Resumindo...
                 </>
               ) : (
                 <>
                   <FileText className="w-4 h-4 mr-2" />
-                  Summarize Text
+                  Resumir Texto
                 </>
               )}
             </Button>
@@ -96,15 +96,15 @@ export default function SummarizerPage() {
               Summary
             </CardTitle>
             <CardDescription>
-              Your AI-generated summary will appear here.
+              Seu resumo gerado pela IA aparecerá aqui.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col">
             <Tabs defaultValue="preview" className="flex-1 flex flex-col">
               <div className="flex justify-end mb-2">
                 <TabsList>
-                  <TabsTrigger value="preview">Preview</TabsTrigger>
-                  <TabsTrigger value="edit">Edit</TabsTrigger>
+                  <TabsTrigger value="preview">Visualizar</TabsTrigger>
+                  <TabsTrigger value="edit">Editar</TabsTrigger>
                 </TabsList>
               </div>
 
@@ -127,7 +127,7 @@ export default function SummarizerPage() {
                   <div className="h-full flex items-center justify-center text-muted-foreground">
                     <div className="text-center">
                       <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>Your summary will appear here after processing</p>
+                      <p>O resumo aparecerá aqui após o processamento</p>
                     </div>
                   </div>
                 )}
@@ -140,24 +140,24 @@ export default function SummarizerPage() {
       {/* Features Section */}
       <Card className="ai-card">
         <CardHeader>
-          <CardTitle>Summarization Features</CardTitle>
+          <CardTitle>Recursos do Resumidor</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4">
               <FileText className="w-8 h-8 mx-auto mb-2 text-ai-primary" />
-              <h3 className="font-semibold mb-1">Key Points</h3>
-              <p className="text-sm text-muted-foreground">Extracts main ideas and important details</p>
+              <h3 className="font-semibold mb-1">Pontos Principais</h3>
+              <p className="text-sm text-muted-foreground">Extrai ideias principais e detalhes importantes</p>
             </div>
             <div className="text-center p-4">
               <Upload className="w-8 h-8 mx-auto mb-2 text-ai-secondary" />
-              <h3 className="font-semibold mb-1">Smart Processing</h3>
-              <p className="text-sm text-muted-foreground">Handles long texts with intelligent compression</p>
+              <h3 className="font-semibold mb-1">Processamento Inteligente</h3>
+              <p className="text-sm text-muted-foreground">Processa textos longos com compressão inteligente</p>
             </div>
             <div className="text-center p-4">
               <FileText className="w-8 h-8 mx-auto mb-2 text-ai-primary" />
-              <h3 className="font-semibold mb-1">Structured Output</h3>
-              <p className="text-sm text-muted-foreground">Clear, organized summaries</p>
+              <h3 className="font-semibold mb-1">Saída Estruturada</h3>
+              <p className="text-sm text-muted-foreground">Resumos claros e organizados</p>
             </div>
           </div>
         </CardContent>

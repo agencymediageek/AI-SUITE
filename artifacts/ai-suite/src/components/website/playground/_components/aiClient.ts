@@ -23,6 +23,7 @@ export async function* streamGeminiResponse(messages: { role: string; content: s
     systemPrompt: instructionMsg?.content, // Pass the big prompt as systemPrompt
     model: model,
     tool: "website-builder",
+    temperature: 0.1, // Baixa temperatura = saída consistente e determinística
     isManual: true
   };
 

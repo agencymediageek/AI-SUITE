@@ -314,7 +314,7 @@ export default function ChatPage() {
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your message here..."
+                  placeholder="Digite sua mensagem aqui..."
                   className="min-h-[44px] max-h-[120px] resize-none py-3 focus-visible:ring-ai-primary/20 transition-all border-muted-foreground/20 rounded-xl"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
