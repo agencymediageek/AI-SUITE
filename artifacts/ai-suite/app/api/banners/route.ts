@@ -1,28 +1,23 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { query } from "@/lib/pg";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
         const now = new Date().toISOString();
-
-        // Fetch active banners within time range
-        const { data, error } = await supabaseAdmin
-            .from("announcement_banners")
-            .select("*")
-            .eq("is_enabled", true)
-            .lte("start_date", now)
-            .gte("end_date", now)
-            .order("priority", { ascending: false })
-            .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        // Return the highest priority active banner (only one needed for frontend display)
-        return NextResponse.json(data[0] || null);
+        const res = await query(
+            `SELECT * FROM announcement_banners
+             WHERE is_enabled = true
+               AND start_date <= $1
+               AND end_date >= $1
+             ORDER BY priority DESC, created_at DESC
+             LIMIT 1`,
+            [now]
+        );
+        return NextResponse.json(res.rows[0] || null);
     } catch (error: any) {
         console.error("Error fetching public banner:", error);
-        return NextResponse.json({ error: "Failed to fetch banner" }, { status: 500 });
+        return NextResponse.json(null);
     }
 }

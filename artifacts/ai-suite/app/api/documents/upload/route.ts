@@ -6,48 +6,9 @@ import { processDocument, processText } from '@/lib/rag';
 import { scrapeUrl } from '@/lib/scraper';
 import { extractTextFromFile } from '@/lib/docProcessor';
 import axios from 'axios';
-
-// Check if documents table and storage bucket exist
-async function checkStorageAndDatabase(): Promise<{ tableExists: boolean; bucketExists: boolean }> {
-    const status = { tableExists: false, bucketExists: false };
-    try {
-        const { supabaseAdmin } = await import('@/lib/supabase');
-
-        // Check table
-        const { error: tableError } = await supabaseAdmin
-            .from('documents')
-            .select('id')
-            .limit(1);
-        status.tableExists = !tableError || !tableError.message.includes('does not exist');
-
-        // Check bucket
-        const { data: buckets } = await supabaseAdmin.storage.listBuckets();
-        status.bucketExists = !!buckets?.find(b => b.id === 'documents');
-
-        return status;
-    } catch {
-        return status;
-    }
-}
-
-async function ensureBucketExists() {
-    try {
-        const { supabaseAdmin } = await import('@/lib/supabase');
-        const { data: buckets } = await supabaseAdmin.storage.listBuckets();
-        const exists = buckets?.find(b => b.id === 'documents');
-
-        if (!exists) {
-            console.log("Creating 'documents' bucket...");
-            const { error } = await supabaseAdmin.storage.createBucket('documents', {
-                public: true,
-                fileSizeLimit: 10485760 // 10MB
-            });
-            if (error) console.error("Error creating bucket:", error);
-        }
-    } catch (err) {
-        console.error("Failed to ensure bucket exists:", err);
-    }
-}
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 export async function POST(req: Request) {
     try {
@@ -56,22 +17,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Check setup
-        const { tableExists, bucketExists } = await checkStorageAndDatabase();
-
-        if (!tableExists) {
-            return NextResponse.json({
-                error: 'Database not configured',
-                details: 'The documents table has not been created yet. Please run the SQL schema in your Supabase SQL Editor. Check the schema.sql file for the required SQL.',
-                needsSetup: true
-            }, { status: 503 });
-        }
-
-        if (!bucketExists) {
-            await ensureBucketExists();
-        }
-
-        // Parse request
         const contentType = req.headers.get('content-type') || '';
         let file: File | null = null;
         let url: string | null = null;
@@ -89,16 +34,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'No file or URL provided' }, { status: 400 });
         }
 
+        // ── URL-based training ─────────────────────────────────────────────────
         if (url) {
-            // Handle URL-based training
             let text = '';
             let title = url;
-
             const isPdf = url.toLowerCase().endsWith('.pdf');
 
             try {
                 if (isPdf) {
-                    console.log(`[Upload] Detected PDF URL: ${url}`);
                     const response = await axios.get(url, { responseType: 'arraybuffer' });
                     const buffer = Buffer.from(response.data);
                     text = await extractTextFromFile(buffer, url);
@@ -109,112 +52,48 @@ export async function POST(req: Request) {
                     title = scraped.title;
                 }
             } catch (err: any) {
-                console.error("Failed to fetch or scrape URL", url, err);
-                return NextResponse.json({
-                    error: 'Failed to process URL content',
-                    details: err.message
-                }, { status: 500 });
+                return NextResponse.json({ error: 'Failed to process URL content', details: err.message }, { status: 500 });
             }
 
-            // 1. Create document record in DB
-            const doc = await db.saveDocument({
-                userEmail: session.email,
-                name: title || url,
-                status: 'processing',
-                metadata: { source: 'url', url }
-            });
-
-            // 2. Process text
+            const doc = await db.saveDocument({ userEmail: session.email, name: title || url, status: 'processing', metadata: { source: 'url', url } });
             try {
                 await processText(text, title || url, doc.id);
             } catch (procError: unknown) {
-                console.error("Processing failed for URL", doc.id, procError);
                 await db.updateDocumentStatus(doc.id, 'error');
-                return NextResponse.json({
-                    error: 'URL processing failed',
-                    details: (procError as Error).message
-                }, { status: 500 });
+                return NextResponse.json({ error: 'URL processing failed', details: (procError as Error).message }, { status: 500 });
             }
-
-            return NextResponse.json({
-                message: 'URL content processed successfully',
-                document: doc
-            });
+            return NextResponse.json({ message: 'URL content processed successfully', document: doc });
         }
 
-        // Handle File-based training
+        // ── File-based training (local temp storage — no Supabase needed) ─────
         if (file) {
             const fileName = file.name;
-    
-            // 1. Upload file to Supabase Storage (Server-side bypasses RLS)
-            const fileExt = fileName.split('.').pop();
-            const storageFileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-            const storagePath = `uploads/${storageFileName}`;
-    
-            const { supabaseAdmin } = await import('@/lib/supabase');
             const buffer = Buffer.from(await file.arrayBuffer());
-    
-            const { data: uploadData, error: uploadError } = await supabaseAdmin
-                .storage
-                .from('documents')
-                .upload(storagePath, buffer, {
-                    contentType: file.type,
-                    upsert: true
-                });
-    
-            if (uploadError) {
-                console.error("Storage upload failed", uploadError);
-                return NextResponse.json({
-                    error: 'Failed to upload file to storage',
-                    details: uploadError.message
-                }, { status: 500 });
+
+            // Write to a temp file for processing, then delete
+            const tmpPath = path.join(os.tmpdir(), `mediageek-upload-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+            try {
+                fs.writeFileSync(tmpPath, buffer);
+            } catch (e) {
+                // tmp write failed — proceed with in-memory buffer (still works)
             }
-    
-            // 2. Create document record in DB
-            const doc = await db.saveDocument({
-                userEmail: session.email,
-                name: fileName || 'Uploaded Document',
-                status: 'processing'
-            });
-    
-            // 3. Process document
+
+            const doc = await db.saveDocument({ userEmail: session.email, name: fileName || 'Uploaded Document', status: 'processing' });
             try {
                 await processDocument(buffer, fileName, doc.id);
-    
-                // Clean up storage after processing
-                await supabaseAdmin.storage.from('documents').remove([storagePath]);
             } catch (procError: unknown) {
-                console.error("Processing failed for doc", doc.id, procError);
                 await db.updateDocumentStatus(doc.id, 'error');
-                return NextResponse.json({
-                    error: 'Document processing failed',
-                    details: (procError as Error).message
-                }, { status: 500 });
+                return NextResponse.json({ error: 'Document processing failed', details: (procError as Error).message }, { status: 500 });
+            } finally {
+                // Clean up temp file
+                try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch { }
             }
-    
-            return NextResponse.json({
-                message: 'Document uploaded and processed successfully',
-                document: doc
-            });
+            return NextResponse.json({ message: 'Document uploaded and processed successfully', document: doc });
         }
 
     } catch (error: unknown) {
         console.error('Upload Error:', error);
-
-        const errorMessage = (error as Error).message || 'Upload failed';
-
-        // Check for table not found error
-        if (errorMessage.includes('documents') && errorMessage.includes('schema cache')) {
-            return NextResponse.json({
-                error: 'Database not configured',
-                details: 'Please run the SQL schema in your Supabase SQL Editor to create the documents table.',
-                needsSetup: true
-            }, { status: 503 });
-        }
-
-        return NextResponse.json({
-            error: errorMessage
-        }, { status: 500 });
+        return NextResponse.json({ error: (error as Error).message || 'Upload failed' }, { status: 500 });
     }
 }
 
@@ -224,25 +103,9 @@ export async function GET() {
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-
-        // Check setup
-        const { tableExists, bucketExists } = await checkStorageAndDatabase();
-        if (!tableExists) {
-            return NextResponse.json([]); // Return empty array if table doesn't exist
-        }
-
-        if (!bucketExists) {
-            await ensureBucketExists();
-        }
-
         const documents = await db.listDocuments(session.email);
         return NextResponse.json(documents);
     } catch (error: unknown) {
-        const errorMessage = (error as Error).message || '';
-        // If table doesn't exist, return empty array gracefully
-        if (errorMessage.includes('documents')) {
-            return NextResponse.json([]);
-        }
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+        return NextResponse.json({ error: (error as Error).message || 'Failed to list documents' }, { status: 500 });
     }
 }
