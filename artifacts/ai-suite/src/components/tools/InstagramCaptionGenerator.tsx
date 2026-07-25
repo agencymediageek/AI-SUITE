@@ -117,7 +117,7 @@ export function InstagramCaptionGenerator() {
                                 <Instagram className="w-4 h-4" />
                                 <span>Instagram Toolkit</span>
                             </div>
-                            <h1 className="text-4xl font-bold tracking-tight mb-2">Caption Generator</h1>
+                            <h1 className="text-2xl lg:text-4xl font-bold tracking-tight mb-2">Caption Generator</h1>
                             <p className="text-muted-foreground text-lg">
                                 Stop staring at a blank screen. detailed captions in seconds.
                             </p>
@@ -134,7 +134,7 @@ export function InstagramCaptionGenerator() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Estilo</Label>
                                     <Select value={vibe} onValueChange={setVibe}>

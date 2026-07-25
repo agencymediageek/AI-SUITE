@@ -151,8 +151,8 @@ export default function AIMeetingPage() {
     };
 
     const fadeUp = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
+        hidden: { opacity: 0 },
+        show: { opacity: 1, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
     };
 
     return (
@@ -165,7 +165,7 @@ export default function AIMeetingPage() {
                 className="relative text-center space-y-5 pt-4"
             >
                 {/* Decorative glow */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-radial from-[#00d4ff]/8 via-transparent to-transparent blur-3xl pointer-events-none" />
+                <div className="hidden lg:block absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-radial from-[#00d4ff]/8 via-transparent to-transparent blur-3xl pointer-events-none" />
 
                 <motion.div variants={fadeUp} className="relative">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00d4ff]/10 border border-[#00d4ff]/20 text-[#00d4ff] text-xs font-semibold mb-4">
@@ -173,7 +173,7 @@ export default function AIMeetingPage() {
                         Real-time Video & Chat
                     </div>
 
-                    <h1 className="text-4xl lg:text-5xl font-bold tracking-tight">
+                    <h1 className="text-2xl lg:text-5xl font-bold tracking-tight">
                         <span className="bg-gradient-to-r from-black via-black to-black/60 bg-clip-text text-transparent">
                             AI Meeting
                         </span>
@@ -199,7 +199,7 @@ export default function AIMeetingPage() {
 
                         <CardContent className="relative p-6 space-y-5">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00d4ff]/20 to-[#0099cc]/20 flex items-center justify-center border border-[#00d4ff]/20 shadow-lg shadow-[#00d4ff]/5">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00d4ff]/20 to-[#0099cc]/20 flex items-center justify-center shrink-0 border border-[#00d4ff]/20 shadow-lg shadow-[#00d4ff]/5">
                                     <Plus className="w-6 h-6 text-[#00d4ff]" />
                                 </div>
                                 <div>
@@ -247,7 +247,7 @@ export default function AIMeetingPage() {
 
                         <CardContent className="relative p-6 space-y-5">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#ff9f43]/20 to-[#ee5a24]/20 flex items-center justify-center border border-[#ff9f43]/20 shadow-lg shadow-[#ff9f43]/5">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#ff9f43]/20 to-[#ee5a24]/20 flex items-center justify-center shrink-0 border border-[#ff9f43]/20 shadow-lg shadow-[#ff9f43]/5">
                                     <Link2 className="w-6 h-6 text-[#ff9f43]" />
                                 </div>
                                 <div>
