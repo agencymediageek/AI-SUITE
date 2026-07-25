@@ -9,30 +9,19 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 179.197.229.207
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          timeout: 60s
-          command_timeout: 20m
-          script: |
-            export PATH="/usr/bin:/usr/local/bin:$PATH"
-            set -e
-            echo "=== git pull ==="
-            cd /var/www/mediageek
-            git pull origin main
-            echo "=== npm install ==="
-            cd artifacts/ai-suite
-            npm install --legacy-peer-deps 2>&1 | tail -5
-            echo "=== npm build ==="
-            npm run build 2>&1 | tail -10
-            echo "=== pm2 restart ==="
-            pm2 restart mediageek --update-env
-            pm2 save
-            echo "✅ Deploy concluído: $(date)"
+      - name: Trigger deploy webhook
+        run: |
+          echo "Triggering deploy on VPS..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST https://mediageek.io/webhook/deploy \
+            -H "Content-Type: application/json" \
+            -d '{"secret":"mediageek-deploy-2026"}' \
+            --max-time 15)
+          if [ "$response" = "200" ]; then
+            echo "✅ Deploy triggered successfully (HTTP $response)"
+            echo "VPS will run: git pull + npm install + npm build + pm2 restart"
+            echo "Monitor: pm2 logs mediageek"
+          else
+            echo "❌ Webhook returned HTTP $response"
+            exit 1
+          fi
