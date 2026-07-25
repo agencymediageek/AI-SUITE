@@ -737,7 +737,7 @@ export default function LandingPage() {
             </section>
 
             {/* Features Section */}
-            <section id="features" className="py-24">
+            <section id="features" className="py-24 overflow-hidden">
                 <div className="container mx-auto px-4">
                     <motion.div
                         className="text-center mb-16"
@@ -1124,7 +1124,7 @@ export default function LandingPage() {
             <div className="section-divider-glow" />
 
             {/* Tools Grid Section */}
-            <section id="tools" className="py-24 bg-muted/30 relative">
+            <section id="tools" className="py-24 bg-muted/30 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
                 <div className="container mx-auto px-4 relative z-10">
                     <motion.div
@@ -1190,7 +1190,7 @@ export default function LandingPage() {
             </section>
 
             {/* Testimonials Section */}
-            <section className="py-24">
+            <section className="py-24 overflow-hidden">
                 <div className="container mx-auto px-4">
                     <motion.div
                         className="text-center mb-16"
@@ -1241,7 +1241,7 @@ export default function LandingPage() {
             </section>
 
             {/* Pricing Section */}
-            <section id="pricing" className="py-24 bg-muted/30">
+            <section id="pricing" className="py-24 bg-muted/30 overflow-hidden">
                 <div className="container mx-auto px-4">
                     <motion.div
                         className="text-center mb-16"
