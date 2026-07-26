@@ -1,57 +1,86 @@
 ---
-name: Estado atual da plataforma MediaGeek AI
-description: Status de cada área após a sessão de refinamento mobile + traduções PT
+name: Estado da Plataforma
+description: Status atual dos dois projetos ativos — MediaGeek e TechSites — credenciais, decisões e o que falta para amanhã
 ---
 
-# Estado da plataforma (2026-07-25)
+## MediaGeek AI (mediageek.io)
 
-## O que está 100% funcional
-- Deploy automático: push → GitHub Actions (8s) → webhook VPS → build → PM2 restart
-- Website builder: JSON bug resolvido, temperatura 0.1 (resultados consistentes), prompt com regras de consistência
-- Mobile scroll: page-scroll natural no mobile (overflow-hidden removido da cadeia de layout)
-- Tradução PT: ~95% das views traduzidas (ver seção pendentes abaixo)
-- Auth JWT, favoritos, plans, admin /admin
+**Estado:** Funcional no VPS, zero clientes, não lançado.
 
-## Pendentes conhecidos (detectados, não corrigidos ainda)
-- **Favoritos bug**: remover 1 favorito apaga todos (Task #4 proposta) — bug crítico pré-apresentação
-- **Admin conta**: Task #5 proposta — reynaldodallin@gmail.com já tem role=admin
-- **BrowserControlPage**: tool complexa com layouts overflow-hidden não auditada completamente
-- **TradingTerminal, VoiceAgentPage**: layouts complexos não auditados para mobile
+**Decisões confirmadas:**
+- Reconstruir/simplificar o código (menos complexidade, mais segurança)
+- Somente inglês (remover qualquer estrutura multi-idioma)
+- Somente Stripe (remover Mercado Pago completamente)
+- Deploy continua no VPS via GitHub Actions → PM2
 
-## Infraestrutura
-- VPS: root@179.197.229.207, /var/www/mediageek, PM2 process mediageek porta 3000
-- DB: PostgreSQL local, database mediageek
-- Webhook receiver: PM2 process deploy-webhook porta 9876
-- GitHub: agencymediageek/AI-SUITE, branch main
+**Bugs móbile:** todos corrigidos e deployados (8 bugs, julho 2026). Documentado em `docs/relatorio-bugs-mobile-julho-2026.md`.
 
-## Próximas prioridades (após apresentação)
-1. Fix bug favoritos (task #4)
-2. Backup automatizado do banco de dados
-3. Documentação técnica completa
-4. Sistema de redundância / failover
-5. Rebuild limpo pós-apresentação (decidido na sessão anterior)
+**Tarefas pendentes (tasks propostas):**
+- Task #4: Corrigir bug que apaga todos os favoritos ao remover um
+- Task #5: Criar conta de administrador para acessar /admin
+- Task #3: Deploy automático no Hostinger quando atualizar o GitHub
 
-## Lições aprendidas — fixes mobile (julho 2026)
+**Credenciais disponíveis:**
+- `STRIPE_SECRET_KEY` ✅
+- `STRIPE_WEBHOOK_SECRET` ✅
+- `GEMINI` ✅
+- `GROK` ✅
+- `SESSION_SECRET` ✅
+- `VPS_ROOT_PASSWORD` ✅
+- `GITHUB_TOKEN` ✅
+- SSH deploy key em `.agents/deploy_key` (gitignored)
 
-### Causa raiz do overflow horizontal
-- Classe `container` do Tailwind tem `padding: "2rem"` no config do projeto
-- Layout.tsx já adiciona `p-4 lg:p-6 xl:p-8` ao content area
-- Qualquer componente dentro de Layout que use `container` sem override de padding = double-padding
-- Fix: substituir `container max-w-X` por `w-full max-w-X mx-auto` (remove o padding extra do container)
-- Afeta: ToolPage, HeadlineGenerator, InstagramCaptionGenerator
+---
 
-### Ícone "tic-tac" (oval) em flex containers
-- Sem `shrink-0`, flex comprime a largura do wrapper de ícone mas mantém a altura → oval
-- Fix: sempre adicionar `shrink-0` em wrappers de ícone com dimensões fixas (w-14 h-14 etc.)
-- Título grande (`text-3xl`) ao lado do ícone piora o problema → usar `text-xl sm:text-2xl lg:text-3xl`
-- Div de texto precisa de `min-w-0` para wrapping correto
+## TechSites (techsites.ai) — Sistema SYNEX
 
-### Flash no scroll da home page (mobile)
-- Causa: elementos com `position: fixed` + `filter: blur(N px)` causam GPU repaint em cada scroll
-- Afeta: Layout.tsx (3 orbs `blur-80px`) e LandingPage.tsx (3 blobs `blur-3xl`)
-- Fix: `hidden lg:block` nesses containers — desktop mantém efeito, mobile sem repaint
+**Estado:** Arquitetura documentada, zero código de automação implementado. Único site em produção: `techsites.ai`.
 
-### overflow-x mobile (universal)
-- `overflow-x: hidden` no body: CSS spec força `overflow-y: auto` = body vira scroll container
-- Mais confiável que `overflow-x: clip` (suporte limitado em browsers antigos)
-- x-transforms Framer Motion (x: ±N) causam horizontal overflow durante animação → remover todos
+**O que é SYNEX:**
+Sistema de IA/automação que orquestra a criação de directory sites. Totalmente especificado em blueprints no Google Drive (`techsites-hub-main/`). Documentos principais:
+- SYNEX CORE BLUEPRINT - PROTOCOLO DE ATIVAÇÃO MESTRE
+- SYNEX-DEFINICAO-E-DESCRICAO
+- SYNEX-ESCOPO-PROMPTS-TECHSITES-FINAL
+- Arquitetura Operacional do Synex
+- Stack Operacional TechSites — GitHub, Cloudflare, n8n e VPS
+
+**O que precisa ser construído (prioridade):**
+1. `engine/build.js` — Node.js script que lê config.json + partials → gera site estático completo
+2. Partials: nav.html, footer.html, card-listing.html (extrair do Dubai Coffee)
+3. CSS variables consolidadas (remover os 20+ hex hardcoded)
+4. CI/CD: GitHub Actions → Cloudflare Pages (arquivo `deploy-pages.yml` existe no Drive, 2 versões)
+
+**Domínios Cloudflare (14, conta TechSites):**
+- `techsites.ai` ✅ live
+- `fond.coffee`, `places.guide`, `hq.tips`, `saas.tips`, `waas.host`, `llc.reviews`, `cult.tips`, `hub.guide`, `spots.tips`, `clever.reviews`, `thebest.tips`, `hho.expert`, `velorestudio.com.br` — a maioria sem DNS configurado
+
+**GitHub repos relevantes:**
+- `dubai-coffee-rebuild` — template base de directory (HTML estático, 41 arquivos com navbar duplicada)
+- `techsites-templates` — 10 nichos HTML (coach, dentist, ecom, fitness, lawyer, etc.)
+- `directory-factory` — somente documentação (sem código de automação)
+- `techsites-hub-docs` — somente prompts
+
+**Credenciais disponíveis:**
+- `CLOUDFLARE_ACCOUNT_ID` ✅ (conta TechSites)
+- `CLOUDFLARE_API_TOKEN` ✅ (conta TechSites)
+- `GITHUB_TOKEN_TECHSITES` ✅
+- `GDRIVE_TECHSITES_CREDENTIALS` ✅ (legacy — substituído pelo Replit connector)
+- Google Drive Connector ✅ `conn_google-drive_01KYDYZQZPA4G0RKX1Y494YWKA` (adicionado Jul/2026)
+- `BRIGHTDATA` ✅ (para scraping de listings)
+- `MERCADO_PAGO_ACCESS_TOKEN` ✅ (não usado no TechSites)
+
+**Credenciais MediaGeek Cloudflare:**
+- `CLOUDFLARE_MEDIAGEEK_ACCOUNT_ID` ✅ (adicionado Jul/2026)
+- `CLOUDFLARE_MEDIAGEEK_API_TOKEN` ✅ (adicionado Jul/2026)
+- Zona `mediageek.io` confirmada ativa via API
+- ⚠️ Token sem permissão `Cloudflare Pages: Read/Edit` — usuário vai corrigir amanhã
+
+**O que falta verificar amanhã:**
+- Permissão Pages no token Cloudflare MediaGeek
+- Conector Cloudflare no Replit (status: `requires_setup` — precisa ser ativado em Settings → Connectors)
+- Audit dos N8N workflows no VPS (IP/hostname necessário)
+- Verificar se `CLOUDFLARE_ACCOUNT_ID` (TechSites) tem permissão de Pages também
+
+**Auditórias salvas:**
+- `docs/auditoria-techsites-julho-2026.md` — GitHub + Cloudflare TechSites
+- `docs/auditoria-gdrive-julho-2026.md` — Google Drive completo
