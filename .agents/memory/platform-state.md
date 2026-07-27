@@ -1,86 +1,80 @@
 ---
 name: Estado da Plataforma
-description: Status atual dos dois projetos ativos — MediaGeek e TechSites — credenciais, decisões e o que falta para amanhã
+description: Mapa completo de infraestrutura, projetos, secrets e pendências — atualizado após auditoria completa Jul/2026
 ---
 
-## MediaGeek AI (mediageek.io)
+## Infraestrutura — 3 VPS
 
-**Estado:** Funcional no VPS, zero clientes, não lançado.
+### VPS 1 — Hostinger Node.js (179.197.229.207)
+- SSH: chave em `.agents/deploy_key` ✅
+- PM2: `mediageek` (porta 3000) + `deploy-webhook`
+- App: `/var/www/mediageek/artifacts/ai-suite/`
+- Deploy: GitHub push → webhook → git pull + build + pm2 restart
 
-**Decisões confirmadas:**
-- Reconstruir/simplificar o código (menos complexidade, mais segurança)
-- Somente inglês (remover qualquer estrutura multi-idioma)
-- Somente Stripe (remover Mercado Pago completamente)
-- Deploy continua no VPS via GitHub Actions → PM2
+### VPS 2 — Hostinger N8N (187.77.37.75)
+- SSH root: bloqueado → usar N8N REST API
+- Acesso: `N8N_BASE_URL` + `N8N_API_KEY` ✅
+- 50 workflows (24 ON, 26 off)
+- Sistemas: PixelForge (8 ON), TechSites (5 ON), W-Series outreach (7 ON), SEOContent (1 ON)
 
-**Bugs móbile:** todos corrigidos e deployados (8 bugs, julho 2026). Documentado em `docs/relatorio-bugs-mobile-julho-2026.md`.
-
-**Tarefas pendentes (tasks propostas):**
-- Task #4: Corrigir bug que apaga todos os favoritos ao remover um
-- Task #5: Criar conta de administrador para acessar /admin
-- Task #3: Deploy automático no Hostinger quando atualizar o GitHub
-
-**Credenciais disponíveis:**
-- `STRIPE_SECRET_KEY` ✅
-- `STRIPE_WEBHOOK_SECRET` ✅
-- `GEMINI` ✅
-- `GROK` ✅
-- `SESSION_SECRET` ✅
-- `VPS_ROOT_PASSWORD` ✅
-- `GITHUB_TOKEN` ✅
-- SSH deploy key em `.agents/deploy_key` (gitignored)
+### VPS 3 — Hostgator WHM/cPanel (redewp.com / 129.121.34.139)
+- SSH porta 22: bloqueado → usar WHM API
+- WHM API: `HOSTGATOR_WHM_API_TOKEN` ✅ funcionando
+- 4 contas cPanel: redewp, pousada, netmediageek, driverscopilot
 
 ---
 
-## TechSites (techsites.ai) — Sistema SYNEX
+## Projetos
 
-**Estado:** Arquitetura documentada, zero código de automação implementado. Único site em produção: `techsites.ai`.
+### MediaGeek AI (mediageek.io)
+- Estado: funcional, zero clientes, não lançado
+- Decisões: reconstruir — inglês only, Stripe only
+- Bugs mobile: todos corrigidos (Jul/2026)
+- Tasks pendentes: #3 auto-deploy, #4 favorites bug, #5 admin account
 
-**O que é SYNEX:**
-Sistema de IA/automação que orquestra a criação de directory sites. Totalmente especificado em blueprints no Google Drive (`techsites-hub-main/`). Documentos principais:
-- SYNEX CORE BLUEPRINT - PROTOCOLO DE ATIVAÇÃO MESTRE
-- SYNEX-DEFINICAO-E-DESCRICAO
-- SYNEX-ESCOPO-PROMPTS-TECHSITES-FINAL
-- Arquitetura Operacional do Synex
-- Stack Operacional TechSites — GitHub, Cloudflare, n8n e VPS
+### PixelForge
+- Estado: EM PRODUÇÃO com Fiverr (9 workflows N8N ativos)
+- Contexto: SaaS com sistema de créditos, magic links, onboarding Fiverr, hub upsell
+- Frontend: localização desconhecida — verificar com usuário
+- Workflows: pf-agent-bootstrap, pf-credits-purchase, pf-fiverr-inbox, pf-magic-link-reissue, pf-revision-handler, pf-agent-interest, PixelForge Fiverr Onboarding Bridge, Hub Upsell, 90-day Expiry Renewal
 
-**O que precisa ser construído (prioridade):**
-1. `engine/build.js` — Node.js script que lê config.json + partials → gera site estático completo
-2. Partials: nav.html, footer.html, card-listing.html (extrair do Dubai Coffee)
-3. CSS variables consolidadas (remover os 20+ hex hardcoded)
-4. CI/CD: GitHub Actions → Cloudflare Pages (arquivo `deploy-pages.yml` existe no Drive, 2 versões)
+### TechSites / SYNEX
+- Estado: 5 N8N workflows ativos, directory engine não implementado em código
+- N8N ativos: ts-agent-bootstrap, ts-briefing-intake, ts-chat-editor-intake, WaaS Template Builder V4, Save Template WYSIWYG
+- N8N inativos: Maestro Fábrica de Sites (off!), Perplexity-N8N Bridge, WaaS Payment Handler
+- GitHub: 16 repos (dubai-coffee-rebuild, techsites-templates como ativos principais)
+- Cloudflare: 14 domínios, só techsites.ai live
+- Drive: blueprints SYNEX completos (connector ativo)
+- Próximo: construir engine/build.js (Node.js static site generator)
 
-**Domínios Cloudflare (14, conta TechSites):**
-- `techsites.ai` ✅ live
-- `fond.coffee`, `places.guide`, `hq.tips`, `saas.tips`, `waas.host`, `llc.reviews`, `cult.tips`, `hub.guide`, `spots.tips`, `clever.reviews`, `thebest.tips`, `hho.expert`, `velorestudio.com.br` — a maioria sem DNS configurado
+### SEOContent Engine
+- Estado: V4.0 (Unified) parado, V1.0 SEO Audit ativo
+- Múltiplas versões: V2→V4, todas off exceto audit
 
-**GitHub repos relevantes:**
-- `dubai-coffee-rebuild` — template base de directory (HTML estático, 41 arquivos com navbar duplicada)
-- `techsites-templates` — 10 nichos HTML (coach, dentist, ecom, fitness, lawyer, etc.)
-- `directory-factory` — somente documentação (sem código de automação)
-- `techsites-hub-docs` — somente prompts
+### W-Series Outreach (B2B prospecting)
+- Estado: pipeline completo ATIVO
+- W1 Google Maps Scraper → W2 Email Enrichment → W3 Cold Email → W4 Follow-up → W6 WhatsApp Funnel → W7 WhatsApp Follow-up → W8 Instagram Scraper
 
-**Credenciais disponíveis:**
-- `CLOUDFLARE_ACCOUNT_ID` ✅ (conta TechSites)
-- `CLOUDFLARE_API_TOKEN` ✅ (conta TechSites)
-- `GITHUB_TOKEN_TECHSITES` ✅
-- `GDRIVE_TECHSITES_CREDENTIALS` ✅ (legacy — substituído pelo Replit connector)
-- Google Drive Connector ✅ `conn_google-drive_01KYDYZQZPA4G0RKX1Y494YWKA` (adicionado Jul/2026)
-- `BRIGHTDATA` ✅ (para scraping de listings)
-- `MERCADO_PAGO_ACCESS_TOKEN` ✅ (não usado no TechSites)
+### Hostgator Sites
+- redewp.com — rede WordPress (BeTheme/MyListing)
+- driverscopilot.app — projeto novo Jul/2026
+- net.mediageek.io — MediaGeek relacionado, Jul/2026
+- pousadasaopedrotimbo.com.br — cliente ativo (1GB)
 
-**Credenciais MediaGeek Cloudflare:**
-- `CLOUDFLARE_MEDIAGEEK_ACCOUNT_ID` ✅ (adicionado Jul/2026)
-- `CLOUDFLARE_MEDIAGEEK_API_TOKEN` ✅ (adicionado Jul/2026)
-- Zona `mediageek.io` confirmada ativa via API
-- ⚠️ Token sem permissão `Cloudflare Pages: Read/Edit` — usuário vai corrigir amanhã
+---
 
-**O que falta verificar amanhã:**
-- Permissão Pages no token Cloudflare MediaGeek
-- Conector Cloudflare no Replit (status: `requires_setup` — precisa ser ativado em Settings → Connectors)
-- Audit dos N8N workflows no VPS (IP/hostname necessário)
-- Verificar se `CLOUDFLARE_ACCOUNT_ID` (TechSites) tem permissão de Pages também
+## Secrets — Estado Completo
 
-**Auditórias salvas:**
-- `docs/auditoria-techsites-julho-2026.md` — GitHub + Cloudflare TechSites
-- `docs/auditoria-gdrive-julho-2026.md` — Google Drive completo
+Todos configurados: GEMINI, GROK, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SESSION_SECRET, GITHUB_TOKEN, GITHUB_TOKEN_TECHSITES, VPS_ROOT_PASSWORD, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, CLOUDFLARE_MEDIAGEEK_ACCOUNT_ID, CLOUDFLARE_MEDIAGEEK_API_TOKEN, BRIGHTDATA, GDRIVE_TECHSITES_CREDENTIALS (legacy), MERCADO_PAGO_ACCESS_TOKEN (descontinuar), N8N_VPS_HOST, N8N_VPS_ROOT_PASSWORD, N8N_BASE_URL, N8N_API_KEY, HOSTGATOR_VPS_HOST, HOSTGATOR_ROOT_PASSWORD, HOSTGATOR_WHM_API_TOKEN
+
+**Pendências de secrets/acesso:**
+- CLOUDFLARE_MEDIAGEEK_API_TOKEN: recriar com permissão Pages:Edit
+- Conector Cloudflare Replit: ativar em Settings → Connectors
+- PixelForge: verificar onde está o frontend e se precisa de secrets
+
+---
+
+## Auditórias Salvas
+- `docs/auditoria-techsites-julho-2026.md`
+- `docs/auditoria-gdrive-julho-2026.md`
+- `docs/auditoria-infraestrutura-completa-julho-2026.md`
