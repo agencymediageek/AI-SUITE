@@ -131,35 +131,43 @@
 }
 
 .light {
-  --background: 0 0% 100%;
+  /* Soft blue-gray base — NOT pure white */
+  --background: 214 32% 96%;
   --foreground: 222 47% 11%;
-  
-  --card: 210 40% 98%;
+
+  /* Cards are white so they pop against the base */
+  --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
-  --card-border: 214 32% 91%;
-  
+  --card-border: 214 32% 88%;
+
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
-  --popover-border: 214 32% 91%;
-  
-  --primary: 217 91% 60%;
+  --popover-border: 214 32% 88%;
+
+  --primary: 217 91% 55%;
   --primary-foreground: 0 0% 100%;
-  
-  --secondary: 258 90% 66%;
+
+  --secondary: 258 90% 60%;
   --secondary-foreground: 0 0% 100%;
-  
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  
-  --accent: 217 91% 60%;
+
+  /* Muted sections: slightly deeper blue-gray for contrast between sections */
+  --muted: 214 30% 90%;
+  --muted-foreground: 215 20% 40%;
+
+  --accent: 217 91% 55%;
   --accent-foreground: 0 0% 100%;
-  
+
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 217 91% 60%;
+
+  --border: 214 28% 84%;
+  --input: 214 28% 84%;
+  --ring: 217 91% 55%;
+
+  /* Light-mode glow adjustments */
+  --button-outline: rgba(59, 130, 246, 0.15);
+  --elevate-1: rgba(59, 130, 246, 0.04);
+  --elevate-2: rgba(59, 130, 246, 0.08);
 }
 
 @layer base {

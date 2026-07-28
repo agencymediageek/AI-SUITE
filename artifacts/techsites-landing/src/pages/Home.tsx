@@ -1,7 +1,9 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { HybridHero } from '@/components/sections/HybridHero';
+import { MarketOpportunity } from '@/components/sections/MarketOpportunity';
 import { NoPluginBloat } from '@/components/sections/NoPluginBloat';
 import { DualPath } from '@/components/sections/DualPath';
+import { LiveDemos } from '@/components/sections/LiveDemos';
 import { TemplatesShowcase } from '@/components/sections/TemplatesShowcase';
 import { PluginFeatures } from '@/components/sections/PluginFeatures';
 import { AIHosting } from '@/components/sections/AIHosting';
@@ -15,8 +17,10 @@ export default function Home() {
       <Navbar />
       <main className="flex-1">
         <HybridHero />
+        <MarketOpportunity />
         <NoPluginBloat />
         <DualPath />
+        <LiveDemos />
         <TemplatesShowcase />
         <PluginFeatures />
         <AIHosting />
