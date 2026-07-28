@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/waashost-landing/"
+title = "WaasHost — Landing Page"
+version = "1.0.0"
+id = "artifacts/waashost-landing"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/waashost-landing/" ]
+localPort = 20402
+
+[services.development]
+run = "pnpm --filter @workspace/waashost-landing run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/waashost-landing", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/waashost-landing/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20402"
+BASE_PATH = "/waashost-landing/"

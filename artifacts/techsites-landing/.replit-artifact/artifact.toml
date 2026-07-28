@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/techsites-landing/"
+title = "TechSites — Landing Page"
+version = "1.0.0"
+id = "artifacts/techsites-landing"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/techsites-landing/" ]
+localPort = 25304
+
+[services.development]
+run = "pnpm --filter @workspace/techsites-landing run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/techsites-landing", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/techsites-landing/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25304"
+BASE_PATH = "/techsites-landing/"
