@@ -9,30 +9,32 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
             <Terminal className="w-6 h-6 text-primary" />
-            <span className="font-mono font-bold text-xl glow-text">WaasHost</span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-bold text-xl glow-text">&gt;_ WaasHost</span>
+              <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                Infraestrutura TechSites AI
+              </span>
+            </div>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
-            <a href="#produto" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Produto
-            </a>
-            <a href="#como-funciona" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/#como-funciona" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Como Funciona
             </a>
-            <a href="#integracoes" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Integrações
+            <a href="/#recursos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Recursos
             </a>
-            <a href="#precos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Preços
+            <a href="/#creditos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Créditos
             </a>
+            <Link href="/infraestrutura" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Infraestrutura
+            </Link>
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-              Entrar
-            </Button>
             <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Começar Agora
+              Acessar Meu Painel
             </Button>
           </div>
         </div>

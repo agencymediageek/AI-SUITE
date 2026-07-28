@@ -11,36 +11,13 @@ export function Footer() {
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Terminal className="w-6 h-6 text-primary" />
-              <span className="font-mono font-bold text-xl glow-text">WaasHost</span>
+              <span className="font-mono font-bold text-xl glow-text">&gt;_ WaasHost</span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-              Deploy automatizado de SaaS em 3 minutos. Infraestrutura enterprise para agências.
+              O cofre central e a infraestrutura invisível por trás do ecossistema TechSites AI.
             </p>
-            <div className="flex items-center gap-3">
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 bg-muted hover:bg-primary/20 rounded-lg flex items-center justify-center transition-colors border border-border hover:border-primary/30"
-              >
-                <Github className="w-4 h-4 text-foreground" />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 bg-muted hover:bg-primary/20 rounded-lg flex items-center justify-center transition-colors border border-border hover:border-primary/30"
-              >
-                <Twitter className="w-4 h-4 text-foreground" />
-              </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 bg-muted hover:bg-primary/20 rounded-lg flex items-center justify-center transition-colors border border-border hover:border-primary/30"
-              >
-                <Linkedin className="w-4 h-4 text-foreground" />
-              </a>
+            <div className="inline-flex items-center px-3 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 mb-6">
+              Parte do Ecossistema MediaGeek
             </div>
           </div>
 
@@ -49,51 +26,41 @@ export function Footer() {
             <h4 className="font-mono font-bold text-foreground mb-4">Produto</h4>
             <ul className="space-y-3">
               <li>
-                <a href="#produto" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Features
-                </a>
-              </li>
-              <li>
-                <a href="#como-funciona" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <a href="/#como-funciona" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Como Funciona
                 </a>
               </li>
               <li>
-                <a href="#integracoes" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Integrações
+                <a href="/#recursos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Recursos
                 </a>
               </li>
               <li>
-                <a href="#precos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Preços
+                <a href="/#creditos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Créditos
                 </a>
+              </li>
+              <li>
+                <Link href="/infraestrutura" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Infraestrutura Legada
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Company */}
+          {/* Ecossistema */}
           <div>
-            <h4 className="font-mono font-bold text-foreground mb-4">Empresa</h4>
+            <h4 className="font-mono font-bold text-foreground mb-4">Ecossistema</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/sobre" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Sobre Nós
-                </Link>
+                <a href="https://techsites.ai" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  TechSites AI
+                </a>
               </li>
               <li>
-                <Link href="/blog" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link href="/carreiras" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Carreiras
-                </Link>
-              </li>
-              <li>
-                <Link href="/contato" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Contato
-                </Link>
+                <a href="https://mediageek.io" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  MediaGeek
+                </a>
               </li>
             </ul>
           </div>
@@ -120,7 +87,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2024 WaasHost. Todos os direitos reservados.
+            © 2024 WaasHost. Infraestrutura operada pela MediaGeek.
           </p>
           <div className="flex items-center gap-6">
             <Link href="/privacidade" className="text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -128,9 +95,6 @@ export function Footer() {
             </Link>
             <Link href="/termos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Termos de Uso
-            </Link>
-            <Link href="/cookies" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              Cookies
             </Link>
           </div>
         </div>
