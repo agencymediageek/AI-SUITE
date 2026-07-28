@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'wouter';
-import { Menu, X, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link } from 'wouter';
+import { Menu, X, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLang } from '@/context/LangContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [location] = useLocation();
+  const { lang, setLang, t } = useLang();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,67 +19,80 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isPlataforma = location === '/plataforma';
-
   const navLinks = [
-    { name: 'Como Funciona', href: '/#como-funciona' },
-    { name: 'Recursos', href: '/#recursos' },
-    { name: 'Preços', href: '/#precos' },
-    { name: 'Plataforma Pro', href: '/plataforma' },
+    { name: t('Home', 'Início'), href: '#' },
+    { name: t('Plugin', 'Plugin'), href: '#plugin' },
+    { name: t('Pricing', 'Preços'), href: '#pricing' },
+    { name: t('How it works', 'Como funciona'), href: '#how-it-works' },
+    { name: t('AI Chatbot', 'Chatbot IA'), href: '#chatbot' },
+    { name: t('Help', 'Ajuda'), href: '#help' },
   ];
 
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
         scrolled 
-          ? 'bg-background/80 backdrop-blur-md border-white/10' 
+          ? 'bg-background/90 backdrop-blur-md border-white/10' 
           : 'bg-transparent border-transparent'
       }`}
     >
-      <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center group-hover:glow-primary transition-all duration-300">
-            <Zap className="w-4 h-4 text-primary" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-xl tracking-tight text-white leading-none">
-              TechSites <span className="text-primary">A.I.</span>
-            </span>
-            <span className="text-[9px] text-muted-foreground uppercase tracking-widest mt-1">
-              Powered by MediaGeek
-            </span>
-          </div>
+      <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
+          <span className="text-white">TechSites</span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
-            link.href.startsWith('/') && !link.href.includes('#') ? (
-              <Link 
-                key={link.name} 
-                href={link.href}
-                className={`text-sm font-medium transition-colors ${location === link.href ? 'text-primary' : 'text-muted-foreground hover:text-white'}`}
-              >
-                {link.name}
-              </Link>
-            ) : (
-              <a 
-                key={link.name} 
-                href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
-              >
-                {link.name}
-              </a>
-            )
+            <a 
+              key={link.name} 
+              href={link.href}
+              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
+            >
+              {link.name}
+            </a>
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
+          {/* Language Toggle */}
+          <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
+            <button
+              onClick={() => setLang('EN')}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                lang === 'EN' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-white'
+              }`}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLang('PT')}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                lang === 'PT' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-white'
+              }`}
+            >
+              PT
+            </button>
+          </div>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-card border border-border hover:bg-muted transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <Moon className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
+
           <a 
             href="#download" 
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-bold hover:glow-primary transition-all duration-300"
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all duration-300"
           >
-            Instalar o Plugin — Grátis
+            {t('Get Started', 'Começar Agora')}
           </a>
         </div>
 
@@ -100,33 +116,48 @@ export function Navbar() {
           >
             <div className="container mx-auto px-6 py-4 flex flex-col gap-4">
               {navLinks.map((link) => (
-                link.href.startsWith('/') && !link.href.includes('#') ? (
-                   <Link 
-                    key={link.name} 
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-base font-medium text-white py-2"
-                  >
-                    {link.name}
-                  </Link>
-                ) : (
-                  <a 
-                    key={link.name} 
-                    href={link.href}
-                    className="text-base font-medium text-white py-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.name}
-                  </a>
-                )
+                <a 
+                  key={link.name} 
+                  href={link.href}
+                  className="text-base font-medium text-white py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.name}
+                </a>
               ))}
               <div className="h-px bg-white/10 my-2" />
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+                  <button
+                    onClick={() => setLang('EN')}
+                    className={`px-3 py-1 text-xs font-medium rounded ${
+                      lang === 'EN' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
+                    }`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => setLang('PT')}
+                    className={`px-3 py-1 text-xs font-medium rounded ${
+                      lang === 'PT' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
+                    }`}
+                  >
+                    PT
+                  </button>
+                </div>
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-lg bg-muted"
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
+              </div>
               <a 
                 href="#download" 
-                className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-xl text-base font-bold"
+                className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-lg text-base font-semibold"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Instalar o Plugin — Grátis
+                {t('Get Started', 'Começar Agora')}
               </a>
             </div>
           </motion.div>

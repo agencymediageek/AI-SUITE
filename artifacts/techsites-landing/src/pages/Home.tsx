@@ -1,11 +1,11 @@
-import React from 'react';
 import { Navbar } from '@/components/layout/Navbar';
-import { PluginHero } from '@/components/sections/PluginHero';
-import { SubstitutionBar } from '@/components/sections/SubstitutionBar';
-import { HowItWorksPlugin } from '@/components/sections/HowItWorksPlugin';
-import { VirtualStaff } from '@/components/sections/VirtualStaff';
+import { Hero } from '@/components/sections/Hero';
+import { PoweredBy } from '@/components/sections/PoweredBy';
+import { TheAudit } from '@/components/sections/TheAudit';
+import { PluginServices } from '@/components/sections/PluginServices';
 import { ComparisonTable } from '@/components/sections/ComparisonTable';
-import { CreditsPlans } from '@/components/sections/CreditsPlans';
+import { PricingPlans } from '@/components/sections/PricingPlans';
+import { ChatbotCTA } from '@/components/sections/ChatbotCTA';
 import { Footer } from '@/components/layout/Footer';
 
 export default function Home() {
@@ -13,12 +13,13 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/30 selection:text-white">
       <Navbar />
       <main className="flex-1">
-        <PluginHero />
-        <SubstitutionBar />
-        <HowItWorksPlugin />
-        <VirtualStaff />
+        <Hero />
+        <PoweredBy />
+        <TheAudit />
+        <PluginServices />
         <ComparisonTable />
-        <CreditsPlans />
+        <PricingPlans />
+        <ChatbotCTA />
       </main>
       <Footer />
     </div>

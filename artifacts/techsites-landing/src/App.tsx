@@ -5,6 +5,8 @@ import NotFound from '@/pages/not-found';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import Home from '@/pages/Home';
 import Plataforma from '@/pages/Plataforma';
+import { LangProvider } from '@/context/LangContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 const queryClient = new QueryClient();
 
@@ -22,10 +24,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
+        <LangProvider>
+          <ThemeProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+          </ThemeProvider>
+        </LangProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

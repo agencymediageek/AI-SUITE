@@ -1,107 +1,86 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { X, Check } from 'lucide-react';
+import { useLang } from '@/context/LangContext';
 
 export function ComparisonTable() {
-  const comparisons = [
+  const { t } = useLang();
+
+  const rows = [
     {
-      old: { title: "Agência de SEO", cost: "R$ 2.000/mês" },
-      new: { title: "IA corrige SEO automaticamente", cost: "Incluso" }
+      role: t('SEO Agency', 'Agência SEO'),
+      monthlyCost: '$2,000/mo',
+      withTechSites: t('AI corrects automatically — included', 'IA corrige automaticamente — incluso'),
     },
     {
-      old: { title: "Web Designer", cost: "R$ 3.500/mês" },
-      new: { title: "Editor WYSIWYG inline (você edita)", cost: "Incluso" }
+      role: t('Web Designer', 'Web Designer'),
+      monthlyCost: '$3,500/mo',
+      withTechSites: t('WYSIWYG editor — you control it', 'Editor WYSIWYG — você mesmo controla'),
     },
     {
-      old: { title: "Programador", cost: "R$ 5.000/mês" },
-      new: { title: "Plugin atualiza e mantém sem código", cost: "Incluso" }
+      role: t('Developer', 'Programador'),
+      monthlyCost: '$5,000/mo',
+      withTechSites: t('Plugin updates and maintains without code', 'Plugin atualiza e mantém sem código'),
     },
     {
-      old: { title: "Gestor de Tráfego", cost: "R$ 2.500/mês" },
-      new: { title: "Robôs de prospecção ativos 24/7", cost: "Incluso" }
+      role: t('Traffic Manager', 'Gestor de Tráfego'),
+      monthlyCost: '$2,500/mo',
+      withTechSites: t('Prospecting robots active 24/7', 'Robôs de prospecção ativos 24/7'),
     },
     {
-      old: { title: "Redator", cost: "R$ 1.500/mês" },
-      new: { title: "IA cria conteúdo no seu estilo", cost: "Incluso" }
-    }
+      role: t('Copywriter', 'Redator'),
+      monthlyCost: '$1,500/mo',
+      withTechSites: t('AI creates content in your style', 'IA cria conteúdo no seu estilo'),
+    },
+    {
+      role: t('Marketing Agency', 'Agência de Marketing'),
+      monthlyCost: '$3,000/mo',
+      withTechSites: t('WhatsApp campaigns and chatbot — automated', 'Campanhas WhatsApp e chatbot — automatizados'),
+    },
   ];
 
   return (
-    <section className="py-24">
-      <div className="container mx-auto px-6">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            O que você para de pagar.<br />O que você começa a ganhar.
+    <section className="py-20 px-6">
+      <div className="container mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
+            {t('What you stop paying. What you start gaining.', 'O que você para de pagar. O que começa a ganhar.')}
           </h2>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-card border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-            {/* Headers */}
-            <div className="grid grid-cols-2 border-b border-white/10">
-              <div className="p-8 bg-destructive/5">
-                <h3 className="text-xl font-bold text-white/80">Antes do TechSites AI</h3>
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            {/* Header */}
+            <div className="grid grid-cols-3 gap-4 p-6 border-b border-border bg-muted/30">
+              <div className="text-sm font-semibold text-white uppercase tracking-wider">
+                {t('Professional', 'Profissional')}
               </div>
-              <div className="p-8 bg-primary/5">
-                <h3 className="text-xl font-bold text-primary">Com o TechSites AI</h3>
+              <div className="text-sm font-semibold text-white uppercase tracking-wider">
+                {t('Monthly Cost', 'Custo Mensal')}
+              </div>
+              <div className="text-sm font-semibold text-white uppercase tracking-wider">
+                {t('With TechSites AI', 'Com TechSites AI')}
               </div>
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-white/5">
-              {comparisons.map((item, idx) => (
-                <div key={idx} className="grid grid-cols-2 hover:bg-white/[0.02] transition-colors">
-                  <div className="p-6 md:p-8 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-destructive/20 flex items-center justify-center">
-                        <X className="w-4 h-4 text-destructive" />
-                      </div>
-                      <span className="font-medium line-through decoration-destructive/50">{item.old.title}</span>
-                    </div>
-                    <span className="text-destructive/80 font-bold whitespace-nowrap">{item.old.cost}</span>
-                  </div>
-                  <div className="p-6 md:p-8 flex items-center justify-between gap-4 bg-primary/[0.02]">
-                    <div className="flex items-center gap-3 text-white">
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="font-medium">{item.new.title}</span>
-                    </div>
-                    <span className="text-primary font-bold whitespace-nowrap">{item.new.cost}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Totals */}
-            <div className="grid grid-cols-1 md:grid-cols-2 border-t border-white/10 bg-white/5">
-              <div className="p-8 flex flex-col justify-center border-b md:border-b-0 md:border-r border-white/10">
-                <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Custo Tradicional</span>
-                <span className="text-4xl font-bold text-white/50 line-through">R$ 14.500/mês</span>
+            {rows.map((row, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-3 gap-4 p-6 border-b border-border last:border-b-0"
+              >
+                <div className="text-white font-medium">{row.role}</div>
+                <div className="text-muted-foreground">{row.monthlyCost}</div>
+                <div className="text-muted-foreground">{row.withTechSites}</div>
               </div>
-              <div className="p-8 flex flex-col justify-center bg-primary/10 relative overflow-hidden">
-                <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-                <span className="text-sm font-bold text-primary uppercase tracking-wider mb-2 relative z-10">TechSites AI</span>
-                <div className="flex items-end gap-2 relative z-10">
-                  <span className="text-4xl font-bold text-white">R$ 97</span>
-                  <span className="text-xl text-primary font-medium mb-1">/mês</span>
-                </div>
+            ))}
+
+            {/* Total */}
+            <div className="grid grid-cols-3 gap-4 p-6 bg-primary/10 border-t-2 border-primary">
+              <div className="text-white font-bold uppercase">TOTAL</div>
+              <div className="text-white font-bold">$17,500/mo</div>
+              <div className="text-primary font-bold">
+                {t('TechSites AI: from $97/mo', 'TechSites AI: a partir de R$97/mês')}
               </div>
             </div>
           </div>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-12 text-center"
-          >
-            <div className="inline-flex items-center justify-center px-8 py-4 rounded-2xl bg-card border border-primary/30 shadow-[0_0_40px_rgba(0,212,255,0.15)]">
-              <p className="text-2xl font-bold text-white">
-                Você economiza mais de <span className="text-primary">R$ 14.000 por mês</span>
-              </p>
-            </div>
-          </motion.div>
         </div>
       </div>
     </section>
