@@ -3,23 +3,39 @@ import { Server, Database, Coins, Cpu } from 'lucide-react';
 const features = [
   {
     title: 'Registro Automático do Site',
-    description: 'Quando o plugin é instalado, seu site é adicionado à base central com perfil completo do negócio.',
+    description: 'Quando o plugin é instalado, seu site é adicionado à base central com perfil completo do negócio — nome, categoria, localização e serviços — pronto para as automações.',
     icon: Server,
+    iconColor: 'text-blue-400',
+    iconBg: 'from-blue-950 via-blue-900 to-blue-800',
+    glowColor: 'rgba(96,165,250,0.4)',
+    borderHover: 'hover:border-blue-500/40',
   },
   {
     title: 'Cofre de Dados e Backups',
-    description: 'Histórico completo do site, snapshots automáticos e proteção contra perda de dados.',
+    description: 'Snapshots completos do site gerados automaticamente toda madrugada. Histórico completo de alterações e restauração em 1 clique para qualquer versão anterior.',
     icon: Database,
+    iconColor: 'text-emerald-400',
+    iconBg: 'from-emerald-950 via-emerald-900 to-emerald-800',
+    glowColor: 'rgba(52,211,153,0.4)',
+    borderHover: 'hover:border-emerald-500/40',
   },
   {
     title: 'Central de Créditos',
-    description: 'Gerencie, recarregue e acompanhe o consumo dos créditos que alimentam as automações.',
+    description: 'Compre uma vez, use quando quiser. Gerencie, recarregue e acompanhe em tempo real o consumo de cada automação — sem mensalidade, sem surpresas.',
     icon: Coins,
+    iconColor: 'text-amber-400',
+    iconBg: 'from-amber-950 via-amber-900 to-amber-800',
+    glowColor: 'rgba(251,191,36,0.4)',
+    borderHover: 'hover:border-amber-500/40',
   },
   {
     title: 'Motor de Automações',
-    description: 'Orquestra todas as tarefas N8N: scraping, campanhas WhatsApp, relatórios e robôs de negócios.',
+    description: 'Orquestra centenas de tarefas N8N em paralelo: scraping B2B, campanhas WhatsApp, geração de artigos, relatórios de SEO e robôs de vendas — tudo rodando 24/7.',
     icon: Cpu,
+    iconColor: 'text-violet-400',
+    iconBg: 'from-violet-950 via-violet-900 to-violet-800',
+    glowColor: 'rgba(167,139,250,0.4)',
+    borderHover: 'hover:border-violet-500/40',
   },
 ];
 
@@ -34,23 +50,34 @@ export function WhatItDoes() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="bg-card/40 border border-card-border p-8 rounded-lg hover:border-primary/50 transition-colors group relative overflow-hidden"
+              className={`bg-card border border-card-border rounded-2xl overflow-hidden ${feature.borderHover} hover:scale-[1.02] transition-all duration-300 group`}
             >
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <feature.icon className="w-24 h-24 text-primary" />
-              </div>
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-center mb-6">
-                  <feature.icon className="w-6 h-6 text-primary" />
+              {/* Icon banner */}
+              <div className={`relative h-36 bg-gradient-to-b ${feature.iconBg} flex items-center justify-center`}>
+                {/* Radial glow */}
+                <div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  style={{ filter: 'blur(30px)' }}
+                >
+                  <div
+                    className="w-20 h-20 rounded-full"
+                    style={{ background: feature.glowColor }}
+                  />
                 </div>
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {feature.description}
-                </p>
+                <feature.icon
+                  className={`w-16 h-16 ${feature.iconColor} relative z-10 drop-shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                  strokeWidth={1.4}
+                />
+              </div>
+
+              {/* Text body */}
+              <div className="p-6">
+                <h3 className="text-base font-bold mb-3 text-foreground">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
               </div>
             </div>
           ))}
