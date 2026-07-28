@@ -21,10 +21,11 @@ export function Navbar() {
 
   const navLinks = [
     { name: t('Home', 'Início'), href: '#' },
-    { name: t('Plugin', 'Plugin'), href: '#plugin' },
+    { name: t('Services', 'Serviços'), href: '#portfolio' },
+    { name: t('Templates', 'Templates'), href: '#templates' },
+    { name: t('Portfolio', 'Portfolio'), href: '#portfolio' },
     { name: t('Pricing', 'Preços'), href: '#pricing' },
-    { name: t('How it works', 'Como funciona'), href: '#how-it-works' },
-    { name: t('AI Chatbot', 'Chatbot IA'), href: '#chatbot' },
+    { name: t('Plugin', 'Plugin'), href: '#plugin' },
     { name: t('Help', 'Ajuda'), href: '#help' },
   ];
 

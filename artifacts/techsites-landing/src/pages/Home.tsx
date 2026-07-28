@@ -1,11 +1,12 @@
 import { Navbar } from '@/components/layout/Navbar';
-import { Hero } from '@/components/sections/Hero';
-import { PoweredBy } from '@/components/sections/PoweredBy';
-import { TheAudit } from '@/components/sections/TheAudit';
-import { PluginServices } from '@/components/sections/PluginServices';
-import { ComparisonTable } from '@/components/sections/ComparisonTable';
-import { PricingPlans } from '@/components/sections/PricingPlans';
-import { ChatbotCTA } from '@/components/sections/ChatbotCTA';
+import { HybridHero } from '@/components/sections/HybridHero';
+import { NoPluginBloat } from '@/components/sections/NoPluginBloat';
+import { DualPath } from '@/components/sections/DualPath';
+import { TemplatesShowcase } from '@/components/sections/TemplatesShowcase';
+import { PluginFeatures } from '@/components/sections/PluginFeatures';
+import { AIHosting } from '@/components/sections/AIHosting';
+import { NichePortfolio } from '@/components/sections/NichePortfolio';
+import { FullPricing } from '@/components/sections/FullPricing';
 import { Footer } from '@/components/layout/Footer';
 
 export default function Home() {
@@ -13,13 +14,14 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/30 selection:text-white">
       <Navbar />
       <main className="flex-1">
-        <Hero />
-        <PoweredBy />
-        <TheAudit />
-        <PluginServices />
-        <ComparisonTable />
-        <PricingPlans />
-        <ChatbotCTA />
+        <HybridHero />
+        <NoPluginBloat />
+        <DualPath />
+        <TemplatesShowcase />
+        <PluginFeatures />
+        <AIHosting />
+        <NichePortfolio />
+        <FullPricing />
       </main>
       <Footer />
     </div>
