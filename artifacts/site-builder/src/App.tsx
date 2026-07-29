@@ -262,9 +262,12 @@ export default function App() {
 
               {/* URL */}
               <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, marginBottom: 8, color: '#94a3b8' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, marginBottom: 4, color: '#94a3b8' }}>
                   <Globe size={13} /> EXISTING SITE URL <span style={{ fontWeight: 400, color: '#475569' }}>(optional)</span>
                 </label>
+                <p style={{ fontSize: 12, color: '#475569', marginBottom: 8, lineHeight: 1.5 }}>
+                  Paste the client's current website. Apex will read the brand, services and tone from that URL and use them as the foundation for the new site — preserving the identity while upgrading everything else.
+                </p>
                 <input
                   type="url"
                   value={url}
