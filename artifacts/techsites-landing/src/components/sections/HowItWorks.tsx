@@ -30,7 +30,7 @@ export function HowItWorks() {
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-20">
           <h2 className="text-sm font-bold text-primary tracking-widest uppercase mb-3">Workflow Simples</h2>
-          <h3 className="text-3xl md:text-5xl font-extrabold text-white mb-6">
+          <h3 className="text-3xl md:text-5xl font-extrabold text-foreground mb-6">
             Do zero à produção em <br className="hidden md:block" />
             questão de minutos
           </h3>
@@ -54,7 +54,7 @@ export function HowItWorks() {
                   {step.number}
                 </div>
                 <div className="text-center px-4">
-                  <h4 className="text-xl font-bold text-white mb-3">{step.title}</h4>
+                  <h4 className="text-xl font-bold text-foreground mb-3">{step.title}</h4>
                   <p className="text-muted-foreground text-sm leading-relaxed">
                     {step.description}
                   </p>

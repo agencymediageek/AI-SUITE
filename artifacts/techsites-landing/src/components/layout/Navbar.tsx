@@ -39,7 +39,7 @@ export function Navbar() {
     >
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
-          <span className="text-white">TechSites</span>
+          <span className="text-foreground">TechSites</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -48,7 +48,7 @@ export function Navbar() {
             <a 
               key={link.name} 
               href={link.href}
-              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               {link.name}
             </a>
@@ -61,7 +61,7 @@ export function Navbar() {
             <button
               onClick={() => setLang('EN')}
               className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                lang === 'EN' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-white'
+                lang === 'EN' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               EN
@@ -69,7 +69,7 @@ export function Navbar() {
             <button
               onClick={() => setLang('PT')}
               className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                lang === 'PT' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-white'
+                lang === 'PT' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               PT
@@ -99,7 +99,7 @@ export function Navbar() {
 
         {/* Mobile Menu Button */}
         <button 
-          className="md:hidden text-white p-2"
+          className="md:hidden text-foreground p-2"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -120,7 +120,7 @@ export function Navbar() {
                 <a 
                   key={link.name} 
                   href={link.href}
-                  className="text-base font-medium text-white py-2"
+                  className="text-base font-medium text-foreground py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.name}

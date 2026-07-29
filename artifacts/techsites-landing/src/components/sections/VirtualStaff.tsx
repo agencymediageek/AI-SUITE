@@ -55,7 +55,7 @@ export function VirtualStaff() {
     <section id="recursos" className="py-24 bg-white/[0.02]">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Seu batalhão de funcionários digitais, <span className="text-primary">prontos 24/7</span>
           </h2>
           <p className="text-xl text-muted-foreground">
@@ -78,7 +78,7 @@ export function VirtualStaff() {
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
                   <Icon className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-4">
+                <h3 className="text-xl font-bold text-foreground mb-4">
                   {feature.title}
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">

@@ -42,7 +42,7 @@ export function HybridHero() {
 
             {/* Headline */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] mb-6">
-              <div className="text-white mb-2">
+              <div className="text-foreground mb-2">
                 {t('Build. Transform.', 'Construa. Transforme.')}
               </div>
               <div className="text-gradient-primary">
@@ -86,7 +86,7 @@ export function HybridHero() {
                 <div className="text-xs font-mono text-muted-foreground mb-2 uppercase tracking-wider">
                   {stat.label}
                 </div>
-                <div className="text-3xl md:text-4xl font-black text-white">
+                <div className="text-3xl md:text-4xl font-black text-foreground">
                   {stat.value}
                 </div>
               </div>

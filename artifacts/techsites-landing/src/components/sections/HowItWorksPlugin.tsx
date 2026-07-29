@@ -30,7 +30,7 @@ export function HowItWorksPlugin() {
     <section id="como-funciona" className="py-24 relative">
       <div className="container mx-auto px-6">
         <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Como funciona
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -65,7 +65,7 @@ export function HowItWorksPlugin() {
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-bold text-white mb-3">
+                  <h3 className="text-xl font-bold text-foreground mb-3">
                     {step.title}
                   </h3>
                   <p className="text-muted-foreground leading-relaxed">

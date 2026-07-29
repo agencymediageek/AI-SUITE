@@ -41,7 +41,7 @@ export function SubstitutionBar() {
 
         <div className="inline-block bg-card border border-white/10 rounded-2xl p-6 shadow-xl relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5" />
-          <p className="text-lg text-white font-medium relative z-10">
+          <p className="text-lg text-foreground font-medium relative z-10">
             Custo médio mensal dessas 6 pessoas: <span className="text-destructive font-bold line-through">R$ 18.000</span>
             <span className="mx-4 text-muted-foreground">→</span>
             Custo do TechSites AI: planos a partir de <span className="text-primary font-bold text-2xl">R$ 97/mês</span>

@@ -120,7 +120,7 @@ export function PluginServices() {
     <section id="plugin" className="py-20 px-6 bg-card/30">
       <div className="container mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
             {t('Everything your business needs. One plugin.', 'Tudo que seu negócio precisa. Em um plugin.')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -140,7 +140,7 @@ export function PluginServices() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center mb-4">
                 <service.icon className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">{service.title}</h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">{service.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{service.description}</p>
             </div>
           ))}

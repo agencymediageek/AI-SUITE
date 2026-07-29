@@ -20,7 +20,7 @@ export function Templates() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div className="max-w-2xl">
             <h2 className="text-sm font-bold text-secondary tracking-widest uppercase mb-3">8 Nichos Validados</h2>
-            <h3 className="text-3xl md:text-5xl font-extrabold text-white mb-4">
+            <h3 className="text-3xl md:text-5xl font-extrabold text-foreground mb-4">
               Comece sem partir do zero
             </h3>
             <p className="text-lg text-muted-foreground">
@@ -28,7 +28,7 @@ export function Templates() {
               Gere o site do seu cliente com dados reais via IA em menos de 3 minutos.
             </p>
           </div>
-          <button className="shrink-0 flex items-center gap-2 text-white font-medium hover:text-primary transition-colors pb-2">
+          <button className="shrink-0 flex items-center gap-2 text-foreground font-medium hover:text-primary transition-colors pb-2">
             Ver todos os templates
             <ExternalLink className="w-4 h-4" />
           </button>
@@ -64,14 +64,14 @@ export function Templates() {
 
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                  <span className="bg-black/50 text-white px-4 py-2 rounded-full font-medium text-sm flex items-center gap-2">
+                  <span className="bg-black/50 text-foreground px-4 py-2 rounded-full font-medium text-sm flex items-center gap-2">
                     Visualizar <ExternalLink className="w-4 h-4" />
                   </span>
                 </div>
               </div>
               <div>
                 <div className="text-xs text-secondary font-bold mb-1 tracking-wider uppercase">{template.category}</div>
-                <h4 className="text-white font-bold text-lg group-hover:text-primary transition-colors">{template.name}</h4>
+                <h4 className="text-foreground font-bold text-lg group-hover:text-primary transition-colors">{template.name}</h4>
               </div>
             </motion.div>
           ))}

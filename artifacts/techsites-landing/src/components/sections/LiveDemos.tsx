@@ -60,7 +60,7 @@ export function LiveDemos() {
       <div className="container mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-bold shadow-md mb-6">
             {t('Live Demos', 'Demos ao Vivo')}
           </div>
           <h2 className="text-3xl md:text-5xl font-black text-foreground mb-6">

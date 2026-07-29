@@ -12,7 +12,7 @@ export function ChatbotCTA() {
             <MessageCircle className="w-8 h-8 text-primary" />
           </div>
 
-          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
             {t('Talk to our AI right now.', 'Fale com nossa IA agora mesmo.')}
           </h2>
 

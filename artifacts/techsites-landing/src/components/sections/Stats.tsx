@@ -56,10 +56,10 @@ export function Stats() {
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform duration-300`}>
                   <Icon className="w-6 h-6" />
                 </div>
-                <div className="text-4xl md:text-5xl font-extrabold text-white mb-2 font-mono tracking-tight">
+                <div className="text-4xl md:text-5xl font-extrabold text-foreground mb-2 font-mono tracking-tight">
                   {stat.value}
                 </div>
-                <div className="text-sm font-bold text-white mb-1 uppercase tracking-wider">
+                <div className="text-sm font-bold text-foreground mb-1 uppercase tracking-wider">
                   {stat.label}
                 </div>
                 <div className="text-xs text-muted-foreground">

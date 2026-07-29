@@ -102,20 +102,20 @@ export function FullPricing() {
     <section id="pricing" className="py-20 bg-background">
       <div className="container mx-auto px-6">
         {/* Headline */}
-        <h2 className="text-3xl md:text-5xl font-black text-center text-white mb-12">
+        <h2 className="text-3xl md:text-5xl font-black text-center text-foreground mb-12">
           {t('Simple, transparent pricing.', 'Preços simples e transparentes.')}
         </h2>
 
         {/* Tab Switcher */}
-        <div className="flex items-center justify-center gap-2 mb-16">
+        <div className="flex items-center justify-center mb-16 max-w-md mx-auto w-full">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 rounded-lg text-sm font-bold transition-all duration-300 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold transition-all duration-300 first:rounded-l-lg last:rounded-r-lg border ${
                 activeTab === tab.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-card text-muted-foreground hover:text-white border border-border'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-muted-foreground hover:text-foreground border-border'
               }`}
             >
               {tab.label}

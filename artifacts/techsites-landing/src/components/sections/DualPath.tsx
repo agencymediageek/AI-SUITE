@@ -43,7 +43,7 @@ export function DualPath() {
     <section className="py-20 bg-background">
       <div className="container mx-auto px-6">
         {/* Headline */}
-        <h2 className="text-3xl md:text-5xl font-black text-center text-white mb-16">
+        <h2 className="text-3xl md:text-5xl font-black text-center text-foreground mb-16">
           {t('Two paths. One platform.', 'Dois caminhos. Uma plataforma.')}
         </h2>
 
@@ -56,9 +56,11 @@ export function DualPath() {
                 key={i}
                 className="bg-card border border-card-border rounded-2xl p-8 hover:border-primary/40 transition-all duration-300 flex flex-col"
               >
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm font-semibold mb-6 self-start">
-                  {path.badge}
+                {/* Badge — CTA style, centered */}
+                <div className="flex justify-center mb-6">
+                  <div className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold shadow-md">
+                    {path.badge}
+                  </div>
                 </div>
 
                 {/* Icon + Title */}
@@ -66,7 +68,7 @@ export function DualPath() {
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                     <Icon className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">{path.title}</h3>
+                  <h3 className="text-2xl font-bold text-foreground">{path.title}</h3>
                 </div>
 
                 {/* Description */}

@@ -62,7 +62,7 @@ export function Pricing() {
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-sm font-bold text-primary tracking-widest uppercase mb-3">Planos e Preços</h2>
-          <h3 className="text-3xl md:text-5xl font-extrabold text-white mb-6">
+          <h3 className="text-3xl md:text-5xl font-extrabold text-foreground mb-6">
             Escale sua agência sem <br className="hidden md:block"/>
             aumentar custos fixos
           </h3>
@@ -89,12 +89,12 @@ export function Pricing() {
               )}
               
               <div className="mb-8">
-                <h4 className="text-2xl font-bold text-white mb-2">{plan.name}</h4>
+                <h4 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h4>
                 <p className="text-muted-foreground text-sm">{plan.description}</p>
               </div>
               
               <div className="mb-8">
-                <span className="text-5xl font-extrabold text-white">{plan.price}</span>
+                <span className="text-5xl font-extrabold text-foreground">{plan.price}</span>
                 <span className="text-muted-foreground">{plan.period}</span>
               </div>
               
@@ -117,7 +117,7 @@ export function Pricing() {
                 className={`w-full py-4 rounded-xl font-bold transition-all duration-300 ${
                   plan.popular 
                     ? 'bg-primary text-primary-foreground hover:glow-primary' 
-                    : 'bg-white/10 text-white hover:bg-white/20'
+                    : 'bg-white/10 text-foreground hover:bg-white/20'
                 }`}
               >
                 {plan.cta}

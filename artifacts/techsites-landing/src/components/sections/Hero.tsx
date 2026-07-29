@@ -22,7 +22,7 @@ export function Hero() {
             </div>
 
             <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-              <div className="text-white mb-2">
+              <div className="text-foreground mb-2">
                 {t('One plugin.', 'Um plugin.')}
               </div>
               <div className="text-gradient-primary">
@@ -46,7 +46,7 @@ export function Hero() {
               </a>
               <a
                 href="#how-it-works"
-                className="inline-flex items-center justify-center gap-2 bg-transparent border border-border text-white px-8 py-4 rounded-lg text-base font-semibold hover:bg-card transition-all duration-300"
+                className="inline-flex items-center justify-center gap-2 bg-transparent border border-border text-foreground px-8 py-4 rounded-lg text-base font-semibold hover:bg-card transition-all duration-300"
               >
                 <Play className="w-4 h-4" />
                 {t('Watch how it works', 'Ver como funciona')}

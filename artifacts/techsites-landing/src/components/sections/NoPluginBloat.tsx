@@ -15,7 +15,7 @@ export function NoPluginBloat() {
       <div className="container mx-auto px-6">
         <div className="max-w-5xl mx-auto bg-card border-2 border-primary/20 rounded-2xl p-8 md:p-12 glow-border">
           {/* Headline */}
-          <h2 className="text-3xl md:text-4xl font-black text-center text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-black text-center text-foreground mb-4">
             {t('One plugin. Zero bloat.', 'Um plugin. Zero lixo.')}
           </h2>
 

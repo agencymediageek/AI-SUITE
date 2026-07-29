@@ -56,7 +56,7 @@ export function AIHosting() {
     <section className="py-20 bg-background">
       <div className="container mx-auto px-6">
         {/* Headline */}
-        <h2 className="text-3xl md:text-5xl font-black text-center text-white mb-4">
+        <h2 className="text-3xl md:text-5xl font-black text-center text-foreground mb-4">
           {t('AI-Managed Hosting.', 'Hospedagem Gerenciada por IA.')}
         </h2>
 
@@ -89,7 +89,7 @@ export function AIHosting() {
               )}
 
               {/* Plan Name */}
-              <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
+              <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
 
               {/* Price */}
               <div className="text-3xl font-black text-primary mb-2">{plan.price}</div>

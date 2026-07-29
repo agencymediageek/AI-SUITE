@@ -50,7 +50,7 @@ export function CreditsPlans() {
     <section id="precos" className="py-24 bg-white/[0.02]">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Simples como recarregar um celular
           </h2>
           <p className="text-xl text-muted-foreground">
@@ -84,23 +84,23 @@ export function CreditsPlans() {
 
                 <div className="flex items-center gap-4 mb-6">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    isPopular ? 'bg-primary text-primary-foreground' : 'bg-white/5 text-white'
+                    isPopular ? 'bg-primary text-primary-foreground' : 'bg-white/5 text-foreground'
                   }`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
+                    <h3 className="text-2xl font-bold text-foreground">{plan.name}</h3>
                     <p className="text-sm text-muted-foreground">{plan.description}</p>
                   </div>
                 </div>
 
                 <div className="mb-8 flex items-end gap-2">
-                  <span className="text-5xl font-bold text-white">R${plan.price}</span>
+                  <span className="text-5xl font-bold text-foreground">R${plan.price}</span>
                   <span className="text-muted-foreground mb-2">/mês</span>
                 </div>
 
                 <div className="bg-white/5 rounded-xl p-4 mb-8 text-center border border-white/5">
-                  <span className="font-bold text-white block">{plan.credits}</span>
+                  <span className="font-bold text-foreground block">{plan.credits}</span>
                   <span className="text-xs text-muted-foreground">incluídos todo mês</span>
                 </div>
 
@@ -118,7 +118,7 @@ export function CreditsPlans() {
                   className={`w-full py-4 rounded-xl text-center font-bold transition-all duration-300 ${
                     isPopular 
                       ? 'bg-primary text-primary-foreground hover:glow-primary' 
-                      : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'
+                      : 'bg-white/5 text-foreground hover:bg-white/10 border border-white/10'
                   }`}
                 >
                   Começar Agora
@@ -130,7 +130,7 @@ export function CreditsPlans() {
 
         <div className="mt-16 text-center">
           <p className="text-muted-foreground bg-card border border-white/10 inline-block px-6 py-3 rounded-full text-sm">
-            <span className="text-white font-medium">Nota:</span> O plugin é 100% gratuito. Os créditos ativam os recursos avançados. Cancele quando quiser.
+            <span className="text-foreground font-medium">Nota:</span> O plugin é 100% gratuito. Os créditos ativam os recursos avançados. Cancele quando quiser.
           </p>
         </div>
       </div>

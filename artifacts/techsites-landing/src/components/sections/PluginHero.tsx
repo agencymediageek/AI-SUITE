@@ -19,10 +19,10 @@ export function PluginHero() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8">
               <Zap className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-white/80">Tecnologia exclusiva — Único no mundo</span>
+              <span className="text-sm font-medium text-foreground/80">Tecnologia exclusiva — Único no mundo</span>
             </div>
 
-            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight mb-6 text-white leading-[1.1]">
+            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight mb-6 text-foreground leading-[1.1]">
               Seu site WordPress vai começar a <span className="text-primary">trabalhar por você</span>
             </h1>
 
@@ -40,7 +40,7 @@ export function PluginHero() {
               </a>
               <a
                 href="#como-funciona"
-                className="flex items-center justify-center gap-2 bg-white/5 text-white border border-white/10 px-8 py-4 rounded-xl text-base font-bold hover:bg-white/10 transition-all duration-300"
+                className="flex items-center justify-center gap-2 bg-white/5 text-foreground border border-white/10 px-8 py-4 rounded-xl text-base font-bold hover:bg-white/10 transition-all duration-300"
               >
                 Ver como funciona
                 <ArrowRight className="w-5 h-5" />

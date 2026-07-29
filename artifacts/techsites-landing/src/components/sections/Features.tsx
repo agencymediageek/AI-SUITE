@@ -43,7 +43,7 @@ export function Features() {
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-3xl mb-16">
           <h2 className="text-sm font-bold text-primary tracking-widest uppercase mb-3">Infraestrutura Real</h2>
-          <h3 className="text-3xl md:text-5xl font-extrabold text-white mb-6">
+          <h3 className="text-3xl md:text-5xl font-extrabold text-foreground mb-6">
             Stack moderno desenhado para <br className="hidden md:block"/>
             <span className="text-gradient-primary">escalabilidade absurda</span>
           </h3>
@@ -67,11 +67,11 @@ export function Features() {
               >
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
-                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary/10 group-hover:border-primary/30 group-hover:text-primary transition-all duration-300 text-white">
+                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary/10 group-hover:border-primary/30 group-hover:text-primary transition-all duration-300 text-foreground">
                   <Icon className="w-6 h-6" />
                 </div>
                 
-                <h4 className="text-xl font-bold text-white mb-3 group-hover:text-primary transition-colors">
+                <h4 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
                   {feature.title}
                 </h4>
                 

@@ -43,7 +43,7 @@ export function TheAudit() {
     <section id="how-it-works" className="py-20 px-6">
       <div className="container mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
             {t(
               'Your site audited. Your business understood. In 60 seconds.',
               'Seu site auditado. Seu negócio compreendido. Em 60 segundos.'
@@ -60,7 +60,7 @@ export function TheAudit() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center mb-4">
                 <step.icon className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3">{step.title}</h3>
               <p className="text-muted-foreground leading-relaxed">{step.description}</p>
             </div>
           ))}

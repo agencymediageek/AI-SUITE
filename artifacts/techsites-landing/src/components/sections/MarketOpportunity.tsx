@@ -108,28 +108,28 @@ export function MarketOpportunity() {
               </p>
               <div className="space-y-3">
                 {[
-                  ['SEO Agency', 'Agência de SEO', '$2,000'],
-                  ['Web Designer', 'Web Designer', '$3,500'],
-                  ['Developer', 'Programador', '$5,000'],
-                  ['Copywriter', 'Redator', '$1,500'],
-                  ['Traffic Manager', 'Gestor de Tráfego', '$2,500'],
-                  ['Marketing Agency', 'Agência de Marketing', '$3,000'],
+                  ['SEO Agency', 'Agência de SEO', '$24,000'],
+                  ['Web Designer', 'Web Designer', '$42,000'],
+                  ['Developer', 'Programador', '$60,000'],
+                  ['Copywriter', 'Redator', '$18,000'],
+                  ['Traffic Manager', 'Gestor de Tráfego', '$30,000'],
+                  ['Marketing Agency', 'Agência de Marketing', '$36,000'],
                 ].map(([en, pt, price]) => (
                   <div key={en} className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground line-through">{t(en, pt)}</span>
-                    <span className="text-muted-foreground line-through font-mono">{price}/mo</span>
+                    <span className="text-muted-foreground line-through font-mono">{price}/yr</span>
                   </div>
                 ))}
                 <div className="pt-3 border-t border-border flex items-center justify-between">
                   <span className="font-bold text-foreground">{t('Total', 'Total')}</span>
-                  <span className="font-black text-red-400 font-mono">$17,500/mo</span>
+                  <span className="font-black text-red-400 font-mono">$210,000/yr</span>
                 </div>
               </div>
             </div>
 
             {/* Right: TechSites */}
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-8 text-center">
-              <p className="text-xs uppercase tracking-widest text-primary font-bold mb-4">
+              <p className="text-base font-black text-amber-400 uppercase tracking-widest mb-4">
                 {t('With TechSites AI Plugin', 'Com o Plugin TechSites AI')}
               </p>
               <div className="text-7xl font-black text-foreground mb-1">$10</div>

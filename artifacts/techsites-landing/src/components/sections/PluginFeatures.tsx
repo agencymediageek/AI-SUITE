@@ -115,7 +115,7 @@ export function PluginFeatures() {
           </p>
           <a
             href="#pricing"
-            className="flex items-center justify-center w-full bg-primary text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-primary/90 transition-colors"
+            className="flex items-center justify-center w-full bg-primary text-foreground px-8 py-4 rounded-xl text-lg font-bold hover:bg-primary/90 transition-colors"
           >
             {t('Get the Plugin — $10', 'Obter o Plugin — $10')}
           </a>

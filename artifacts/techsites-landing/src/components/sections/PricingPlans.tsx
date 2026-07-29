@@ -49,7 +49,7 @@ export function PricingPlans() {
     <section id="pricing" className="py-20 px-6">
       <div className="container mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
             {t('Simple as recharging your phone.', 'Simples como recarregar um celular.')}
           </h2>
         </div>
@@ -69,7 +69,7 @@ export function PricingPlans() {
               )}
 
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
                 <div className="text-4xl font-bold text-primary mb-2">{plan.price}</div>
                 <div className="text-sm text-muted-foreground">{plan.credits}</div>
               </div>
@@ -88,7 +88,7 @@ export function PricingPlans() {
                 className={`block text-center px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
                   plan.popular
                     ? 'bg-primary text-primary-foreground hover:opacity-90'
-                    : 'bg-muted text-white hover:bg-muted/80'
+                    : 'bg-muted text-foreground hover:bg-muted/80'
                 }`}
               >
                 {index === 2 ? t('Contact Us', 'Falar com a Equipe') : t('Get Started', 'Começar Agora')}
