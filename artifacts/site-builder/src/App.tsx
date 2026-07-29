@@ -42,22 +42,7 @@ function renderMarkdown(text: string) {
     ).join('');
 }
 
-async function callGemini(messages: Message[], apiKey: string): Promise<string> {
-  const history = messages.slice(0, -1).map(m => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }],
-  }));
-  const lastMsg = messages[messages.length - 1];
-
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{
-            text: `You are Apex, the TechSites AI assistant specialized in building professional websites. 
+const SYSTEM_PROMPT = `You are Apex, the TechSites AI assistant specialized in building professional websites.
 When given a brief, you generate a complete, detailed site structure including:
 - Hero section with compelling headline and subheadline
 - Key sections (About, Services, Portfolio, Testimonials, CTA, Contact)
@@ -66,22 +51,33 @@ When given a brief, you generate a complete, detailed site structure including:
 - Conversion-focused copy for each section
 - Call-to-action buttons text
 Format your response in clear Markdown with sections. Be specific, professional, and conversion-focused.
-After the site structure, always add a "⚡ Next Steps" section explaining that TechSites AI will build this live site in 24 hours.`
-          }]
-        },
-        contents: [...history, { role: 'user', parts: [{ text: lastMsg.content }] }],
-        generationConfig: { temperature: 0.8, maxOutputTokens: 2048 },
-      }),
-    }
-  );
+After the site structure, always add a "⚡ Next Steps" section explaining that TechSites AI will build this live site in 24 hours.`;
+
+async function callAI(messages: Message[], apiKey: string): Promise<string> {
+  const res = await fetch('https://api.x.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'grok-3-mini',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...messages.map(m => ({ role: m.role, content: m.content })),
+      ],
+      temperature: 0.8,
+      max_tokens: 2048,
+    }),
+  });
 
   if (!res.ok) {
     const err = await res.json() as any;
-    throw new Error(err?.error?.message || 'Gemini API error');
+    throw new Error(err?.error?.message || `API error ${res.status}`);
   }
 
   const data = await res.json() as any;
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated.';
+  return data?.choices?.[0]?.message?.content || 'No response generated.';
 }
 
 export default function App() {
@@ -92,7 +88,7 @@ export default function App() {
   const [chatInput, setChatInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
-  const [apiKey] = useState(() => (import.meta.env.VITE_GEMINI_KEY as string) || '');
+  const [apiKey] = useState(() => (import.meta.env.VITE_GROK_KEY as string) || '');
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -120,7 +116,7 @@ export default function App() {
     setStarted(true);
     setLoading(true);
     try {
-      const reply = await callGemini(newMessages, apiKey);
+      const reply = await callAI(newMessages, apiKey);
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (e: any) {
       setMessages(prev => [...prev, { role: 'assistant', content: `❌ Error: ${e.message}` }]);
@@ -137,7 +133,7 @@ export default function App() {
     setMessages(newMessages);
     setLoading(true);
     try {
-      const reply = await callGemini(newMessages, apiKey);
+      const reply = await callAI(newMessages, apiKey);
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (e: any) {
       setMessages(prev => [...prev, { role: 'assistant', content: `❌ Error: ${e.message}` }]);
@@ -446,7 +442,7 @@ export default function App() {
         padding: '16px 24px', borderTop: '1px solid var(--border)',
         textAlign: 'center', color: 'var(--muted)', fontSize: 12,
       }}>
-        Powered by <strong style={{ color: '#60a5fa' }}>TechSites AI</strong> · Apex AI Engine · Gemini 2.0 Flash
+        Powered by <strong style={{ color: '#60a5fa' }}>TechSites AI</strong> · Apex AI Engine · Grok 3
       </footer>
 
       <style>{`
