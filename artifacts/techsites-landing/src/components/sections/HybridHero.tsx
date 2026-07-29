@@ -1,5 +1,5 @@
 import { useLang } from '@/context/LangContext';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
 export function HybridHero() {
   const { t } = useLang();
@@ -68,10 +68,22 @@ export function HybridHero() {
                 <ArrowRight className="w-5 h-5" />
               </a>
               <a
-                href="#plugin"
-                className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-primary text-primary px-8 py-4 rounded-lg text-base font-bold hover:bg-primary/10 transition-all duration-300"
+                href="https://build.techsites.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-amber-500 text-white px-8 py-4 rounded-lg text-base font-bold hover:bg-amber-400 transition-all duration-300"
               >
-                {t('Install Plugin — $10 with 200 credits', 'Instalar Plugin — $10 com 200 créditos')}
+                <Sparkles className="w-5 h-5" />
+                {t('Try AI Builder', 'Testar Builder IA')}
+              </a>
+            </div>
+            {/* Secondary CTA */}
+            <div className="mt-3 flex justify-center lg:justify-start">
+              <a
+                href="#plugin"
+                className="inline-flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t('Install Plugin — $10 with 200 credits', 'Instalar Plugin — $10 com 200 créditos')} →
               </a>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { Menu, X, Sun, Moon, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLang } from '@/context/LangContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -89,6 +89,15 @@ export function Navbar() {
             )}
           </button>
 
+          <a
+            href="https://build.techsites.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-amber-500 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-amber-400 transition-all duration-300"
+          >
+            <Sparkles className="w-4 h-4" />
+            {t('AI Builder', 'Builder IA')}
+          </a>
           <a 
             href="#download" 
             className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all duration-300"
