@@ -42,42 +42,24 @@ function renderMarkdown(text: string) {
     ).join('');
 }
 
-const SYSTEM_PROMPT = `You are Apex, the TechSites AI assistant specialized in building professional websites.
-When given a brief, you generate a complete, detailed site structure including:
-- Hero section with compelling headline and subheadline
-- Key sections (About, Services, Portfolio, Testimonials, CTA, Contact)
-- Color palette and typography recommendations
-- SEO meta title and description
-- Conversion-focused copy for each section
-- Call-to-action buttons text
-Format your response in clear Markdown with sections. Be specific, professional, and conversion-focused.
-After the site structure, always add a "⚡ Next Steps" section explaining that TechSites AI will build this live site in 24 hours.`;
+const PROXY_URL = 'https://ts-builder-proxy.reynaldodallin.workers.dev';
 
-async function callAI(messages: Message[], apiKey: string): Promise<string> {
-  const res = await fetch('https://api.x.ai/v1/chat/completions', {
+async function callAI(messages: Message[], _apiKey: string): Promise<string> {
+  const res = await fetch(PROXY_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'grok-3-mini',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...messages.map(m => ({ role: m.role, content: m.content })),
-      ],
-      temperature: 0.8,
-      max_tokens: 2048,
+      messages: messages.map(m => ({ role: m.role, content: m.content })),
     }),
   });
 
-  if (!res.ok) {
-    const err = await res.json() as any;
-    throw new Error(err?.error?.message || `API error ${res.status}`);
+  const data = await res.json() as any;
+
+  if (!res.ok || data?.error) {
+    throw new Error(data?.error || `API error ${res.status}`);
   }
 
-  const data = await res.json() as any;
-  return data?.choices?.[0]?.message?.content || 'No response generated.';
+  return data?.content || 'No response generated.';
 }
 
 export default function App() {
