@@ -122,7 +122,7 @@ export function MarketOpportunity() {
                 ))}
                 <div className="pt-3 border-t border-border flex items-center justify-between">
                   <span className="font-bold text-foreground">{t('Total', 'Total')}</span>
-                  <span className="font-black text-red-400 font-mono">$210,000/yr</span>
+                  <span className="font-black text-red-400 font-mono">$100,000/yr</span>
                 </div>
               </div>
             </div>

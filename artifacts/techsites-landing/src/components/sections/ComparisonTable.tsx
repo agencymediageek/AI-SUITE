@@ -75,7 +75,7 @@ export function ComparisonTable() {
             {/* Total */}
             <div className="grid grid-cols-3 gap-4 p-6 bg-primary/10 border-t-2 border-primary">
               <div className="text-foreground font-bold uppercase">TOTAL</div>
-              <div className="text-foreground font-bold">$210,000/yr</div>
+              <div className="text-foreground font-bold">$100,000/yr</div>
               <div className="text-primary font-bold">
                 {t('TechSites AI: from $97/mo', 'TechSites AI: a partir de R$97/mês')}
               </div>
