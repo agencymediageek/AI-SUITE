@@ -3,27 +3,39 @@ import { cookies } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret-for-dev-only';
 
+// Cookie options used consistently across all session operations
+const SESSION_COOKIE_OPTIONS = {
+    httpOnly: true,
+    // secure:false because nginx handles HTTPS termination — the connection
+    // from nginx to Next.js is HTTP. The browser still receives the cookie
+    // over HTTPS because nginx enforces it.
+    secure: false,
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+};
+
+/** Returns a signed JWT token for the given payload. */
+export function signToken(payload: object): string {
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+}
+
+/**
+ * Sets a session cookie using next/headers cookies() — works in Replit dev
+ * and in Server Actions. For Route Handlers behind nginx, prefer setting the
+ * cookie directly on the NextResponse object using SESSION_COOKIE_OPTIONS.
+ */
 export async function createSession(payload: any) {
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    const token = signToken(payload);
     const cookieStore = await cookies();
-
-    // When running behind nginx (SSL termination), the connection to Next.js is HTTP,
-    // so secure:true may be rejected. We fall back to secure:false — nginx enforces HTTPS.
-    const cookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax' as const,
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-    };
-
     try {
-        cookieStore.set('session', token, cookieOptions);
+        cookieStore.set('session', token, SESSION_COOKIE_OPTIONS);
     } catch {
-        // Fallback: nginx handles HTTPS enforcement, so secure:false is safe behind the proxy
-        cookieStore.set('session', token, { ...cookieOptions, secure: false });
+        // Silently ignore if cookies() API is unavailable in this context
     }
 }
+
+export { SESSION_COOKIE_OPTIONS };
 
 export async function getSession() {
     const cookieStore = await cookies();

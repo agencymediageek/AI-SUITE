@@ -3,13 +3,11 @@ import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '@/lib/db';
-import { createSession } from '@/lib/auth';
+import { signToken, SESSION_COOKIE_OPTIONS } from '@/lib/auth';
 import { verifyRecaptcha } from '@/lib/recaptcha';
 import { checkLoginRateLimit, recordLoginAttempt, resetLoginAttempts } from '@/lib/rate-limiter';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-dev-only';
-
-// Force dynamic to ensure cookies() works at runtime in production
+// Force dynamic — prevents Next.js from treating this route as static in production
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -71,7 +69,7 @@ export async function POST(req: Request) {
 
         // 5. 2FA Check
         if (user.twoFactorEnabled) {
-            const tempToken = jwt.sign({ email: user.email, temp: true }, JWT_SECRET, { expiresIn: '5m' });
+            const tempToken = jwt.sign({ email: user.email, temp: true }, process.env.JWT_SECRET || 'fallback-secret-for-dev-only', { expiresIn: '5m' });
             return NextResponse.json({
                 requires2FA: true,
                 tempToken
@@ -79,23 +77,36 @@ export async function POST(req: Request) {
         }
 
         let role = user.role;
-        const cookieStore = await cookies();
-        const adminIntent = cookieStore.get('admin_intent')?.value;
 
-        if (adminIntent === 'true') {
-            role = 'admin';
-            if (user.role !== 'admin') {
-                await db.saveUser({ ...user, role: 'admin' });
+        // Read admin_intent cookie (read-only — safe in any context)
+        try {
+            const cookieStore = await cookies();
+            const adminIntent = cookieStore.get('admin_intent')?.value;
+            if (adminIntent === 'true') {
+                role = 'admin';
+                if (user.role !== 'admin') {
+                    await db.saveUser({ ...user, role: 'admin' });
+                }
+                cookieStore.delete('admin_intent');
             }
-            cookieStore.delete('admin_intent');
+        } catch {
+            // Non-fatal: admin_intent not critical
         }
 
-        await createSession({ id: user.id, email: user.email, role, name: user.name, disabledFeatures: user.disabledFeatures || [] });
+        const sessionToken = signToken({
+            id: user.id,
+            email: user.email,
+            role,
+            name: user.name,
+            disabledFeatures: user.disabledFeatures || []
+        });
 
         const tokens = await db.getTokenBalance(user.email);
         const planDetails = await db.getUserPlan(user.email);
- 
-        return NextResponse.json({
+
+        // Use NextResponse.cookies.set() — works reliably behind nginx SSL termination
+        // (avoids the cookies() API from next/headers which can fail in proxy contexts)
+        const response = NextResponse.json({
             success: true,
             user: {
                 email: user.email,
@@ -106,8 +117,11 @@ export async function POST(req: Request) {
                 aiTools: planDetails.aiTools
             }
         });
+        response.cookies.set('session', sessionToken, SESSION_COOKIE_OPTIONS);
+        return response;
+
     } catch (error: any) {
-        console.error('Login Error:', error);
+        console.error('Login Error:', error?.message || error);
         return NextResponse.json({ error: 'Login failed' }, { status: 500 });
     }
 }

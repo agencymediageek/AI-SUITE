@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { db } from '@/lib/db';
-import { createSession } from '@/lib/auth';
+import { signToken, SESSION_COOKIE_OPTIONS } from '@/lib/auth';
 import { verifyTOTP, decryptSecret } from '@/lib/totp';
 import { check2FARateLimit, recordAttempt, resetAttempts } from '@/lib/rate-limiter';
 
@@ -70,19 +70,19 @@ export async function POST(req: Request) {
 
         // 5. Create active session
         let role = user.role;
-        
-        await createSession({ 
-            id: user.id, 
-            email: user.email, 
-            role, 
-            name: user.name, 
-            disabledFeatures: user.disabledFeatures || [] 
+
+        const sessionToken = signToken({
+            id: user.id,
+            email: user.email,
+            role,
+            name: user.name,
+            disabledFeatures: user.disabledFeatures || []
         });
 
         const tokens = await db.getTokenBalance(user.email);
         const planDetails = await db.getUserPlan(user.email);
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             success: true,
             user: {
                 email: user.email,
@@ -93,6 +93,8 @@ export async function POST(req: Request) {
                 aiTools: planDetails.aiTools
             }
         });
+        response.cookies.set('session', sessionToken, SESSION_COOKIE_OPTIONS);
+        return response;
     } catch (error: any) {
         console.error('[2FA Verify Route Error]:', error);
         return NextResponse.json({ error: 'Failed to verify 2FA code' }, { status: 500 });
