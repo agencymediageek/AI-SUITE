@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,12 +14,11 @@ import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { LogIn } from 'lucide-react';
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+const loginSchemaShape = z.object({
+  email: z.string(),
+  password: z.string(),
 });
-
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginForm = z.infer<typeof loginSchemaShape>;
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -28,6 +27,11 @@ export default function Login() {
   const { toast } = useToast();
   const login = useLoginUser();
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const loginSchema = useMemo(() => z.object({
+    email: z.string().email(t('valid.email')),
+    password: z.string().min(6, t('valid.passwordMin')),
+  }), [t]);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),

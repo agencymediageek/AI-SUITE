@@ -150,7 +150,7 @@ function SettingsContent() {
                         <Input {...field} type="url" placeholder="https://example.com/logo.png" className="bg-background/50" data-testid="input-logo-url" />
                       </FormControl>
                       <FormDescription className="text-xs">
-                        URL to your company logo (optional)
+                        {t('settings.logoUrl.desc')}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -163,7 +163,7 @@ function SettingsContent() {
                     name="primaryColor"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Primary Color</FormLabel>
+                        <FormLabel>{t('settings.primaryColor')}</FormLabel>
                         <div className="flex gap-3">
                           <FormControl>
                             <Input {...field} type="color" className="bg-background/50 w-20 h-10 p-1 cursor-pointer" data-testid="input-primary-color" />
