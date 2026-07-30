@@ -15,16 +15,16 @@ import { useAuthStore } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
 import { useI18n, Language } from '@/lib/i18n';
 import { MatrixGlobe } from '@/components/meeting/MatrixGlobe';
-import { useGetMe, useLogoutUser } from '@workspace/api-client-react';
+import { useGetMe, useLogoutUser, getGetMeQueryKey } from '@workspace/api-client-react';
 import { useToast } from '@/hooks/use-toast';
 
-const navLinks = [
-  { label: 'Início', href: '#inicio', anchor: 'inicio' },
-  { label: 'Como Funciona', href: '#como-funciona', anchor: 'como-funciona' },
-  { label: 'Recursos', href: '#recursos', anchor: 'recursos' },
-  { label: 'Planos', href: '#planos', anchor: 'planos' },
-  { label: 'FAQ', href: '#faq', anchor: 'faq' },
-  { label: 'Contato', href: '#contato', anchor: 'contato' },
+const navLinkDefs = [
+  { key: 'nav.inicio',       anchor: 'inicio' },
+  { key: 'nav.comoFunciona', anchor: 'como-funciona' },
+  { key: 'nav.recursos',     anchor: 'recursos' },
+  { key: 'nav.planos',       anchor: 'planos' },
+  { key: 'nav.faq',          anchor: 'faq' },
+  { key: 'nav.contato',      anchor: 'contato' },
 ];
 
 function scrollTo(id: string) {
@@ -39,7 +39,7 @@ export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useI18n();
   const { toast } = useToast();
-  const { data: user } = useGetMe({ query: { enabled: isAuthenticated } });
+  const { data: user } = useGetMe({ query: { enabled: isAuthenticated, queryKey: getGetMeQueryKey() } });
   const logout = useLogoutUser();
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -83,13 +83,13 @@ export function Navbar() {
         {/* Desktop Nav Links */}
         {isLanding && (
           <div className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {navLinkDefs.map((link) => (
               <button
                 key={link.anchor}
                 onClick={() => scrollTo(link.anchor)}
                 className="text-sm text-muted-foreground hover:text-primary px-3 py-1.5 rounded-md transition-colors hover:bg-primary/5 font-medium"
               >
-                {link.label}
+                {t(link.key)}
               </button>
             ))}
           </div>
@@ -177,10 +177,10 @@ export function Navbar() {
           ) : (
             <div className="hidden sm:flex items-center gap-2">
               <Button variant="ghost" size="sm" asChild className="text-foreground hover:text-primary">
-                <Link href="/login" data-testid="link-login">Entrar</Link>
+                <Link href="/login" data-testid="link-login">{t('nav.login')}</Link>
               </Button>
               <Button size="sm" asChild className="bg-primary text-primary-foreground hover:bg-primary/90 terminal-glow">
-                <Link href="/register" data-testid="link-register">Começar agora</Link>
+                <Link href="/register" data-testid="link-register">{t('nav.register')}</Link>
               </Button>
             </div>
           )}
@@ -202,13 +202,13 @@ export function Navbar() {
               {/* Mobile Nav links */}
               {isLanding && (
                 <nav className="flex flex-col gap-1 mb-6">
-                  {navLinks.map((link) => (
+                  {navLinkDefs.map((link) => (
                     <SheetClose asChild key={link.anchor}>
                       <button
                         onClick={() => handleNavClick(link.anchor)}
                         className="text-left text-base text-foreground hover:text-primary px-3 py-2.5 rounded-md transition-colors hover:bg-primary/5 font-medium"
                       >
-                        {link.label}
+                        {t(link.key)}
                       </button>
                     </SheetClose>
                   ))}
@@ -220,12 +220,12 @@ export function Navbar() {
                 <div className="flex flex-col gap-3 mt-auto">
                   <SheetClose asChild>
                     <Button variant="outline" asChild className="w-full border-primary/30 text-foreground hover:text-primary">
-                      <Link href="/login">Entrar</Link>
+                      <Link href="/login">{t('nav.login')}</Link>
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>
                     <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90 terminal-glow">
-                      <Link href="/register">Começar agora</Link>
+                      <Link href="/register">{t('nav.register')}</Link>
                     </Button>
                   </SheetClose>
                 </div>

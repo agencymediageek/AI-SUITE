@@ -32,11 +32,7 @@ export default function Register() {
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-    },
+    defaultValues: { name: '', email: '', password: '' },
   });
 
   const onSubmit = async (data: RegisterForm) => {
@@ -44,11 +40,11 @@ export default function Register() {
     try {
       const response = await register.mutateAsync({ data });
       setToken(response.token);
-      toast({ title: 'Account created', description: 'Welcome to APEX CORE' });
+      toast({ title: t('register.success.title'), description: t('register.success.desc') });
       setLocation('/dashboard');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-      toast({ title: 'Registration failed', description: errorMessage, variant: 'destructive' });
+      const errorMessage = error instanceof Error ? error.message : t('register.error.default');
+      toast({ title: t('register.error.title'), description: errorMessage, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
@@ -56,12 +52,9 @@ export default function Register() {
 
   return (
     <div className="min-h-[100dvh] bg-black text-foreground relative overflow-hidden flex items-center justify-center">
-      {/* Background Matrix Globe */}
       <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
         <MatrixGlobe size={800} isProcessing={false} />
       </div>
-
-      {/* Scan lines */}
       <div className="scan-lines fixed inset-0 pointer-events-none z-0" />
 
       <div className="relative z-10 w-full max-w-md px-4">
@@ -71,7 +64,7 @@ export default function Register() {
               <UserPlus className="w-8 h-8 text-black" />
             </div>
             <h1 className="text-3xl font-bold matrix-text mb-2">{t('register.title')}</h1>
-            <p className="text-muted-foreground">Join the executive command center</p>
+            <p className="text-muted-foreground">{t('register.subtitle')}</p>
           </div>
 
           <Form {...form}>
@@ -86,7 +79,7 @@ export default function Register() {
                       <Input
                         {...field}
                         type="text"
-                        placeholder="Jane Smith"
+                        placeholder="João Silva"
                         className="bg-background/50 border-primary/30 focus:border-primary"
                         data-testid="input-name"
                       />
@@ -101,7 +94,7 @@ export default function Register() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground">{t('login.email')}</FormLabel>
+                    <FormLabel className="text-foreground">{t('register.email')}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -121,7 +114,7 @@ export default function Register() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground">{t('login.password')}</FormLabel>
+                    <FormLabel className="text-foreground">{t('register.password')}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -145,7 +138,7 @@ export default function Register() {
                 {isProcessing ? (
                   <>
                     <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                    Creating account...
+                    {t('register.loading')}
                   </>
                 ) : (
                   t('register.submit')
@@ -163,12 +156,6 @@ export default function Register() {
             </p>
           </div>
         </Card>
-
-        <div className="text-center mt-6">
-          <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid="link-home">
-            ← Back to home
-          </Link>
-        </div>
       </div>
     </div>
   );

@@ -1,3 +1,11 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+  <rect width="180" height="180" rx="28" fill="#000000"/>
+  <circle cx="90" cy="90" r="70" stroke="#00FF41" stroke-width="2" fill="none" opacity="0.4"/>
+  <circle cx="90" cy="90" r="55" stroke="#00FF41" stroke-width="1.5" fill="none" opacity="0.3"/>
+  <ellipse cx="90" cy="90" rx="70" ry="25" stroke="#00FF41" stroke-width="1.5" fill="none" opacity="0.3"/>
+  <ellipse cx="90" cy="90" rx="70" ry="46" stroke="#00FF41" stroke-width="1" fill="none" opacity="0.2"/>
+  <ellipse cx="90" cy="90" rx="25" ry="70" stroke="#00FF41" stroke-width="1.5" fill="none" opacity="0.3"/>
+  <circle cx="90" cy="90" r="18" fill="#00FF41" opacity="0.95"/>
+  <circle cx="90" cy="90" r="11" fill="#000000"/>
+  <circle cx="90" cy="90" r="6" fill="#00FF41"/>
 </svg>

@@ -4,21 +4,29 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useListPlans } from '@workspace/api-client-react';
+import { useI18n } from '@/lib/i18n';
 import { Check, Zap } from 'lucide-react';
 
 function PricingContent() {
   const { data: plans, isLoading } = useListPlans();
+  const { t } = useI18n();
+
+  const intervalLabel = (interval: string) => {
+    if (interval === 'monthly') return t('pricing.mo');
+    if (interval === 'yearly') return t('pricing.yr');
+    return t('pricing.lifetime');
+  };
 
   return (
     <div className="min-h-[100dvh] bg-black text-foreground">
       <Navbar />
-      
+
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
-            <h1 className="text-5xl font-bold matrix-text mb-4">Choose Your Plan</h1>
+            <h1 className="text-5xl font-bold matrix-text mb-4">{t('pricing.title')}</h1>
             <p className="text-xl text-muted-foreground">
-              Scale your AI-powered meetings to your needs
+              {t('pricing.subtitle')}
             </p>
           </div>
 
@@ -48,7 +56,7 @@ function PricingContent() {
                 >
                   {plan.isPopular && (
                     <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground">
-                      Most Popular
+                      {t('pricing.popular')}
                     </Badge>
                   )}
 
@@ -62,11 +70,11 @@ function PricingContent() {
                         ${plan.price}
                       </span>
                       <span className="text-muted-foreground">
-                        /{plan.interval === 'monthly' ? 'mo' : plan.interval === 'yearly' ? 'yr' : 'lifetime'}
+                        /{intervalLabel(plan.interval)}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground font-mono">
-                      {plan.tokenAllowance.toLocaleString()} tokens
+                      {plan.tokenAllowance.toLocaleString()} {t('pricing.tokens')}
                     </p>
                   </div>
 
@@ -88,20 +96,20 @@ function PricingContent() {
                     data-testid={`button-subscribe-${plan.id}`}
                   >
                     <Zap className="w-4 h-4 mr-2" />
-                    Choose {plan.name}
+                    {t('pricing.choose')} {plan.name}
                   </Button>
                 </Card>
               ))}
             </div>
           ) : (
             <Card className="bg-card/50 border-primary/20 p-12 text-center">
-              <p className="text-muted-foreground">No plans available at the moment</p>
+              <p className="text-muted-foreground">{t('pricing.noPlans')}</p>
             </Card>
           )}
 
           <div className="mt-16 text-center">
             <p className="text-sm text-muted-foreground">
-              All plans include unlimited meetings, voice + camera support, and white-label customization.
+              {t('pricing.note')}
             </p>
           </div>
         </div>

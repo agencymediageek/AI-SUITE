@@ -31,10 +31,7 @@ export default function Login() {
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
+    defaultValues: { email: '', password: '' },
   });
 
   const onSubmit = async (data: LoginForm) => {
@@ -42,11 +39,11 @@ export default function Login() {
     try {
       const response = await login.mutateAsync({ data });
       setToken(response.token);
-      toast({ title: 'Access granted', description: 'Welcome back to APEX CORE' });
+      toast({ title: t('login.success.title'), description: t('login.success.desc') });
       setLocation('/dashboard');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-      toast({ title: 'Access denied', description: errorMessage, variant: 'destructive' });
+      const errorMessage = error instanceof Error ? error.message : t('login.error.default');
+      toast({ title: t('login.error.title'), description: errorMessage, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
@@ -54,12 +51,9 @@ export default function Login() {
 
   return (
     <div className="min-h-[100dvh] bg-black text-foreground relative overflow-hidden flex items-center justify-center">
-      {/* Background Matrix Globe */}
       <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
         <MatrixGlobe size={800} isProcessing={false} />
       </div>
-
-      {/* Scan lines */}
       <div className="scan-lines fixed inset-0 pointer-events-none z-0" />
 
       <div className="relative z-10 w-full max-w-md px-4">
@@ -69,7 +63,7 @@ export default function Login() {
               <LogIn className="w-8 h-8 text-black" />
             </div>
             <h1 className="text-3xl font-bold matrix-text mb-2">{t('login.title')}</h1>
-            <p className="text-muted-foreground">Enter your credentials to continue</p>
+            <p className="text-muted-foreground">{t('login.subtitle')}</p>
           </div>
 
           <Form {...form}>
@@ -123,7 +117,7 @@ export default function Login() {
                 {isProcessing ? (
                   <>
                     <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                    Authenticating...
+                    {t('login.loading')}
                   </>
                 ) : (
                   t('login.submit')
@@ -141,12 +135,6 @@ export default function Login() {
             </p>
           </div>
         </Card>
-
-        <div className="text-center mt-6">
-          <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid="link-home">
-            ← Back to home
-          </Link>
-        </div>
       </div>
     </div>
   );
