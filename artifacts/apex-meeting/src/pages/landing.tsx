@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { MatrixGlobe } from '@/components/meeting/MatrixGlobe';
+import step1Img from '@/assets/step1-configure.jpg';
+import step2Img from '@/assets/step2-live-session.jpg';
+import step3Img from '@/assets/step3-execution.jpg';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Navbar } from '@/components/layout/Navbar';
@@ -182,9 +185,9 @@ export default function Landing() {
   ];
 
   const steps = [
-    { step: '01', title: t('landing.step1.title'), desc: t('landing.step1.desc') },
-    { step: '02', title: t('landing.step2.title'), desc: t('landing.step2.desc') },
-    { step: '03', title: t('landing.step3.title'), desc: t('landing.step3.desc') },
+    { step: '01', title: t('landing.step1.title'), desc: t('landing.step1.desc'), img: step1Img },
+    { step: '02', title: t('landing.step2.title'), desc: t('landing.step2.desc'), img: step2Img },
+    { step: '03', title: t('landing.step3.title'), desc: t('landing.step3.desc'), img: step3Img },
   ];
 
   const stats = [
@@ -292,16 +295,34 @@ export default function Landing() {
             </h2>
           </div>
 
-          <div className="space-y-12">
+          <div className="space-y-10">
             {steps.map((item, i) => (
-              <div key={i} className="flex items-start gap-6 sm:gap-10 group">
-                <div className="text-5xl sm:text-6xl font-bold font-mono matrix-text opacity-30 group-hover:opacity-100 transition-opacity shrink-0">
-                  {item.step}
+              <div key={i} className={`flex flex-col lg:flex-row items-stretch gap-8 group ${i % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
+                {/* Text side */}
+                <div className="flex items-start gap-6 flex-1 min-w-0">
+                  <div className="text-5xl sm:text-6xl font-bold font-mono matrix-text opacity-30 group-hover:opacity-100 transition-opacity shrink-0">
+                    {item.step}
+                  </div>
+                  <div className="flex-1 pt-2">
+                    <h3 className="text-xl sm:text-2xl font-bold mb-3 text-foreground">{item.title}</h3>
+                    <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">{item.desc}</p>
+                    <div className="w-16 h-1 bg-primary/50 mt-5 group-hover:w-32 transition-all duration-300" />
+                  </div>
                 </div>
-                <div className="flex-1 pt-2">
-                  <h3 className="text-xl sm:text-2xl font-bold mb-2 text-foreground">{item.title}</h3>
-                  <p className="text-base sm:text-lg text-muted-foreground">{item.desc}</p>
-                  <div className="w-16 h-1 bg-primary/50 mt-4 group-hover:w-32 transition-all duration-300" />
+                {/* Image side */}
+                <div className="lg:w-[420px] shrink-0">
+                  <div className="relative rounded-2xl overflow-hidden border border-primary/20 shadow-lg shadow-primary/10 group-hover:border-primary/40 transition-all">
+                    <img
+                      src={item.img}
+                      alt={item.title}
+                      className="w-full h-52 lg:h-56 object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur border border-primary/30 text-primary text-xs font-mono px-2 py-1 rounded-full">
+                      {item.step}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -385,6 +406,42 @@ export default function Landing() {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-6 mb-4 text-foreground">
               {t('landing.plans.title')} <span className="matrix-text">{t('landing.plans.title2')}</span>
             </h2>
+          </div>
+
+          {/* Reunião Avulsa — one-time card */}
+          <div className="mb-8">
+            <div className="relative rounded-2xl border border-[#00FFFF]/40 bg-gradient-to-r from-[#00FFFF]/5 via-card/60 to-primary/5 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10">
+              <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#00FFFF]/20 to-primary/10 pointer-events-none opacity-0 hover:opacity-100 transition-opacity" />
+              <div className="flex-1 min-w-0">
+                <div className="inline-flex items-center gap-2 mb-3">
+                  <span className="text-xs font-mono font-bold text-[#00FFFF] bg-[#00FFFF]/10 border border-[#00FFFF]/30 px-3 py-1 rounded-full">
+                    {t('landing.avulsa.badge')}
+                  </span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">{t('landing.avulsa.title')}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">{t('landing.avulsa.desc')}</p>
+                <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1">
+                  {[t('landing.avulsa.f1'), t('landing.avulsa.f2'), t('landing.avulsa.f3'), t('landing.avulsa.f4')].map((f, fi) => (
+                    <li key={fi} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#00FFFF] shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="flex flex-col items-start sm:items-end gap-4 shrink-0">
+                <div>
+                  <span className="text-4xl font-bold font-mono text-[#00FFFF]">{t('landing.avulsa.price')}</span>
+                  <span className="text-muted-foreground text-sm ml-1">{t('landing.avulsa.period')}</span>
+                </div>
+                <Button
+                  asChild
+                  className="border border-[#00FFFF]/60 bg-[#00FFFF]/10 text-[#00FFFF] hover:bg-[#00FFFF]/20 font-semibold px-8"
+                >
+                  <Link href="/register">{t('landing.avulsa.cta')}</Link>
+                </Button>
+              </div>
+            </div>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">

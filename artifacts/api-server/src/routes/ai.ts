@@ -8,11 +8,12 @@ import { getToolById } from "../lib/tools-data.js";
 const router = Router();
 
 const AI_MODELS = [
-  { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", provider: "google", description: "Fast, capable multimodal model" },
-  { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", provider: "google", description: "Advanced reasoning and analysis" },
-  { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "openai", description: "Fast and cost-effective" },
-  { id: "gpt-4o", name: "GPT-4o", provider: "openai", description: "Most capable OpenAI model" },
-  { id: "claude-3-haiku", name: "Claude 3 Haiku", provider: "anthropic", description: "Fast and efficient" },
+  { id: "grok-3-mini",      name: "Grok 3 Mini",      provider: "xai",    description: "Ultra-fast, cost-effective — padrão" },
+  { id: "grok-3",           name: "Grok 3",            provider: "xai",    description: "Raciocínio avançado da xAI" },
+  { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash",  provider: "google", description: "Multimodal rápido da Google" },
+  { id: "gemini-1.5-pro",   name: "Gemini 1.5 Pro",    provider: "google", description: "Análise avançada da Google" },
+  { id: "gpt-4o-mini",      name: "GPT-4o Mini",       provider: "openai", description: "Rápido e econômico" },
+  { id: "gpt-4o",           name: "GPT-4o",            provider: "openai", description: "Mais capaz da OpenAI" },
 ];
 
 router.get("/ai/models", (_req, res) => {
@@ -43,7 +44,7 @@ router.post("/ai/generate", requireAuth, async (req, res) => {
     // Check if tool has a configured N8N webhook — use it if available
     const [toolConfig] = await db.select().from(toolsConfigTable).where(eq(toolsConfigTable.id, toolId)).limit(1);
     let outputText = "";
-    const usedModel = modelId || "gemini-2.0-flash";
+    const usedModel = modelId || "grok-3-mini";
 
     if (toolConfig?.n8nWebhookUrl) {
       // Forward to N8N webhook
@@ -59,13 +60,6 @@ router.post("/ai/generate", requireAuth, async (req, res) => {
       const data = await webhookRes.json() as any;
       outputText = data.text || data.output || JSON.stringify(data);
     } else {
-      // Direct Gemini call
-      const apiKey = process.env["GEMINI_API_KEY"] || process.env["GOOGLE_API_KEY"] || process.env["GEMINI"];
-      if (!apiKey) {
-        res.status(500).json({ error: "AI API key not configured. Please set GEMINI_API_KEY in your environment." });
-        return;
-      }
-
       // Build extra context from inputs
       let fullPrompt = prompt;
       if (extraInputs && typeof extraInputs === "object") {
@@ -76,28 +70,64 @@ router.post("/ai/generate", requireAuth, async (req, res) => {
         if (extras) fullPrompt = `${extras}\n\n${prompt}`;
       }
 
-      const geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: tool.systemPrompt }] },
-            contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
-            generationConfig: { maxOutputTokens: 2048 },
-          }),
+      const provider = AI_MODELS.find(m => m.id === usedModel)?.provider ?? "xai";
+
+      if (provider === "xai" || usedModel.startsWith("grok")) {
+        // ── Grok (xAI) — OpenAI-compatible ──────────────────────────────────
+        const apiKey = process.env["GROK"];
+        if (!apiKey) {
+          res.status(500).json({ error: "GROK API key not configured." });
+          return;
         }
-      );
-
-      if (!geminiRes.ok) {
-        const err = await geminiRes.text();
-        req.log.error({ err }, "Gemini API error");
-        res.status(502).json({ error: "AI generation failed. Please check your API key configuration." });
-        return;
+        const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: usedModel,
+            messages: [
+              { role: "system", content: tool.systemPrompt },
+              { role: "user",   content: fullPrompt },
+            ],
+            max_tokens: 2048,
+          }),
+        });
+        if (!grokRes.ok) {
+          const err = await grokRes.text();
+          req.log.error({ err }, "Grok API error");
+          res.status(502).json({ error: "AI generation failed (Grok)." });
+          return;
+        }
+        const data = await grokRes.json() as any;
+        outputText = data.choices?.[0]?.message?.content || "";
+      } else {
+        // ── Gemini fallback ──────────────────────────────────────────────────
+        const apiKey = process.env["GEMINI_API_KEY"] || process.env["GOOGLE_API_KEY"] || process.env["GEMINI"];
+        if (!apiKey) {
+          res.status(500).json({ error: "AI API key not configured." });
+          return;
+        }
+        const modelName = usedModel.startsWith("gemini") ? usedModel : "gemini-2.0-flash";
+        const geminiRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: tool.systemPrompt }] },
+              contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
+              generationConfig: { maxOutputTokens: 2048 },
+            }),
+          }
+        );
+        if (!geminiRes.ok) {
+          const err = await geminiRes.text();
+          req.log.error({ err }, "Gemini API error");
+          res.status(502).json({ error: "AI generation failed (Gemini)." });
+          return;
+        }
+        const data = await geminiRes.json() as any;
+        outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       }
-
-      const data = await geminiRes.json() as any;
-      outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     }
 
     // Deduct tokens

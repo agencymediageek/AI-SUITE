@@ -60,8 +60,7 @@ export function MatrixGlobe({ isProcessing = false, isListening = false, isSpeak
     let pulsePhase = 0;
 
     const animate = () => {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-      ctx.fillRect(0, 0, size, size);
+      ctx.clearRect(0, 0, size, size);
 
       // Speed: speaking > processing > idle; listening same as idle
       const rotationSpeed = isProcessing ? 0.015 : isSpeaking ? 0.01 : 0.005;

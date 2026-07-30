@@ -51,6 +51,18 @@ const translations: Translations = {
   'landing.cases.title':       { pt: 'Feito para',       en: 'Built for',         es: 'Hecho para' },
   'landing.cases.title2':      { pt: 'Momentos de Decisão', en: 'Decision Moments', es: 'Momentos de Decisión' },
   'landing.cases.subtitle':    { pt: 'Onde decisões se transformam em realidade instantaneamente', en: 'Where decisions become reality instantly', es: 'Donde las decisiones se convierten en realidad al instante' },
+  // ── Reunião Avulsa card ───────────────────────────────────────────────────────
+  'landing.avulsa.badge':  { pt: 'Sem assinatura',        en: 'No subscription',      es: 'Sin suscripción' },
+  'landing.avulsa.title':  { pt: 'Reunião Avulsa',        en: 'Single Meeting',        es: 'Reunión Individual' },
+  'landing.avulsa.desc':   { pt: 'Use o APEX CORE uma única vez, sem compromisso mensal. Pague por sessão e receba o relatório completo.', en: 'Use APEX CORE once with no monthly commitment. Pay per session and receive the full report.', es: 'Usa APEX CORE una vez sin compromiso mensual. Paga por sesión y recibe el informe completo.' },
+  'landing.avulsa.price':  { pt: 'R$97',                  en: '$27',                   es: '$27' },
+  'landing.avulsa.period': { pt: '/sessão',                en: '/session',              es: '/sesión' },
+  'landing.avulsa.f1':     { pt: '1 sessão completa',      en: '1 full session',        es: '1 sesión completa' },
+  'landing.avulsa.f2':     { pt: 'Todos os recursos ativos', en: 'All features active', es: 'Todas las funciones' },
+  'landing.avulsa.f3':     { pt: 'Relatório final incluso', en: 'Final report included', es: 'Informe final incluido' },
+  'landing.avulsa.f4':     { pt: 'Sem mensalidade',        en: 'No monthly fee',        es: 'Sin cuota mensual' },
+  'landing.avulsa.cta':    { pt: 'Contratar agora',        en: 'Get started',           es: 'Comenzar ahora' },
+
   'landing.plans.badge':       { pt: 'PLANOS',           en: 'PLANS',             es: 'PLANES' },
   'landing.plans.title':       { pt: 'Escolha seu',      en: 'Choose your',       es: 'Elige tu' },
   'landing.plans.title2':      { pt: 'plano',            en: 'plan',              es: 'plan' },
