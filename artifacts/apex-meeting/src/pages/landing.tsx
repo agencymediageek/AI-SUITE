@@ -24,6 +24,8 @@ import {
   ArrowRight,
   Lock,
   Cloud,
+  Smartphone,
+  Play,
 } from 'lucide-react';
 import { BackToTop } from '@/components/ui/back-to-top';
 import { useI18n } from '@/lib/i18n';
@@ -50,6 +52,13 @@ function scrollTo(id: string) {
 // ─── Shared Footer ────────────────────────────────────────────────────────────
 export function LandingFooter() {
   const { t } = useI18n();
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  useEffect(() => {
+    const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
   return (
     <footer className="bg-background border-t border-primary/20 py-16 px-4">
       <div className="container mx-auto max-w-7xl">
@@ -106,6 +115,30 @@ export function LandingFooter() {
               <li><a href="mailto:contato@techsites.ai" className="text-sm text-muted-foreground hover:text-primary transition-colors">contato@techsites.ai</a></li>
             </ul>
           </div>
+        </div>
+
+        {/* App install + video row */}
+        <div className="border-t border-primary/10 pt-8 mb-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          {installPrompt && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-primary/40 text-primary hover:bg-primary/10 gap-2 font-mono text-sm"
+              onClick={() => { installPrompt.prompt(); installPrompt.userChoice.then(() => setInstallPrompt(null)); }}
+            >
+              <Smartphone className="w-4 h-4" />
+              {t('nav.installApp')}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 gap-2 font-mono text-sm"
+            onClick={() => window.open('/apex-video', '_blank')}
+          >
+            <Play className="w-4 h-4 fill-current" />
+            {t('hero.demo')}
+          </Button>
         </div>
 
         {/* Bottom row */}
