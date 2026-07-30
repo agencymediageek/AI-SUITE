@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "zcFdzK_vGwsjvgI18qU0N"
+uri = "file://artifacts/apex-video/public/audio/bg_music.mp3"
+type = "audio"
+title = "APEX CORE synthwave background music"

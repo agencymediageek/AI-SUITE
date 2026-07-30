@@ -1,0 +1,18 @@
+kind = "web"
+previewPath = "/apex-video"
+title = "APEX CORE — Vídeo Demo"
+version = "1.0.0"
+id = "artifacts/apex-video"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/apex-video" ]
+localPort = 19847
+
+[services.development]
+run = "pnpm --filter @workspace/apex-video run dev"
+
+[services.env]
+PORT = "19847"
+BASE_PATH = "/apex-video"
