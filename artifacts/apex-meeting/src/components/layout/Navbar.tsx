@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Globe, LogOut, User, Settings, LayoutDashboard, Menu, Smartphone, Play } from 'lucide-react';
+import { Globe, LogOut, User, Settings, LayoutDashboard, Menu, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -121,18 +121,6 @@ export function Navbar() {
               )}
             </>
           )}
-
-          {/* Demo video button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden sm:flex items-center gap-1.5 text-[#00FFFF] hover:text-[#00FFFF] hover:bg-[#00FFFF]/10 border border-[#00FFFF]/30 hover:border-[#00FFFF]/60 text-xs px-3"
-            onClick={() => window.open('/apex-video', '_blank')}
-            title="Ver vídeo demo"
-          >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            Demo
-          </Button>
 
           {/* Get App button — always visible */}
           <Button
