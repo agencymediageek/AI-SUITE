@@ -15,7 +15,7 @@ jobs:
           response=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST https://mediageek.io/webhook/deploy \
             -H "Content-Type: application/json" \
-            -d '{"secret":"mediageek-deploy-2026"}' \
+            -d "{\"secret\":\"${{ secrets.DEPLOY_WEBHOOK_SECRET }}\"}" \
             --max-time 15)
           if [ "$response" = "200" ]; then
             echo "✅ Deploy triggered successfully (HTTP $response)"
@@ -84,6 +84,22 @@ jobs:
         run: |
           npx wrangler pages deploy artifacts/waashost-landing/dist/public \
             --project-name waashost \
+            --branch main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Build apex-meeting
+        run: pnpm --filter @workspace/apex-meeting run build
+        env:
+          PORT: 3000
+          BASE_PATH: /
+          NODE_ENV: production
+
+      - name: Deploy apex-meeting to Cloudflare Pages
+        run: |
+          npx wrangler pages deploy artifacts/apex-meeting/dist/public \
+            --project-name apex-meeting \
             --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

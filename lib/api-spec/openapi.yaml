@@ -23,7 +23,7 @@ tags:
   - name: admin
     description: Admin panel
   - name: meetings
-    description: Meeting room management
+    description: APEX meetings and sessions
   - name: whitelabel
     description: White label configuration
 
@@ -438,6 +438,269 @@ paths:
                 items:
                   $ref: "#/components/schemas/Tool"
 
+  # ─── Meetings ───────────────────────────────────────────────────────────────
+  /meetings:
+    get:
+      operationId: listMeetings
+      tags: [meetings]
+      summary: List all meetings for current user
+      responses:
+        "200":
+          description: List of meetings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meeting"
+    post:
+      operationId: createMeeting
+      tags: [meetings]
+      summary: Create a new meeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingInput"
+      responses:
+        "201":
+          description: Meeting created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+
+  /meetings/overview:
+    get:
+      operationId: getMeetingsOverview
+      tags: [meetings]
+      summary: Get meetings overview stats
+      responses:
+        "200":
+          description: Overview stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingsOverview"
+
+  /meetings/{meetingId}:
+    get:
+      operationId: getMeeting
+      tags: [meetings]
+      summary: Get a single meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Meeting details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateMeeting
+      tags: [meetings]
+      summary: Update a meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingUpdate"
+      responses:
+        "200":
+          description: Updated meeting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+    delete:
+      operationId: deleteMeeting
+      tags: [meetings]
+      summary: Delete a meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /meetings/{meetingId}/sessions:
+    get:
+      operationId: listMeetingSessions
+      tags: [meetings]
+      summary: List sessions for a meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sessions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MeetingSession"
+    post:
+      operationId: startMeetingSession
+      tags: [meetings]
+      summary: Start a new meeting session
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionInput"
+      responses:
+        "201":
+          description: Session started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingSession"
+
+  /meetings/{meetingId}/sessions/{sessionId}:
+    get:
+      operationId: getMeetingSession
+      tags: [meetings]
+      summary: Get a single session
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingSession"
+    patch:
+      operationId: endMeetingSession
+      tags: [meetings]
+      summary: End or update a session
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionUpdate"
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingSession"
+
+  /meetings/{meetingId}/ask:
+    post:
+      operationId: askApex
+      tags: [meetings]
+      summary: Ask APEX AI a question in the context of a meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AskInput"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApexResponse"
+
+  # ─── White Label ─────────────────────────────────────────────────────────────
+  /whitelabel:
+    get:
+      operationId: getWhiteLabel
+      tags: [whitelabel]
+      summary: Get white label config for current user
+      responses:
+        "200":
+          description: White label config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhiteLabel"
+    put:
+      operationId: updateWhiteLabel
+      tags: [whitelabel]
+      summary: Update white label config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WhiteLabelInput"
+      responses:
+        "200":
+          description: Updated config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhiteLabel"
+
   # ─── Admin ──────────────────────────────────────────────────────────────────
   /admin/stats:
     get:
@@ -524,263 +787,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
-
-  # ─── Meetings ───────────────────────────────────────────────────────────────
-  /meetings:
-    get:
-      operationId: listMeetings
-      tags: [meetings]
-      summary: List user's meeting rooms
-      responses:
-        "200":
-          description: Meeting rooms
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Meeting"
-    post:
-      operationId: createMeeting
-      tags: [meetings]
-      summary: Create a meeting room
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MeetingInput"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Meeting"
-
-  /meetings/overview:
-    get:
-      operationId: getMeetingsOverview
-      tags: [meetings]
-      summary: Get aggregated meeting dashboard stats
-      responses:
-        "200":
-          description: Overview stats
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MeetingsOverview"
-
-  /meetings/{meetingId}:
-    get:
-      operationId: getMeeting
-      tags: [meetings]
-      summary: Get a meeting room by id
-      parameters:
-        - name: meetingId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Meeting
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Meeting"
-    patch:
-      operationId: updateMeeting
-      tags: [meetings]
-      summary: Update a meeting room
-      parameters:
-        - name: meetingId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MeetingUpdate"
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Meeting"
-    delete:
-      operationId: deleteMeeting
-      tags: [meetings]
-      summary: Delete a meeting room
-      parameters:
-        - name: meetingId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Deleted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessResponse"
-
-  /meetings/{meetingId}/sessions:
-    get:
-      operationId: listMeetingSessions
-      tags: [meetings]
-      summary: List sessions for a meeting room
-      parameters:
-        - name: meetingId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Sessions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/MeetingSession"
-    post:
-      operationId: startMeetingSession
-      tags: [meetings]
-      summary: Start a new session
-      parameters:
-        - name: meetingId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SessionInput"
-      responses:
-        "201":
-          description: Session started
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MeetingSession"
-
-  /meetings/{meetingId}/sessions/{sessionId}:
-    get:
-      operationId: getMeetingSession
-      tags: [meetings]
-      summary: Get a specific session
-      parameters:
-        - name: meetingId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: sessionId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Session
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MeetingSession"
-    patch:
-      operationId: endMeetingSession
-      tags: [meetings]
-      summary: End or update a session
-      parameters:
-        - name: meetingId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: sessionId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SessionUpdate"
-      responses:
-        "200":
-          description: Updated session
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MeetingSession"
-
-  /meetings/{meetingId}/ask:
-    post:
-      operationId: askApex
-      tags: [meetings]
-      summary: Send a message to APEX AI during a meeting
-      parameters:
-        - name: meetingId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AskInput"
-      responses:
-        "200":
-          description: APEX response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApexResponse"
-
-  # ─── White Label ─────────────────────────────────────────────────────────────
-  /whitelabel:
-    get:
-      operationId: getWhiteLabel
-      tags: [whitelabel]
-      summary: Get current user's white label config
-      responses:
-        "200":
-          description: White label config
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WhiteLabel"
-    put:
-      operationId: updateWhiteLabel
-      tags: [whitelabel]
-      summary: Update white label configuration
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/WhiteLabelInput"
-      responses:
-        "200":
-          description: Updated config
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WhiteLabel"
 
 components:
   schemas:
@@ -1125,7 +1131,7 @@ components:
     # ─── Meetings ─────────────────────────────────────────────────────────────
     Meeting:
       type: object
-      required: [id, userId, title, aiName, language, resources, status, createdAt]
+      required: [id, userId, title, aiName, language, status, createdAt, sessionCount]
       properties:
         id:
           type: integer
@@ -1153,13 +1159,12 @@ components:
           type: ["string", "null"]
         status:
           type: string
-          enum: [active, archived]
-        sessionCount:
-          type: ["integer", "null"]
-        lastSessionAt:
-          type: ["string", "null"]
         createdAt:
           type: string
+        sessionCount:
+          type: integer
+        lastSessionAt:
+          type: ["string", "null"]
 
     MeetingInput:
       type: object
@@ -1168,23 +1173,23 @@ components:
         title:
           type: string
         description:
-          type: string
+          type: ["string", "null"]
         company:
-          type: string
+          type: ["string", "null"]
         companyUrl:
-          type: string
+          type: ["string", "null"]
         logoUrl:
-          type: string
+          type: ["string", "null"]
         aiName:
-          type: string
+          type: ["string", "null"]
         language:
-          type: string
+          type: ["string", "null"]
         resources:
           type: array
           items:
             type: string
         briefingText:
-          type: string
+          type: ["string", "null"]
 
     MeetingUpdate:
       type: object
@@ -1192,25 +1197,25 @@ components:
         title:
           type: string
         description:
-          type: string
+          type: ["string", "null"]
         company:
-          type: string
+          type: ["string", "null"]
         companyUrl:
-          type: string
+          type: ["string", "null"]
         logoUrl:
-          type: string
+          type: ["string", "null"]
         aiName:
-          type: string
+          type: ["string", "null"]
         language:
-          type: string
+          type: ["string", "null"]
         resources:
           type: array
           items:
             type: string
         briefingText:
-          type: string
+          type: ["string", "null"]
         status:
-          type: string
+          type: ["string", "null"]
 
     MeetingSession:
       type: object
@@ -1227,38 +1232,35 @@ components:
           type: string
         endedAt:
           type: ["string", "null"]
-        transcript:
-          type: ["string", "null"]
-        summary:
-          type: ["string", "null"]
-        builtAssets:
-          type: array
-          items:
-            type: string
         durationMinutes:
           type: ["integer", "null"]
+        summary:
+          type: ["string", "null"]
+        transcript:
+          type: ["string", "null"]
+        builtAssets:
+          type: ["string", "null"]
 
     SessionInput:
       type: object
       properties:
         notes:
-          type: string
+          type: ["string", "null"]
 
     SessionUpdate:
       type: object
       properties:
-        summary:
-          type: string
-        transcript:
-          type: string
-        endedAt:
-          type: string
         status:
-          type: string
+          type: ["string", "null"]
+          enum: ["active", "ended", null]
+        summary:
+          type: ["string", "null"]
+        transcript:
+          type: ["string", "null"]
         builtAssets:
-          type: array
-          items:
-            type: string
+          type: ["string", "null"]
+        endedAt:
+          type: ["string", "null"]
 
     AskInput:
       type: object
@@ -1273,7 +1275,7 @@ components:
 
     ApexResponse:
       type: object
-      required: [message]
+      required: [message, tokensUsed]
       properties:
         message:
           type: string
@@ -1282,7 +1284,7 @@ components:
         actionResult:
           type: ["string", "null"]
         tokensUsed:
-          type: ["integer", "null"]
+          type: integer
 
     MeetingsOverview:
       type: object
@@ -1299,17 +1301,20 @@ components:
         recentSessions:
           type: array
           items:
-            type: object
-            required: [meetingId, meetingTitle, startedAt, status]
-            properties:
-              meetingId:
-                type: integer
-              meetingTitle:
-                type: string
-              startedAt:
-                type: string
-              status:
-                type: string
+            $ref: "#/components/schemas/MeetingsOverviewRecentSessionsItem"
+
+    MeetingsOverviewRecentSessionsItem:
+      type: object
+      required: [meetingId, meetingTitle, startedAt, status]
+      properties:
+        meetingId:
+          type: integer
+        meetingTitle:
+          type: string
+        startedAt:
+          type: string
+        status:
+          type: string
 
     # ─── White Label ──────────────────────────────────────────────────────────
     WhiteLabel:
@@ -1337,14 +1342,14 @@ components:
       type: object
       properties:
         aiName:
-          type: string
+          type: ["string", "null"]
         logoUrl:
-          type: string
+          type: ["string", "null"]
         primaryColor:
-          type: string
+          type: ["string", "null"]
         accentColor:
-          type: string
+          type: ["string", "null"]
         companyName:
-          type: string
+          type: ["string", "null"]
         subdomain:
-          type: string
+          type: ["string", "null"]

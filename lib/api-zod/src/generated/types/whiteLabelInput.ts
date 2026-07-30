@@ -7,10 +7,16 @@
  */
 
 export interface WhiteLabelInput {
-  aiName?: string;
-  logoUrl?: string;
-  primaryColor?: string;
-  accentColor?: string;
-  companyName?: string;
-  subdomain?: string;
+  /** @nullable */
+  aiName?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  primaryColor?: string | null;
+  /** @nullable */
+  accentColor?: string | null;
+  /** @nullable */
+  companyName?: string | null;
+  /** @nullable */
+  subdomain?: string | null;
 }

@@ -15,10 +15,11 @@ export interface MeetingSession {
   /** @nullable */
   endedAt?: string | null;
   /** @nullable */
-  transcript?: string | null;
+  durationMinutes?: number | null;
   /** @nullable */
   summary?: string | null;
-  builtAssets?: string[];
   /** @nullable */
-  durationMinutes?: number | null;
+  transcript?: string | null;
+  /** @nullable */
+  builtAssets?: string | null;
 }

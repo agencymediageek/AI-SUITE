@@ -223,14 +223,6 @@ export interface AdminUserUpdate {
   isActive?: boolean;
 }
 
-export type MeetingStatus = typeof MeetingStatus[keyof typeof MeetingStatus];
-
-
-export const MeetingStatus = {
-  active: 'active',
-  archived: 'archived',
-} as const;
-
 export interface Meeting {
   id: number;
   userId: number;
@@ -245,40 +237,54 @@ export interface Meeting {
   logoUrl?: string | null;
   aiName: string;
   language: string;
-  resources: string[];
+  resources?: string[];
   /** @nullable */
   briefingText?: string | null;
-  status: MeetingStatus;
-  /** @nullable */
-  sessionCount?: number | null;
+  status: string;
+  createdAt: string;
+  sessionCount: number;
   /** @nullable */
   lastSessionAt?: string | null;
-  createdAt: string;
 }
 
 export interface MeetingInput {
   title: string;
-  description?: string;
-  company?: string;
-  companyUrl?: string;
-  logoUrl?: string;
-  aiName?: string;
-  language?: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  companyUrl?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  aiName?: string | null;
+  /** @nullable */
+  language?: string | null;
   resources?: string[];
-  briefingText?: string;
+  /** @nullable */
+  briefingText?: string | null;
 }
 
 export interface MeetingUpdate {
   title?: string;
-  description?: string;
-  company?: string;
-  companyUrl?: string;
-  logoUrl?: string;
-  aiName?: string;
-  language?: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  companyUrl?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  aiName?: string | null;
+  /** @nullable */
+  language?: string | null;
   resources?: string[];
-  briefingText?: string;
-  status?: string;
+  /** @nullable */
+  briefingText?: string | null;
+  /** @nullable */
+  status?: string | null;
 }
 
 export type MeetingSessionStatus = typeof MeetingSessionStatus[keyof typeof MeetingSessionStatus];
@@ -297,24 +303,42 @@ export interface MeetingSession {
   /** @nullable */
   endedAt?: string | null;
   /** @nullable */
-  transcript?: string | null;
+  durationMinutes?: number | null;
   /** @nullable */
   summary?: string | null;
-  builtAssets?: string[];
   /** @nullable */
-  durationMinutes?: number | null;
+  transcript?: string | null;
+  /** @nullable */
+  builtAssets?: string | null;
 }
 
 export interface SessionInput {
-  notes?: string;
+  /** @nullable */
+  notes?: string | null;
 }
 
+/**
+ * @nullable
+ */
+export type SessionUpdateStatus = typeof SessionUpdateStatus[keyof typeof SessionUpdateStatus] | null;
+
+
+export const SessionUpdateStatus = {
+  active: 'active',
+  ended: 'ended',
+} as const;
+
 export interface SessionUpdate {
-  summary?: string;
-  transcript?: string;
-  endedAt?: string;
-  status?: string;
-  builtAssets?: string[];
+  /** @nullable */
+  status?: SessionUpdateStatus;
+  /** @nullable */
+  summary?: string | null;
+  /** @nullable */
+  transcript?: string | null;
+  /** @nullable */
+  builtAssets?: string | null;
+  /** @nullable */
+  endedAt?: string | null;
 }
 
 export interface AskInput {
@@ -331,16 +355,15 @@ export interface ApexResponse {
   action?: string | null;
   /** @nullable */
   actionResult?: string | null;
-  /** @nullable */
-  tokensUsed?: number | null;
+  tokensUsed: number;
 }
 
-export type MeetingsOverviewRecentSessionsItem = {
+export interface MeetingsOverviewRecentSessionsItem {
   meetingId: number;
   meetingTitle: string;
   startedAt: string;
   status: string;
-};
+}
 
 export interface MeetingsOverview {
   totalMeetings: number;
@@ -367,12 +390,18 @@ export interface WhiteLabel {
 }
 
 export interface WhiteLabelInput {
-  aiName?: string;
-  logoUrl?: string;
-  primaryColor?: string;
-  accentColor?: string;
-  companyName?: string;
-  subdomain?: string;
+  /** @nullable */
+  aiName?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  primaryColor?: string | null;
+  /** @nullable */
+  accentColor?: string | null;
+  /** @nullable */
+  companyName?: string | null;
+  /** @nullable */
+  subdomain?: string | null;
 }
 
 export type ListToolsParams = {

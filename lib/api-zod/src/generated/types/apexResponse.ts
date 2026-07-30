@@ -12,6 +12,5 @@ export interface ApexResponse {
   action?: string | null;
   /** @nullable */
   actionResult?: string | null;
-  /** @nullable */
-  tokensUsed?: number | null;
+  tokensUsed: number;
 }

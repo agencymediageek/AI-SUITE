@@ -7,5 +7,6 @@
  */
 
 export interface SessionInput {
-  notes?: string;
+  /** @nullable */
+  notes?: string | null;
 }
