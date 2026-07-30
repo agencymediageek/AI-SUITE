@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Repeat, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Repeat, Volume2, VolumeX } from "lucide-react";
 import VideoTemplate, { SCENE_DURATIONS } from "./VideoTemplate";
 import { useSceneControls } from "./useSceneControls";
 
@@ -85,9 +85,13 @@ function ControlBar({
 
       <button
         onClick={onToggleMute}
-        className="w-14 h-14 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors shrink-0"
-        title={muted ? 'Unmute' : 'Mute'}
-        aria-pressed={muted}
+        className={`w-14 h-14 flex items-center justify-center rounded-lg transition-colors shrink-0 ${
+          muted
+            ? 'text-[#00FFFF] bg-[#00FFFF]/15 hover:bg-[#00FFFF]/25 animate-pulse'
+            : 'text-white/60 hover:text-white hover:bg-white/10'
+        }`}
+        title={muted ? 'Ativar som' : 'Silenciar'}
+        aria-pressed={!muted}
       >
         {muted ? <VolumeX className="w-8 h-8" /> : <Volume2 className="w-8 h-8" />}
       </button>
@@ -109,7 +113,7 @@ function ControlBar({
       <button
         onClick={onToggleCollapsed}
         className="w-14 h-14 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors rounded-lg shrink-0"
-        title={collapsed ? 'Show controls' : 'Hide controls'}
+        title={collapsed ? 'Mostrar controles' : 'Ocultar controles'}
         aria-expanded={!collapsed}
       >
         {collapsed ? <ChevronUp className="w-10 h-10" /> : <ChevronDown className="w-10 h-10" />}
@@ -121,20 +125,17 @@ function ControlBar({
 // ── Main wrapper ──────────────────────────────────────────────────────────────
 export default function VideoWithControls() {
   const isIframed = typeof window !== 'undefined' && window.self !== window.top;
-
-  // Export path: no controls, recording markers fire normally
-  if (!isIframed) return <VideoTemplate />;
-
-  return <VideoWithControlsInner />;
+  return <VideoWithControlsInner showBackButton={!isIframed} />;
 }
 
-function VideoWithControlsInner() {
+function VideoWithControlsInner({ showBackButton = false }: { showBackButton?: boolean }) {
   const {
     sceneKeys, activeIndex, locked, mountKey, tick,
     durations, activeDuration, onSceneChange, jumpTo, toggleLock,
   } = useSceneControls(SCENE_DURATIONS);
 
   const [muted, setMuted] = useState(true);
+  const [soundHintDismissed, setSoundHintDismissed] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [hovering, setHovering] = useState(false);
   const [tapPinned, setTapPinned] = useState(false);
@@ -157,6 +158,18 @@ function VideoWithControlsInner() {
     });
   }, []);
 
+  const handleUnmute = useCallback(() => {
+    setMuted(false);
+    setSoundHintDismissed(true);
+  }, []);
+
+  const handleToggleMute = useCallback(() => {
+    setMuted(m => {
+      if (m) setSoundHintDismissed(true); // first unmute dismisses hint
+      return !m;
+    });
+  }, []);
+
   useEffect(() => {
     if (!(collapsed && tapPinned)) return;
     const onDocPointerDown = (e: PointerEvent) => {
@@ -170,6 +183,14 @@ function VideoWithControlsInner() {
 
   const barVisible = !collapsed || hovering || tapPinned;
 
+  const handleBack = useCallback(() => {
+    if (window.opener) {
+      window.close();
+    } else {
+      window.location.href = 'https://apex.techsites.ai';
+    }
+  }, []);
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <VideoTemplate
@@ -179,6 +200,29 @@ function VideoWithControlsInner() {
         muted={muted}
         onSceneChange={onSceneChange}
       />
+
+      {/* ── Botão Voltar (só na aba direta) ── */}
+      {showBackButton && (
+        <button
+          onClick={handleBack}
+          className="absolute top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-black/80 transition-all text-sm font-mono"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </button>
+      )}
+
+      {/* ── Dica de som (some após primeiro clique no mudo) ── */}
+      {muted && !soundHintDismissed && (
+        <button
+          onClick={handleUnmute}
+          className="absolute top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-[#00FFFF]/10 backdrop-blur-sm border border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/20 transition-all text-sm font-mono animate-pulse"
+        >
+          <VolumeX className="w-4 h-4" />
+          Toque para ativar o som
+        </button>
+      )}
+
       <div
         ref={sensorRef}
         className="absolute bottom-0 left-0 right-0 z-50 flex flex-col justify-end"
@@ -198,7 +242,7 @@ function VideoWithControlsInner() {
           activeDuration={activeDuration}
           tick={tick}
           onToggleLock={toggleLock}
-          onToggleMute={() => setMuted(m => !m)}
+          onToggleMute={handleToggleMute}
           onJumpTo={jumpTo}
           onToggleCollapsed={handleToggleCollapsed}
         />
