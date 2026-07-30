@@ -166,7 +166,14 @@ export function LandingFooter() {
 
 // ─── Landing Page ─────────────────────────────────────────────────────────────
 export default function Landing() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+
+  // ── Conversão de preços ───────────────────────────────────────────────────
+  const BRL_RATE = 5.20; // cotação R$/USD
+  const formatPrice = (usd: number) =>
+    language === 'pt'
+      ? `R$${Math.ceil(usd * BRL_RATE).toLocaleString('pt-BR')}`
+      : `$${usd}`;
 
   const features = [
     { icon: Zap,      title: t('landing.f1.title'), description: t('landing.f1.desc') },
@@ -187,7 +194,7 @@ export default function Landing() {
   const plans = [
     {
       name: 'Starter',
-      price: 'R$297',
+      price: formatPrice(57),
       period: t('landing.p1.period'),
       highlight: false,
       features: [t('landing.p1.f1'), t('landing.p1.f2'), t('landing.p1.f3'), t('landing.p1.f4'), t('landing.p1.f5')],
@@ -196,7 +203,7 @@ export default function Landing() {
     },
     {
       name: 'Pro',
-      price: 'R$697',
+      price: formatPrice(134),
       period: t('landing.p2.period'),
       highlight: true,
       badge: t('landing.plans.popular'),
