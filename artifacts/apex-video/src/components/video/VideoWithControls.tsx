@@ -122,13 +122,85 @@ function ControlBar({
   );
 }
 
+// ── Shared overlays (back + sound hint) ──────────────────────────────────────
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="absolute top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-black/80 transition-all text-sm font-mono"
+    >
+      <ArrowLeft className="w-4 h-4" />
+      Voltar
+    </button>
+  );
+}
+
+function SoundHint({ onActivate }: { onActivate: () => void }) {
+  return (
+    <button
+      onClick={onActivate}
+      className="absolute top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-[#00FFFF]/10 backdrop-blur-sm border border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/20 transition-all text-sm font-mono animate-pulse"
+    >
+      <VolumeX className="w-4 h-4" />
+      Toque para ativar o som
+    </button>
+  );
+}
+
+// ── Direct view (new tab): VideoTemplate + overlays, sem controles de pulo ───
+// Preserva o fluxo original do useVideoPlayer com SCENE_DURATIONS estático.
+function DirectView() {
+  const [muted, setMuted] = useState(true);
+  const [hintDismissed, setHintDismissed] = useState(false);
+
+  const handleBack = useCallback(() => {
+    if (window.opener) window.close();
+    else window.location.href = 'https://apex.techsites.ai';
+  }, []);
+
+  const handleActivateSound = useCallback(() => {
+    setMuted(false);
+    setHintDismissed(true);
+  }, []);
+
+  return (
+    <div className="relative w-full h-screen overflow-hidden">
+      {/* VideoTemplate direto — usa SCENE_DURATIONS estático, sem rotação */}
+      <VideoTemplate muted={muted} />
+
+      <BackButton onClick={handleBack} />
+
+      {muted && !hintDismissed && (
+        <SoundHint onActivate={handleActivateSound} />
+      )}
+
+      {/* Botão mudo flutuante (canto inferior direito) após hint ser dispensado */}
+      {hintDismissed && (
+        <button
+          onClick={() => setMuted(m => !m)}
+          className="absolute bottom-6 right-6 z-50 w-12 h-12 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white/70 hover:text-white hover:bg-black/80 transition-all"
+          title={muted ? 'Ativar som' : 'Silenciar'}
+        >
+          {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Main wrapper ──────────────────────────────────────────────────────────────
 export default function VideoWithControls() {
   const isIframed = typeof window !== 'undefined' && window.self !== window.top;
-  return <VideoWithControlsInner showBackButton={!isIframed} />;
+
+  // View direta (nova aba): VideoTemplate sem rotação de cenas (corrige embaralhamento)
+  if (!isIframed) return <DirectView />;
+
+  // View em iframe (embutido na landing): controles completos
+  return <VideoWithControlsInner />;
 }
 
-function VideoWithControlsInner({ showBackButton = false }: { showBackButton?: boolean }) {
+// ── Iframe view: controles completos com jumpTo/loop ─────────────────────────
+function VideoWithControlsInner() {
   const {
     sceneKeys, activeIndex, locked, mountKey, tick,
     durations, activeDuration, onSceneChange, jumpTo, toggleLock,
@@ -158,14 +230,9 @@ function VideoWithControlsInner({ showBackButton = false }: { showBackButton?: b
     });
   }, []);
 
-  const handleUnmute = useCallback(() => {
-    setMuted(false);
-    setSoundHintDismissed(true);
-  }, []);
-
   const handleToggleMute = useCallback(() => {
     setMuted(m => {
-      if (m) setSoundHintDismissed(true); // first unmute dismisses hint
+      if (m) setSoundHintDismissed(true);
       return !m;
     });
   }, []);
@@ -183,14 +250,6 @@ function VideoWithControlsInner({ showBackButton = false }: { showBackButton?: b
 
   const barVisible = !collapsed || hovering || tapPinned;
 
-  const handleBack = useCallback(() => {
-    if (window.opener) {
-      window.close();
-    } else {
-      window.location.href = 'https://apex.techsites.ai';
-    }
-  }, []);
-
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <VideoTemplate
@@ -201,26 +260,8 @@ function VideoWithControlsInner({ showBackButton = false }: { showBackButton?: b
         onSceneChange={onSceneChange}
       />
 
-      {/* ── Botão Voltar (só na aba direta) ── */}
-      {showBackButton && (
-        <button
-          onClick={handleBack}
-          className="absolute top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-black/80 transition-all text-sm font-mono"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Voltar
-        </button>
-      )}
-
-      {/* ── Dica de som (some após primeiro clique no mudo) ── */}
       {muted && !soundHintDismissed && (
-        <button
-          onClick={handleUnmute}
-          className="absolute top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-[#00FFFF]/10 backdrop-blur-sm border border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/20 transition-all text-sm font-mono animate-pulse"
-        >
-          <VolumeX className="w-4 h-4" />
-          Toque para ativar o som
-        </button>
+        <SoundHint onActivate={() => { setMuted(false); setSoundHintDismissed(true); }} />
       )}
 
       <div

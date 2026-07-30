@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { BackToTop } from '@/components/ui/back-to-top';
 import { useI18n } from '@/lib/i18n';
+import { useBRLRate } from '@/hooks/useBRLRate';
 
 function useGlobeSize() {
   const [size, setSize] = useState(() =>
@@ -168,11 +169,11 @@ export function LandingFooter() {
 export default function Landing() {
   const { t, language } = useI18n();
 
-  // ── Conversão de preços ───────────────────────────────────────────────────
-  const BRL_RATE = 5.20; // cotação R$/USD
+  // ── Conversão de preços (câmbio ao vivo, atualizado a cada 1h) ───────────
+  const brlRate = useBRLRate(5.20);
   const formatPrice = (usd: number) =>
     language === 'pt'
-      ? `R$${Math.ceil(usd * BRL_RATE).toLocaleString('pt-BR')}`
+      ? `R$${Math.ceil(usd * brlRate).toLocaleString('pt-BR')}`
       : `$${usd}`;
 
   const features = [
@@ -482,7 +483,7 @@ export default function Landing() {
               </div>
               <div className="flex flex-col items-start sm:items-end gap-4 shrink-0">
                 <div>
-                  <span className="text-4xl font-bold font-mono text-[#00FFFF]">{t('landing.avulsa.price')}</span>
+                  <span className="text-4xl font-bold font-mono text-[#00FFFF]">{formatPrice(27)}</span>
                   <span className="text-muted-foreground text-sm ml-1">{t('landing.avulsa.period')}</span>
                 </div>
                 <Button
