@@ -8,6 +8,8 @@ import plansRouter from "./plans.js";
 import dashboardRouter from "./dashboard.js";
 import adminRouter from "./admin.js";
 import paymentsRouter from "./payments.js";
+import meetingsRouter from "./meetings.js";
+import whitelabelRouter from "./whitelabel.js";
 
 const router: IRouter = Router();
 
@@ -20,5 +22,7 @@ router.use(plansRouter);
 router.use(dashboardRouter);
 router.use(adminRouter);
 router.use(paymentsRouter);
+router.use(meetingsRouter);
+router.use(whitelabelRouter);
 
 export default router;
