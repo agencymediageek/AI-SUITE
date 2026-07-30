@@ -1,40 +1,57 @@
 ---
-name: APEX CORE MEETING Deployment
-description: Infraestrutura de produção do APEX CORE MEETING em apex.techsites.ai
+name: APEX Deployment
+description: Full infrastructure map for apex.techsites.ai — CF Pages (frontend), VPS PM2 (backend), Nginx, deploy process
 ---
 
-## URLs de Produção
-- Frontend: https://apex.techsites.ai (Cloudflare proxied → VPS 179.197.229.207)
-- API: https://apex.techsites.ai/api/* (nginx proxy → VPS:8080)
+## Production URLs
+- Live: https://apex.techsites.ai
+- CF Pages: apex-meeting.pages.dev (project: apex-meeting)
+- VPS: 179.197.229.207 (Hostgator)
 
-## VPS Setup
-- PM2 process: `apex-api` (id=2) — `/var/www/mediageek/artifacts/api-server/dist/index.mjs`
-- Ecosystem file: `/var/www/mediageek/artifacts/api-server/ecosystem.config.cjs`
-- Env file: `/var/www/mediageek/artifacts/api-server/.env.local` (DATABASE_URL, GROK, SESSION_SECRET, STRIPE_*)
-- Static files: `/var/www/mediageek/artifacts/apex-meeting/dist/public/`
-- nginx config: `/etc/nginx/sites-available/apex-techsites` (linked in sites-enabled)
-- SSL: self-signed cert at `/etc/nginx/ssl/apex-techsites.{crt,key}` (Cloudflare "full" mode accepts)
+## Frontend — Cloudflare Pages
+- Project name: `apex-meeting`
+- CF Zone techsites.ai: `aaa2418ffbb69192aa3546436397ccac`
+- Deploy command (from workspace root):
+  ```bash
+  PORT=3001 BASE_PATH=/ pnpm --filter @workspace/apex-meeting run build
+  CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... npx wrangler pages deploy artifacts/apex-meeting/dist/public --project-name apex-meeting --branch main
+  ```
+- After deploy: purge CF cache via API (`purge_everything: true`)
+- Cache issue: if bundle filename doesn't change, browser caches immutably. Force new filename by adding suffix to vite.config build.rollupOptions.output
 
-## Deploy Automático
-- GitHub push → GitHub Actions → deploy webhook POST 9876 → `server.js` em `/var/www/deploy-webhook/`
-- O webhook agora inclui: build api-server → pm2 restart apex-api + build apex-meeting frontend
-- Build command do frontend: `PORT=3001 BASE_PATH=/ pnpm --filter @workspace/apex-meeting run build`
+## Backend — VPS PM2
+- PM2 process: `apex-api` (id=2), port 8080
+- Ecosystem: `artifacts/api-server/ecosystem.config.cjs`
+- Nginx config: `/etc/nginx/sites-available/apex-techsites`
+- Static files served from: `/var/www/mediageek/artifacts/apex-meeting/dist/public`
+- Deploy webhook: `/var/www/deploy-webhook/server.js`
 
-## Cloudflare DNS
-- Zone: techsites.ai (ID: aaa2418ffbb69192aa3546436397ccac)
-- Record: A apex → 179.197.229.207 (proxied=true)
-- SSL mode: "full" (aceita self-signed no origin)
-
-## Why self-signed cert (não Let's Encrypt)
-- Cloudflare proxy modo "full" aceita self-signed sem problemas
-- Let's Encrypt HTTP-01 challenge com CF proxy ativado é complicado
-- Alternativa futura: Cloudflare Origin Certificate via API (requer CSR gerado no VPS)
-
-## Atualizar o site após mudanças
+## VPS Deploy Process
 ```bash
-# No VPS manualmente:
+ssh -i .agents/deploy_key root@179.197.229.207
 cd /var/www/mediageek && git pull origin main
-pnpm --filter @workspace/api-server run build && pm2 restart apex-api
 PORT=3001 BASE_PATH=/ pnpm --filter @workspace/apex-meeting run build
+pm2 restart apex-api
 ```
-Ou fazer push para GitHub → auto-deploy via webhook.
+
+## CI/CD (GitHub Actions)
+- `.github/workflows/deploy.yml` — auto-deploys apex-meeting to CF Pages on push to main
+- Builds with PORT=3000 BASE_PATH=/
+
+## DNS
+- apex.techsites.ai → A record 179.197.229.207 (CF proxied=true)
+
+## Demo Accounts
+- admin@apex.techsites.ai / Admin@Apex2026! (role: admin, plan: pro)
+- demo@apex.techsites.ai / Teste@Apex2026! (role: user)
+
+## Key Quirk: Sync VPS vs CF Pages
+The site runs on CF Pages (frontend), NOT served from VPS nginx static.
+VPS only serves the API (/api/*). Changes to the frontend only show in prod after:
+1. Build locally
+2. Deploy to CF Pages via Wrangler
+3. Purge CF cache
+
+## Documentation
+- GitHub: docs/APEX-CORE-BLUEPRINT.md, docs/APEX-CORE-README.md
+- GDRIVE_TECHSITES_CREDENTIALS secret is a URL, not a JSON key — cannot use for service account upload
