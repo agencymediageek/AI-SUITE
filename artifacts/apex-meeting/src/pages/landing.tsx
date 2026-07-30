@@ -141,7 +141,7 @@ export function LandingFooter() {
             variant="outline"
             size="sm"
             className="border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 gap-2 font-mono text-sm"
-            onClick={() => window.open('/apex-video', '_blank')}
+            onClick={() => window.open('https://apex-video.pages.dev', '_blank')}
           >
             <Play className="w-4 h-4 fill-current" />
             {t('hero.demo')}
@@ -297,7 +297,7 @@ export default function Landing() {
                   className="border-[#00FFFF] text-[#00FFFF] hover:bg-[#00FFFF]/10 text-base px-6 sm:px-8"
                   asChild
                 >
-                  <a href="/apex-video" target="_blank" rel="noopener noreferrer">
+                  <a href="https://apex-video.pages.dev" target="_blank" rel="noopener noreferrer">
                     {t('hero.demo')}
                   </a>
                 </Button>
@@ -474,7 +474,7 @@ export default function Landing() {
             <div className="aspect-video">
               {videoLoaded ? (
                 <iframe
-                  src="/apex-video"
+                  src="https://apex-video.pages.dev"
                   title="APEX CORE MEETING — Demo"
                   className="w-full h-full"
                   allow="autoplay; encrypted-media"
@@ -494,7 +494,7 @@ export default function Landing() {
 
           <div className="text-center mt-8">
             <a
-              href="/apex-video"
+              href="https://apex-video.pages.dev"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-mono text-[#00FFFF]/70 hover:text-[#00FFFF] transition-colors"
