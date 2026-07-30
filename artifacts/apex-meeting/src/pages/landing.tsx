@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { MatrixGlobe } from '@/components/meeting/MatrixGlobe';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,21 @@ import {
   Cloud,
 } from 'lucide-react';
 import { BackToTop } from '@/components/ui/back-to-top';
+
+function useGlobeSize() {
+  const [size, setSize] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.innerWidth < 640 ? 260 : window.innerWidth < 1024 ? 360 : 480
+      : 480
+  );
+  useEffect(() => {
+    const update = () =>
+      setSize(window.innerWidth < 640 ? 260 : window.innerWidth < 1024 ? 360 : 480);
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return size;
+}
 
 function scrollTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -235,30 +251,32 @@ export default function Landing() {
     },
   ];
 
+  const globeSize = useGlobeSize();
+
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-background text-foreground relative overflow-x-hidden">
       <Navbar />
       {/* Scan lines */}
       <div className="scan-lines fixed inset-0 pointer-events-none z-0" />
 
       {/* ── HERO ── */}
       <section id="inicio" className="relative pt-28 pb-20 px-4">
-        <div className="container mx-auto max-w-7xl">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="container mx-auto max-w-7xl w-full">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left */}
-            <div className="space-y-8">
-              <div className="inline-flex items-center px-4 py-2 bg-primary/10 border border-primary/30 rounded-full">
+            <div className="space-y-6 sm:space-y-8 min-w-0">
+              <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-primary/10 border border-primary/30 rounded-full">
                 <span className="text-xs font-mono text-primary tracking-widest">⚡ ENTERPRISE AI INTELLIGENCE</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
                 <span className="text-foreground">IA que </span>
                 <span className="matrix-text">executa</span>
                 <br />
                 <span className="text-foreground">enquanto você fala</span>
               </h1>
 
-              <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl">
+              <p className="text-base sm:text-xl text-muted-foreground leading-relaxed max-w-xl">
                 APEX CORE não apenas assiste reuniões — ele constrói sites, publica documentos e configura infraestrutura antes da reunião terminar.
               </p>
 
@@ -266,7 +284,7 @@ export default function Landing() {
                 <Button
                   size="lg"
                   asChild
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 text-base px-8 terminal-glow"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 text-base px-6 sm:px-8 terminal-glow"
                 >
                   <Link href="/register" data-testid="link-hero-cta">
                     <Zap className="w-5 h-5 mr-2" />
@@ -276,7 +294,7 @@ export default function Landing() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-[#00FFFF] text-[#00FFFF] hover:bg-[#00FFFF]/10 text-base px-8"
+                  className="border-[#00FFFF] text-[#00FFFF] hover:bg-[#00FFFF]/10 text-base px-6 sm:px-8"
                   onClick={() => scrollTo('como-funciona')}
                 >
                   Ver demo →
@@ -284,7 +302,7 @@ export default function Landing() {
               </div>
 
               {/* Trust badges */}
-              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <div className="flex flex-wrap gap-3 sm:gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <Lock className="w-4 h-4 text-primary" /> Sem fidelidade
                 </span>
@@ -292,16 +310,16 @@ export default function Landing() {
                   <Cloud className="w-4 h-4 text-primary" /> 100% em nuvem
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-primary" /> Setup em 3 minutos
+                  <Zap className="w-4 h-4 text-primary" /> Setup em 3 min
                 </span>
               </div>
             </div>
 
-            {/* Right — Globe */}
-            <div className="relative flex justify-center lg:justify-end">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full pointer-events-none" />
-                <MatrixGlobe size={480} isProcessing={false} />
+            {/* Right — Globe (responsive size via hook) */}
+            <div className="relative flex justify-center lg:justify-end mt-4 lg:mt-0">
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 bg-primary/20 blur-[80px] rounded-full pointer-events-none" />
+                <MatrixGlobe size={globeSize} isProcessing={false} />
               </div>
             </div>
           </div>
