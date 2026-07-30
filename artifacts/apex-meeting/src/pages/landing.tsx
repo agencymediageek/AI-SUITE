@@ -241,9 +241,11 @@ export default function Landing() {
                   size="lg"
                   variant="outline"
                   className="border-[#00FFFF] text-[#00FFFF] hover:bg-[#00FFFF]/10 text-base px-6 sm:px-8"
-                  onClick={() => scrollTo('como-funciona')}
+                  asChild
                 >
-                  {t('hero.demo')}
+                  <a href="/apex-video" target="_blank" rel="noopener noreferrer">
+                    {t('hero.demo')}
+                  </a>
                 </Button>
               </div>
 
