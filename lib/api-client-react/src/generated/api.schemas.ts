@@ -223,6 +223,158 @@ export interface AdminUserUpdate {
   isActive?: boolean;
 }
 
+export type MeetingStatus = typeof MeetingStatus[keyof typeof MeetingStatus];
+
+
+export const MeetingStatus = {
+  active: 'active',
+  archived: 'archived',
+} as const;
+
+export interface Meeting {
+  id: number;
+  userId: number;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  companyUrl?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  aiName: string;
+  language: string;
+  resources: string[];
+  /** @nullable */
+  briefingText?: string | null;
+  status: MeetingStatus;
+  /** @nullable */
+  sessionCount?: number | null;
+  /** @nullable */
+  lastSessionAt?: string | null;
+  createdAt: string;
+}
+
+export interface MeetingInput {
+  title: string;
+  description?: string;
+  company?: string;
+  companyUrl?: string;
+  logoUrl?: string;
+  aiName?: string;
+  language?: string;
+  resources?: string[];
+  briefingText?: string;
+}
+
+export interface MeetingUpdate {
+  title?: string;
+  description?: string;
+  company?: string;
+  companyUrl?: string;
+  logoUrl?: string;
+  aiName?: string;
+  language?: string;
+  resources?: string[];
+  briefingText?: string;
+  status?: string;
+}
+
+export type MeetingSessionStatus = typeof MeetingSessionStatus[keyof typeof MeetingSessionStatus];
+
+
+export const MeetingSessionStatus = {
+  active: 'active',
+  ended: 'ended',
+} as const;
+
+export interface MeetingSession {
+  id: number;
+  meetingId: number;
+  status: MeetingSessionStatus;
+  startedAt: string;
+  /** @nullable */
+  endedAt?: string | null;
+  /** @nullable */
+  transcript?: string | null;
+  /** @nullable */
+  summary?: string | null;
+  builtAssets?: string[];
+  /** @nullable */
+  durationMinutes?: number | null;
+}
+
+export interface SessionInput {
+  notes?: string;
+}
+
+export interface SessionUpdate {
+  summary?: string;
+  transcript?: string;
+  endedAt?: string;
+  status?: string;
+  builtAssets?: string[];
+}
+
+export interface AskInput {
+  message: string;
+  /** @nullable */
+  sessionId?: number | null;
+  /** @nullable */
+  imageBase64?: string | null;
+}
+
+export interface ApexResponse {
+  message: string;
+  /** @nullable */
+  action?: string | null;
+  /** @nullable */
+  actionResult?: string | null;
+  /** @nullable */
+  tokensUsed?: number | null;
+}
+
+export type MeetingsOverviewRecentSessionsItem = {
+  meetingId: number;
+  meetingTitle: string;
+  startedAt: string;
+  status: string;
+};
+
+export interface MeetingsOverview {
+  totalMeetings: number;
+  totalSessions: number;
+  activeSessions: number;
+  /** @nullable */
+  avgDurationMinutes?: number | null;
+  recentSessions?: MeetingsOverviewRecentSessionsItem[];
+}
+
+export interface WhiteLabel {
+  /** @nullable */
+  id?: number | null;
+  userId: number;
+  aiName: string;
+  /** @nullable */
+  logoUrl?: string | null;
+  primaryColor: string;
+  accentColor: string;
+  /** @nullable */
+  companyName?: string | null;
+  /** @nullable */
+  subdomain?: string | null;
+}
+
+export interface WhiteLabelInput {
+  aiName?: string;
+  logoUrl?: string;
+  primaryColor?: string;
+  accentColor?: string;
+  companyName?: string;
+  subdomain?: string;
+}
+
 export type ListToolsParams = {
 category?: string;
 search?: string;

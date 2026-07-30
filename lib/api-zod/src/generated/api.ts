@@ -444,3 +444,310 @@ export const DeleteUserResponse = zod.object({
 })
 
 
+/**
+ * @summary List user's meeting rooms
+ */
+export const ListMeetingsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "company": zod.string().nullish(),
+  "companyUrl": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "aiName": zod.string(),
+  "language": zod.string(),
+  "resources": zod.array(zod.string()),
+  "briefingText": zod.string().nullish(),
+  "status": zod.enum(['active', 'archived']),
+  "sessionCount": zod.number().nullish(),
+  "lastSessionAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListMeetingsResponse = zod.array(ListMeetingsResponseItem)
+
+
+/**
+ * @summary Create a meeting room
+ */
+export const CreateMeetingBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "company": zod.string().optional(),
+  "companyUrl": zod.string().optional(),
+  "logoUrl": zod.string().optional(),
+  "aiName": zod.string().optional(),
+  "language": zod.string().optional(),
+  "resources": zod.array(zod.string()).optional(),
+  "briefingText": zod.string().optional()
+})
+
+export const CreateMeetingResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "company": zod.string().nullish(),
+  "companyUrl": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "aiName": zod.string(),
+  "language": zod.string(),
+  "resources": zod.array(zod.string()),
+  "briefingText": zod.string().nullish(),
+  "status": zod.enum(['active', 'archived']),
+  "sessionCount": zod.number().nullish(),
+  "lastSessionAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Get aggregated meeting dashboard stats
+ */
+export const GetMeetingsOverviewResponse = zod.object({
+  "totalMeetings": zod.number(),
+  "totalSessions": zod.number(),
+  "activeSessions": zod.number(),
+  "avgDurationMinutes": zod.number().nullish(),
+  "recentSessions": zod.array(zod.object({
+  "meetingId": zod.number(),
+  "meetingTitle": zod.string(),
+  "startedAt": zod.string(),
+  "status": zod.string()
+})).optional()
+})
+
+
+/**
+ * @summary Get a meeting room by id
+ */
+export const GetMeetingParams = zod.object({
+  "meetingId": zod.coerce.number()
+})
+
+export const GetMeetingResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "company": zod.string().nullish(),
+  "companyUrl": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "aiName": zod.string(),
+  "language": zod.string(),
+  "resources": zod.array(zod.string()),
+  "briefingText": zod.string().nullish(),
+  "status": zod.enum(['active', 'archived']),
+  "sessionCount": zod.number().nullish(),
+  "lastSessionAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a meeting room
+ */
+export const UpdateMeetingParams = zod.object({
+  "meetingId": zod.coerce.number()
+})
+
+export const UpdateMeetingBody = zod.object({
+  "title": zod.string().optional(),
+  "description": zod.string().optional(),
+  "company": zod.string().optional(),
+  "companyUrl": zod.string().optional(),
+  "logoUrl": zod.string().optional(),
+  "aiName": zod.string().optional(),
+  "language": zod.string().optional(),
+  "resources": zod.array(zod.string()).optional(),
+  "briefingText": zod.string().optional(),
+  "status": zod.string().optional()
+})
+
+export const UpdateMeetingResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "company": zod.string().nullish(),
+  "companyUrl": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "aiName": zod.string(),
+  "language": zod.string(),
+  "resources": zod.array(zod.string()),
+  "briefingText": zod.string().nullish(),
+  "status": zod.enum(['active', 'archived']),
+  "sessionCount": zod.number().nullish(),
+  "lastSessionAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a meeting room
+ */
+export const DeleteMeetingParams = zod.object({
+  "meetingId": zod.coerce.number()
+})
+
+export const DeleteMeetingResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().optional()
+})
+
+
+/**
+ * @summary List sessions for a meeting room
+ */
+export const ListMeetingSessionsParams = zod.object({
+  "meetingId": zod.coerce.number()
+})
+
+export const ListMeetingSessionsResponseItem = zod.object({
+  "id": zod.number(),
+  "meetingId": zod.number(),
+  "status": zod.enum(['active', 'ended']),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish(),
+  "transcript": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "builtAssets": zod.array(zod.string()).optional(),
+  "durationMinutes": zod.number().nullish()
+})
+export const ListMeetingSessionsResponse = zod.array(ListMeetingSessionsResponseItem)
+
+
+/**
+ * @summary Start a new session
+ */
+export const StartMeetingSessionParams = zod.object({
+  "meetingId": zod.coerce.number()
+})
+
+export const StartMeetingSessionBody = zod.object({
+  "notes": zod.string().optional()
+})
+
+export const StartMeetingSessionResponse = zod.object({
+  "id": zod.number(),
+  "meetingId": zod.number(),
+  "status": zod.enum(['active', 'ended']),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish(),
+  "transcript": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "builtAssets": zod.array(zod.string()).optional(),
+  "durationMinutes": zod.number().nullish()
+})
+
+
+/**
+ * @summary Get a specific session
+ */
+export const GetMeetingSessionParams = zod.object({
+  "meetingId": zod.coerce.number(),
+  "sessionId": zod.coerce.number()
+})
+
+export const GetMeetingSessionResponse = zod.object({
+  "id": zod.number(),
+  "meetingId": zod.number(),
+  "status": zod.enum(['active', 'ended']),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish(),
+  "transcript": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "builtAssets": zod.array(zod.string()).optional(),
+  "durationMinutes": zod.number().nullish()
+})
+
+
+/**
+ * @summary End or update a session
+ */
+export const EndMeetingSessionParams = zod.object({
+  "meetingId": zod.coerce.number(),
+  "sessionId": zod.coerce.number()
+})
+
+export const EndMeetingSessionBody = zod.object({
+  "summary": zod.string().optional(),
+  "transcript": zod.string().optional(),
+  "endedAt": zod.string().optional(),
+  "status": zod.string().optional(),
+  "builtAssets": zod.array(zod.string()).optional()
+})
+
+export const EndMeetingSessionResponse = zod.object({
+  "id": zod.number(),
+  "meetingId": zod.number(),
+  "status": zod.enum(['active', 'ended']),
+  "startedAt": zod.string(),
+  "endedAt": zod.string().nullish(),
+  "transcript": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "builtAssets": zod.array(zod.string()).optional(),
+  "durationMinutes": zod.number().nullish()
+})
+
+
+/**
+ * @summary Send a message to APEX AI during a meeting
+ */
+export const AskApexParams = zod.object({
+  "meetingId": zod.coerce.number()
+})
+
+export const AskApexBody = zod.object({
+  "message": zod.string(),
+  "sessionId": zod.number().nullish(),
+  "imageBase64": zod.string().nullish()
+})
+
+export const AskApexResponse = zod.object({
+  "message": zod.string(),
+  "action": zod.string().nullish(),
+  "actionResult": zod.string().nullish(),
+  "tokensUsed": zod.number().nullish()
+})
+
+
+/**
+ * @summary Get current user's white label config
+ */
+export const GetWhiteLabelResponse = zod.object({
+  "id": zod.number().nullish(),
+  "userId": zod.number(),
+  "aiName": zod.string(),
+  "logoUrl": zod.string().nullish(),
+  "primaryColor": zod.string(),
+  "accentColor": zod.string(),
+  "companyName": zod.string().nullish(),
+  "subdomain": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update white label configuration
+ */
+export const UpdateWhiteLabelBody = zod.object({
+  "aiName": zod.string().optional(),
+  "logoUrl": zod.string().optional(),
+  "primaryColor": zod.string().optional(),
+  "accentColor": zod.string().optional(),
+  "companyName": zod.string().optional(),
+  "subdomain": zod.string().optional()
+})
+
+export const UpdateWhiteLabelResponse = zod.object({
+  "id": zod.number().nullish(),
+  "userId": zod.number(),
+  "aiName": zod.string(),
+  "logoUrl": zod.string().nullish(),
+  "primaryColor": zod.string(),
+  "accentColor": zod.string(),
+  "companyName": zod.string().nullish(),
+  "subdomain": zod.string().nullish()
+})
+
+
