@@ -1,7 +1,7 @@
 import { ReactNode, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuthStore } from '@/lib/auth';
-import { useGetMe } from '@workspace/api-client-react';
+import { useGetMe, getGetMeQueryKey } from '@workspace/api-client-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const { isAuthenticated } = useAuthStore();
   const [, setLocation] = useLocation();
-  const { data: user, isLoading } = useGetMe({ query: { enabled: isAuthenticated } });
+  const { data: user, isLoading } = useGetMe({ query: { enabled: isAuthenticated, queryKey: getGetMeQueryKey() } });
 
   useEffect(() => {
     if (!isAuthenticated) {

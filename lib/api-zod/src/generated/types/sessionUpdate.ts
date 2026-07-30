@@ -5,11 +5,17 @@
  * AI Suite Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { SessionUpdateStatus } from './sessionUpdateStatus';
 
 export interface SessionUpdate {
-  summary?: string;
-  transcript?: string;
-  endedAt?: string;
-  status?: string;
-  builtAssets?: string[];
+  /** @nullable */
+  status?: SessionUpdateStatus;
+  /** @nullable */
+  summary?: string | null;
+  /** @nullable */
+  transcript?: string | null;
+  /** @nullable */
+  builtAssets?: string | null;
+  /** @nullable */
+  endedAt?: string | null;
 }

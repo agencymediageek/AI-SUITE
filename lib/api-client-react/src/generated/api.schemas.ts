@@ -223,6 +223,187 @@ export interface AdminUserUpdate {
   isActive?: boolean;
 }
 
+export interface Meeting {
+  id: number;
+  userId: number;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  companyUrl?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  aiName: string;
+  language: string;
+  resources?: string[];
+  /** @nullable */
+  briefingText?: string | null;
+  status: string;
+  createdAt: string;
+  sessionCount: number;
+  /** @nullable */
+  lastSessionAt?: string | null;
+}
+
+export interface MeetingInput {
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  companyUrl?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  aiName?: string | null;
+  /** @nullable */
+  language?: string | null;
+  resources?: string[];
+  /** @nullable */
+  briefingText?: string | null;
+}
+
+export interface MeetingUpdate {
+  title?: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  companyUrl?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  aiName?: string | null;
+  /** @nullable */
+  language?: string | null;
+  resources?: string[];
+  /** @nullable */
+  briefingText?: string | null;
+  /** @nullable */
+  status?: string | null;
+}
+
+export type MeetingSessionStatus = typeof MeetingSessionStatus[keyof typeof MeetingSessionStatus];
+
+
+export const MeetingSessionStatus = {
+  active: 'active',
+  ended: 'ended',
+} as const;
+
+export interface MeetingSession {
+  id: number;
+  meetingId: number;
+  status: MeetingSessionStatus;
+  startedAt: string;
+  /** @nullable */
+  endedAt?: string | null;
+  /** @nullable */
+  durationMinutes?: number | null;
+  /** @nullable */
+  summary?: string | null;
+  /** @nullable */
+  transcript?: string | null;
+  /** @nullable */
+  builtAssets?: string | null;
+}
+
+export interface SessionInput {
+  /** @nullable */
+  notes?: string | null;
+}
+
+/**
+ * @nullable
+ */
+export type SessionUpdateStatus = typeof SessionUpdateStatus[keyof typeof SessionUpdateStatus] | null;
+
+
+export const SessionUpdateStatus = {
+  active: 'active',
+  ended: 'ended',
+} as const;
+
+export interface SessionUpdate {
+  /** @nullable */
+  status?: SessionUpdateStatus;
+  /** @nullable */
+  summary?: string | null;
+  /** @nullable */
+  transcript?: string | null;
+  /** @nullable */
+  builtAssets?: string | null;
+  /** @nullable */
+  endedAt?: string | null;
+}
+
+export interface AskInput {
+  message: string;
+  /** @nullable */
+  sessionId?: number | null;
+  /** @nullable */
+  imageBase64?: string | null;
+}
+
+export interface ApexResponse {
+  message: string;
+  /** @nullable */
+  action?: string | null;
+  /** @nullable */
+  actionResult?: string | null;
+  tokensUsed: number;
+}
+
+export interface MeetingsOverviewRecentSessionsItem {
+  meetingId: number;
+  meetingTitle: string;
+  startedAt: string;
+  status: string;
+}
+
+export interface MeetingsOverview {
+  totalMeetings: number;
+  totalSessions: number;
+  activeSessions: number;
+  /** @nullable */
+  avgDurationMinutes?: number | null;
+  recentSessions?: MeetingsOverviewRecentSessionsItem[];
+}
+
+export interface WhiteLabel {
+  /** @nullable */
+  id?: number | null;
+  userId: number;
+  aiName: string;
+  /** @nullable */
+  logoUrl?: string | null;
+  primaryColor: string;
+  accentColor: string;
+  /** @nullable */
+  companyName?: string | null;
+  /** @nullable */
+  subdomain?: string | null;
+}
+
+export interface WhiteLabelInput {
+  /** @nullable */
+  aiName?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  primaryColor?: string | null;
+  /** @nullable */
+  accentColor?: string | null;
+  /** @nullable */
+  companyName?: string | null;
+  /** @nullable */
+  subdomain?: string | null;
+}
+
 export type ListToolsParams = {
 category?: string;
 search?: string;

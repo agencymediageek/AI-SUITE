@@ -8,12 +8,19 @@
 
 export interface MeetingInput {
   title: string;
-  description?: string;
-  company?: string;
-  companyUrl?: string;
-  logoUrl?: string;
-  aiName?: string;
-  language?: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  companyUrl?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  aiName?: string | null;
+  /** @nullable */
+  language?: string | null;
   resources?: string[];
-  briefingText?: string;
+  /** @nullable */
+  briefingText?: string | null;
 }

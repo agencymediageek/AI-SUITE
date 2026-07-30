@@ -12,7 +12,7 @@ import {
 import { useAuthStore } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
 import { useI18n, Language } from '@/lib/i18n';
-import { useGetMe, useLogoutUser } from '@workspace/api-client-react';
+import { useGetMe, useLogoutUser, getGetMeQueryKey } from '@workspace/api-client-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function Navbar() {
@@ -20,7 +20,7 @@ export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useI18n();
   const { toast } = useToast();
-  const { data: user } = useGetMe({ query: { enabled: isAuthenticated } });
+  const { data: user } = useGetMe({ query: { enabled: isAuthenticated, queryKey: getGetMeQueryKey() } });
   const logout = useLogoutUser();
 
   const handleLogout = async () => {

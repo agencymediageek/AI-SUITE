@@ -10,7 +10,7 @@ const matrixChars = 'アイウエオカキクケコサシスセソタチツテ�
 
 export function MatrixGlobe({ isProcessing = false, isListening = false, size = 400 }: MatrixGlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
   const particlesRef = useRef<Array<{
     x: number;
     y: number;

@@ -23,6 +23,8 @@ import type {
   AdminStats,
   AdminUserUpdate,
   AiModel,
+  ApexResponse,
+  AskInput,
   AuthResponse,
   DashboardStats,
   ErrorResponse,
@@ -34,8 +36,15 @@ import type {
   ListToolsParams,
   ListUsersParams,
   LoginInput,
+  Meeting,
+  MeetingInput,
+  MeetingSession,
+  MeetingUpdate,
+  MeetingsOverview,
   Plan,
   RegisterInput,
+  SessionInput,
+  SessionUpdate,
   SubscribeInput,
   SubscribeResponse,
   SuccessResponse,
@@ -44,7 +53,9 @@ import type {
   UsageStats,
   User,
   UserProfile,
-  UserProfileUpdate
+  UserProfileUpdate,
+  WhiteLabel,
+  WhiteLabelInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1733,6 +1744,976 @@ export function useGetTrendingTools<TData = Awaited<ReturnType<typeof getTrendin
 
 
 
+
+export const getListMeetingsUrl = () => {
+
+
+
+
+  return `/api/meetings`
+}
+
+/**
+ * @summary List all meetings for current user
+ */
+export const listMeetings = async ( options?: RequestInit): Promise<Meeting[]> => {
+
+  return customFetch<Meeting[]>(getListMeetingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMeetingsQueryKey = () => {
+    return [
+    `/api/meetings`
+    ] as const;
+    }
+
+
+export const getListMeetingsQueryOptions = <TData = Awaited<ReturnType<typeof listMeetings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMeetings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMeetingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMeetings>>> = ({ signal }) => listMeetings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMeetings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMeetingsQueryResult = NonNullable<Awaited<ReturnType<typeof listMeetings>>>
+export type ListMeetingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all meetings for current user
+ */
+
+export function useListMeetings<TData = Awaited<ReturnType<typeof listMeetings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMeetings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMeetingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateMeetingUrl = () => {
+
+
+
+
+  return `/api/meetings`
+}
+
+/**
+ * @summary Create a new meeting
+ */
+export const createMeeting = async (meetingInput: MeetingInput, options?: RequestInit): Promise<Meeting> => {
+
+  return customFetch<Meeting>(getCreateMeetingUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(meetingInput)
+  }
+);}
+
+
+
+
+
+export const getCreateMeetingMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMeeting>>, TError,{data: BodyType<MeetingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMeeting>>, TError,{data: BodyType<MeetingInput>}, TContext> => {
+
+const mutationKey = ['createMeeting'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMeeting>>, {data: BodyType<MeetingInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMeeting(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMeetingMutationResult = NonNullable<Awaited<ReturnType<typeof createMeeting>>>
+    export type CreateMeetingMutationBody = BodyType<MeetingInput>
+    export type CreateMeetingMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new meeting
+ */
+export const useCreateMeeting = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMeeting>>, TError,{data: BodyType<MeetingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMeeting>>,
+        TError,
+        {data: BodyType<MeetingInput>},
+        TContext
+      > => {
+      return useMutation(getCreateMeetingMutationOptions(options));
+    }
+
+export const getGetMeetingsOverviewUrl = () => {
+
+
+
+
+  return `/api/meetings/overview`
+}
+
+/**
+ * @summary Get meetings overview stats
+ */
+export const getMeetingsOverview = async ( options?: RequestInit): Promise<MeetingsOverview> => {
+
+  return customFetch<MeetingsOverview>(getGetMeetingsOverviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMeetingsOverviewQueryKey = () => {
+    return [
+    `/api/meetings/overview`
+    ] as const;
+    }
+
+
+export const getGetMeetingsOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getMeetingsOverview>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMeetingsOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMeetingsOverviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMeetingsOverview>>> = ({ signal }) => getMeetingsOverview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMeetingsOverview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMeetingsOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getMeetingsOverview>>>
+export type GetMeetingsOverviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get meetings overview stats
+ */
+
+export function useGetMeetingsOverview<TData = Awaited<ReturnType<typeof getMeetingsOverview>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMeetingsOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMeetingsOverviewQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetMeetingUrl = (meetingId: number,) => {
+
+
+
+
+  return `/api/meetings/${meetingId}`
+}
+
+/**
+ * @summary Get a single meeting
+ */
+export const getMeeting = async (meetingId: number, options?: RequestInit): Promise<Meeting> => {
+
+  return customFetch<Meeting>(getGetMeetingUrl(meetingId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMeetingQueryKey = (meetingId: number,) => {
+    return [
+    `/api/meetings/${meetingId}`
+    ] as const;
+    }
+
+
+export const getGetMeetingQueryOptions = <TData = Awaited<ReturnType<typeof getMeeting>>, TError = ErrorType<ErrorResponse>>(meetingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMeeting>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMeetingQueryKey(meetingId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMeeting>>> = ({ signal }) => getMeeting(meetingId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: meetingId !== null && meetingId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMeeting>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMeetingQueryResult = NonNullable<Awaited<ReturnType<typeof getMeeting>>>
+export type GetMeetingQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Get a single meeting
+ */
+
+export function useGetMeeting<TData = Awaited<ReturnType<typeof getMeeting>>, TError = ErrorType<ErrorResponse>>(
+ meetingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMeeting>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMeetingQueryOptions(meetingId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateMeetingUrl = (meetingId: number,) => {
+
+
+
+
+  return `/api/meetings/${meetingId}`
+}
+
+/**
+ * @summary Update a meeting
+ */
+export const updateMeeting = async (meetingId: number,
+    meetingUpdate: MeetingUpdate, options?: RequestInit): Promise<Meeting> => {
+
+  return customFetch<Meeting>(getUpdateMeetingUrl(meetingId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(meetingUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateMeetingMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMeeting>>, TError,{meetingId: number;data: BodyType<MeetingUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMeeting>>, TError,{meetingId: number;data: BodyType<MeetingUpdate>}, TContext> => {
+
+const mutationKey = ['updateMeeting'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMeeting>>, {meetingId: number;data: BodyType<MeetingUpdate>}> = (props) => {
+          const {meetingId,data} = props ?? {};
+
+          return  updateMeeting(meetingId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMeetingMutationResult = NonNullable<Awaited<ReturnType<typeof updateMeeting>>>
+    export type UpdateMeetingMutationBody = BodyType<MeetingUpdate>
+    export type UpdateMeetingMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a meeting
+ */
+export const useUpdateMeeting = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMeeting>>, TError,{meetingId: number;data: BodyType<MeetingUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMeeting>>,
+        TError,
+        {meetingId: number;data: BodyType<MeetingUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateMeetingMutationOptions(options));
+    }
+
+export const getDeleteMeetingUrl = (meetingId: number,) => {
+
+
+
+
+  return `/api/meetings/${meetingId}`
+}
+
+/**
+ * @summary Delete a meeting
+ */
+export const deleteMeeting = async (meetingId: number, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getDeleteMeetingUrl(meetingId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMeetingMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMeeting>>, TError,{meetingId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMeeting>>, TError,{meetingId: number}, TContext> => {
+
+const mutationKey = ['deleteMeeting'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMeeting>>, {meetingId: number}> = (props) => {
+          const {meetingId} = props ?? {};
+
+          return  deleteMeeting(meetingId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMeetingMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMeeting>>>
+
+    export type DeleteMeetingMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a meeting
+ */
+export const useDeleteMeeting = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMeeting>>, TError,{meetingId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMeeting>>,
+        TError,
+        {meetingId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteMeetingMutationOptions(options));
+    }
+
+export const getListMeetingSessionsUrl = (meetingId: number,) => {
+
+
+
+
+  return `/api/meetings/${meetingId}/sessions`
+}
+
+/**
+ * @summary List sessions for a meeting
+ */
+export const listMeetingSessions = async (meetingId: number, options?: RequestInit): Promise<MeetingSession[]> => {
+
+  return customFetch<MeetingSession[]>(getListMeetingSessionsUrl(meetingId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMeetingSessionsQueryKey = (meetingId: number,) => {
+    return [
+    `/api/meetings/${meetingId}/sessions`
+    ] as const;
+    }
+
+
+export const getListMeetingSessionsQueryOptions = <TData = Awaited<ReturnType<typeof listMeetingSessions>>, TError = ErrorType<unknown>>(meetingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMeetingSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMeetingSessionsQueryKey(meetingId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMeetingSessions>>> = ({ signal }) => listMeetingSessions(meetingId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: meetingId !== null && meetingId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMeetingSessions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMeetingSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof listMeetingSessions>>>
+export type ListMeetingSessionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List sessions for a meeting
+ */
+
+export function useListMeetingSessions<TData = Awaited<ReturnType<typeof listMeetingSessions>>, TError = ErrorType<unknown>>(
+ meetingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMeetingSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMeetingSessionsQueryOptions(meetingId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getStartMeetingSessionUrl = (meetingId: number,) => {
+
+
+
+
+  return `/api/meetings/${meetingId}/sessions`
+}
+
+/**
+ * @summary Start a new meeting session
+ */
+export const startMeetingSession = async (meetingId: number,
+    sessionInput?: SessionInput, options?: RequestInit): Promise<MeetingSession> => {
+
+  return customFetch<MeetingSession>(getStartMeetingSessionUrl(meetingId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(sessionInput)
+  }
+);}
+
+
+
+
+
+export const getStartMeetingSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startMeetingSession>>, TError,{meetingId: number;data?: BodyType<SessionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startMeetingSession>>, TError,{meetingId: number;data?: BodyType<SessionInput>}, TContext> => {
+
+const mutationKey = ['startMeetingSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startMeetingSession>>, {meetingId: number;data?: BodyType<SessionInput>}> = (props) => {
+          const {meetingId,data} = props ?? {};
+
+          return  startMeetingSession(meetingId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartMeetingSessionMutationResult = NonNullable<Awaited<ReturnType<typeof startMeetingSession>>>
+    export type StartMeetingSessionMutationBody = BodyType<SessionInput> | undefined
+    export type StartMeetingSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Start a new meeting session
+ */
+export const useStartMeetingSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startMeetingSession>>, TError,{meetingId: number;data?: BodyType<SessionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startMeetingSession>>,
+        TError,
+        {meetingId: number;data?: BodyType<SessionInput>},
+        TContext
+      > => {
+      return useMutation(getStartMeetingSessionMutationOptions(options));
+    }
+
+export const getGetMeetingSessionUrl = (meetingId: number,
+    sessionId: number,) => {
+
+
+
+
+  return `/api/meetings/${meetingId}/sessions/${sessionId}`
+}
+
+/**
+ * @summary Get a single session
+ */
+export const getMeetingSession = async (meetingId: number,
+    sessionId: number, options?: RequestInit): Promise<MeetingSession> => {
+
+  return customFetch<MeetingSession>(getGetMeetingSessionUrl(meetingId,sessionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMeetingSessionQueryKey = (meetingId: number,
+    sessionId: number,) => {
+    return [
+    `/api/meetings/${meetingId}/sessions/${sessionId}`
+    ] as const;
+    }
+
+
+export const getGetMeetingSessionQueryOptions = <TData = Awaited<ReturnType<typeof getMeetingSession>>, TError = ErrorType<unknown>>(meetingId: number,
+    sessionId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMeetingSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMeetingSessionQueryKey(meetingId,sessionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMeetingSession>>> = ({ signal }) => getMeetingSession(meetingId,sessionId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: meetingId !== null && meetingId !== undefined && sessionId !== null && sessionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMeetingSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMeetingSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getMeetingSession>>>
+export type GetMeetingSessionQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a single session
+ */
+
+export function useGetMeetingSession<TData = Awaited<ReturnType<typeof getMeetingSession>>, TError = ErrorType<unknown>>(
+ meetingId: number,
+    sessionId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMeetingSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMeetingSessionQueryOptions(meetingId,sessionId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getEndMeetingSessionUrl = (meetingId: number,
+    sessionId: number,) => {
+
+
+
+
+  return `/api/meetings/${meetingId}/sessions/${sessionId}`
+}
+
+/**
+ * @summary End or update a session
+ */
+export const endMeetingSession = async (meetingId: number,
+    sessionId: number,
+    sessionUpdate: SessionUpdate, options?: RequestInit): Promise<MeetingSession> => {
+
+  return customFetch<MeetingSession>(getEndMeetingSessionUrl(meetingId,sessionId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(sessionUpdate)
+  }
+);}
+
+
+
+
+
+export const getEndMeetingSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endMeetingSession>>, TError,{meetingId: number;sessionId: number;data: BodyType<SessionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof endMeetingSession>>, TError,{meetingId: number;sessionId: number;data: BodyType<SessionUpdate>}, TContext> => {
+
+const mutationKey = ['endMeetingSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof endMeetingSession>>, {meetingId: number;sessionId: number;data: BodyType<SessionUpdate>}> = (props) => {
+          const {meetingId,sessionId,data} = props ?? {};
+
+          return  endMeetingSession(meetingId,sessionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EndMeetingSessionMutationResult = NonNullable<Awaited<ReturnType<typeof endMeetingSession>>>
+    export type EndMeetingSessionMutationBody = BodyType<SessionUpdate>
+    export type EndMeetingSessionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary End or update a session
+ */
+export const useEndMeetingSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endMeetingSession>>, TError,{meetingId: number;sessionId: number;data: BodyType<SessionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof endMeetingSession>>,
+        TError,
+        {meetingId: number;sessionId: number;data: BodyType<SessionUpdate>},
+        TContext
+      > => {
+      return useMutation(getEndMeetingSessionMutationOptions(options));
+    }
+
+export const getAskApexUrl = (meetingId: number,) => {
+
+
+
+
+  return `/api/meetings/${meetingId}/ask`
+}
+
+/**
+ * @summary Ask APEX AI a question in the context of a meeting
+ */
+export const askApex = async (meetingId: number,
+    askInput: AskInput, options?: RequestInit): Promise<ApexResponse> => {
+
+  return customFetch<ApexResponse>(getAskApexUrl(meetingId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(askInput)
+  }
+);}
+
+
+
+
+
+export const getAskApexMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askApex>>, TError,{meetingId: number;data: BodyType<AskInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof askApex>>, TError,{meetingId: number;data: BodyType<AskInput>}, TContext> => {
+
+const mutationKey = ['askApex'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof askApex>>, {meetingId: number;data: BodyType<AskInput>}> = (props) => {
+          const {meetingId,data} = props ?? {};
+
+          return  askApex(meetingId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AskApexMutationResult = NonNullable<Awaited<ReturnType<typeof askApex>>>
+    export type AskApexMutationBody = BodyType<AskInput>
+    export type AskApexMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Ask APEX AI a question in the context of a meeting
+ */
+export const useAskApex = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askApex>>, TError,{meetingId: number;data: BodyType<AskInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof askApex>>,
+        TError,
+        {meetingId: number;data: BodyType<AskInput>},
+        TContext
+      > => {
+      return useMutation(getAskApexMutationOptions(options));
+    }
+
+export const getGetWhiteLabelUrl = () => {
+
+
+
+
+  return `/api/whitelabel`
+}
+
+/**
+ * @summary Get white label config for current user
+ */
+export const getWhiteLabel = async ( options?: RequestInit): Promise<WhiteLabel> => {
+
+  return customFetch<WhiteLabel>(getGetWhiteLabelUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWhiteLabelQueryKey = () => {
+    return [
+    `/api/whitelabel`
+    ] as const;
+    }
+
+
+export const getGetWhiteLabelQueryOptions = <TData = Awaited<ReturnType<typeof getWhiteLabel>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWhiteLabel>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWhiteLabelQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWhiteLabel>>> = ({ signal }) => getWhiteLabel({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWhiteLabel>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWhiteLabelQueryResult = NonNullable<Awaited<ReturnType<typeof getWhiteLabel>>>
+export type GetWhiteLabelQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get white label config for current user
+ */
+
+export function useGetWhiteLabel<TData = Awaited<ReturnType<typeof getWhiteLabel>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWhiteLabel>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWhiteLabelQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateWhiteLabelUrl = () => {
+
+
+
+
+  return `/api/whitelabel`
+}
+
+/**
+ * @summary Update white label config
+ */
+export const updateWhiteLabel = async (whiteLabelInput: WhiteLabelInput, options?: RequestInit): Promise<WhiteLabel> => {
+
+  return customFetch<WhiteLabel>(getUpdateWhiteLabelUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(whiteLabelInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateWhiteLabelMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWhiteLabel>>, TError,{data: BodyType<WhiteLabelInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWhiteLabel>>, TError,{data: BodyType<WhiteLabelInput>}, TContext> => {
+
+const mutationKey = ['updateWhiteLabel'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWhiteLabel>>, {data: BodyType<WhiteLabelInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateWhiteLabel(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWhiteLabelMutationResult = NonNullable<Awaited<ReturnType<typeof updateWhiteLabel>>>
+    export type UpdateWhiteLabelMutationBody = BodyType<WhiteLabelInput>
+    export type UpdateWhiteLabelMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update white label config
+ */
+export const useUpdateWhiteLabel = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWhiteLabel>>, TError,{data: BodyType<WhiteLabelInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWhiteLabel>>,
+        TError,
+        {data: BodyType<WhiteLabelInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateWhiteLabelMutationOptions(options));
+    }
 
 export const getGetAdminStatsUrl = () => {
 

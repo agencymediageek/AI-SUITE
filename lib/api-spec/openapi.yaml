@@ -22,6 +22,10 @@ tags:
     description: Subscription plans
   - name: admin
     description: Admin panel
+  - name: meetings
+    description: APEX meetings and sessions
+  - name: whitelabel
+    description: White label configuration
 
 paths:
   /healthz:
@@ -433,6 +437,269 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Tool"
+
+  # ─── Meetings ───────────────────────────────────────────────────────────────
+  /meetings:
+    get:
+      operationId: listMeetings
+      tags: [meetings]
+      summary: List all meetings for current user
+      responses:
+        "200":
+          description: List of meetings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meeting"
+    post:
+      operationId: createMeeting
+      tags: [meetings]
+      summary: Create a new meeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingInput"
+      responses:
+        "201":
+          description: Meeting created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+
+  /meetings/overview:
+    get:
+      operationId: getMeetingsOverview
+      tags: [meetings]
+      summary: Get meetings overview stats
+      responses:
+        "200":
+          description: Overview stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingsOverview"
+
+  /meetings/{meetingId}:
+    get:
+      operationId: getMeeting
+      tags: [meetings]
+      summary: Get a single meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Meeting details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateMeeting
+      tags: [meetings]
+      summary: Update a meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingUpdate"
+      responses:
+        "200":
+          description: Updated meeting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+    delete:
+      operationId: deleteMeeting
+      tags: [meetings]
+      summary: Delete a meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /meetings/{meetingId}/sessions:
+    get:
+      operationId: listMeetingSessions
+      tags: [meetings]
+      summary: List sessions for a meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sessions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MeetingSession"
+    post:
+      operationId: startMeetingSession
+      tags: [meetings]
+      summary: Start a new meeting session
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionInput"
+      responses:
+        "201":
+          description: Session started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingSession"
+
+  /meetings/{meetingId}/sessions/{sessionId}:
+    get:
+      operationId: getMeetingSession
+      tags: [meetings]
+      summary: Get a single session
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingSession"
+    patch:
+      operationId: endMeetingSession
+      tags: [meetings]
+      summary: End or update a session
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionUpdate"
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeetingSession"
+
+  /meetings/{meetingId}/ask:
+    post:
+      operationId: askApex
+      tags: [meetings]
+      summary: Ask APEX AI a question in the context of a meeting
+      parameters:
+        - name: meetingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AskInput"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApexResponse"
+
+  # ─── White Label ─────────────────────────────────────────────────────────────
+  /whitelabel:
+    get:
+      operationId: getWhiteLabel
+      tags: [whitelabel]
+      summary: Get white label config for current user
+      responses:
+        "200":
+          description: White label config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhiteLabel"
+    put:
+      operationId: updateWhiteLabel
+      tags: [whitelabel]
+      summary: Update white label config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WhiteLabelInput"
+      responses:
+        "200":
+          description: Updated config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhiteLabel"
 
   # ─── Admin ──────────────────────────────────────────────────────────────────
   /admin/stats:
@@ -860,3 +1127,229 @@ components:
           type: string
         isActive:
           type: boolean
+
+    # ─── Meetings ─────────────────────────────────────────────────────────────
+    Meeting:
+      type: object
+      required: [id, userId, title, aiName, language, status, createdAt, sessionCount]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        company:
+          type: ["string", "null"]
+        companyUrl:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        aiName:
+          type: string
+        language:
+          type: string
+        resources:
+          type: array
+          items:
+            type: string
+        briefingText:
+          type: ["string", "null"]
+        status:
+          type: string
+        createdAt:
+          type: string
+        sessionCount:
+          type: integer
+        lastSessionAt:
+          type: ["string", "null"]
+
+    MeetingInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        company:
+          type: ["string", "null"]
+        companyUrl:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        aiName:
+          type: ["string", "null"]
+        language:
+          type: ["string", "null"]
+        resources:
+          type: array
+          items:
+            type: string
+        briefingText:
+          type: ["string", "null"]
+
+    MeetingUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        company:
+          type: ["string", "null"]
+        companyUrl:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        aiName:
+          type: ["string", "null"]
+        language:
+          type: ["string", "null"]
+        resources:
+          type: array
+          items:
+            type: string
+        briefingText:
+          type: ["string", "null"]
+        status:
+          type: ["string", "null"]
+
+    MeetingSession:
+      type: object
+      required: [id, meetingId, status, startedAt]
+      properties:
+        id:
+          type: integer
+        meetingId:
+          type: integer
+        status:
+          type: string
+          enum: [active, ended]
+        startedAt:
+          type: string
+        endedAt:
+          type: ["string", "null"]
+        durationMinutes:
+          type: ["integer", "null"]
+        summary:
+          type: ["string", "null"]
+        transcript:
+          type: ["string", "null"]
+        builtAssets:
+          type: ["string", "null"]
+
+    SessionInput:
+      type: object
+      properties:
+        notes:
+          type: ["string", "null"]
+
+    SessionUpdate:
+      type: object
+      properties:
+        status:
+          type: ["string", "null"]
+          enum: ["active", "ended", null]
+        summary:
+          type: ["string", "null"]
+        transcript:
+          type: ["string", "null"]
+        builtAssets:
+          type: ["string", "null"]
+        endedAt:
+          type: ["string", "null"]
+
+    AskInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        sessionId:
+          type: ["integer", "null"]
+        imageBase64:
+          type: ["string", "null"]
+
+    ApexResponse:
+      type: object
+      required: [message, tokensUsed]
+      properties:
+        message:
+          type: string
+        action:
+          type: ["string", "null"]
+        actionResult:
+          type: ["string", "null"]
+        tokensUsed:
+          type: integer
+
+    MeetingsOverview:
+      type: object
+      required: [totalMeetings, totalSessions, activeSessions]
+      properties:
+        totalMeetings:
+          type: integer
+        totalSessions:
+          type: integer
+        activeSessions:
+          type: integer
+        avgDurationMinutes:
+          type: ["number", "null"]
+        recentSessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/MeetingsOverviewRecentSessionsItem"
+
+    MeetingsOverviewRecentSessionsItem:
+      type: object
+      required: [meetingId, meetingTitle, startedAt, status]
+      properties:
+        meetingId:
+          type: integer
+        meetingTitle:
+          type: string
+        startedAt:
+          type: string
+        status:
+          type: string
+
+    # ─── White Label ──────────────────────────────────────────────────────────
+    WhiteLabel:
+      type: object
+      required: [userId, aiName, primaryColor, accentColor]
+      properties:
+        id:
+          type: ["integer", "null"]
+        userId:
+          type: integer
+        aiName:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        primaryColor:
+          type: string
+        accentColor:
+          type: string
+        companyName:
+          type: ["string", "null"]
+        subdomain:
+          type: ["string", "null"]
+
+    WhiteLabelInput:
+      type: object
+      properties:
+        aiName:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        primaryColor:
+          type: ["string", "null"]
+        accentColor:
+          type: ["string", "null"]
+        companyName:
+          type: ["string", "null"]
+        subdomain:
+          type: ["string", "null"]

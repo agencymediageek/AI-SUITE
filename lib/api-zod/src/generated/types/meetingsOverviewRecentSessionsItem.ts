@@ -6,9 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type MeetingsOverviewRecentSessionsItem = {
+export interface MeetingsOverviewRecentSessionsItem {
   meetingId: number;
   meetingTitle: string;
   startedAt: string;
   status: string;
-};
+}
