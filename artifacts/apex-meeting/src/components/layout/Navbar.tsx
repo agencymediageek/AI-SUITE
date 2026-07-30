@@ -134,18 +134,23 @@ export function Navbar() {
             Demo
           </Button>
 
-          {/* Install App button — shown only when PWA install is available */}
-          {installPrompt && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-foreground hover:text-primary"
-              title={t('nav.installApp')}
-              onClick={() => { installPrompt.prompt(); installPrompt.userChoice.then(() => setInstallPrompt(null)); }}
-            >
-              <Smartphone className="w-4 h-4" />
-            </Button>
-          )}
+          {/* Get App button — always visible */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-foreground hover:text-primary"
+            title={t('nav.installApp')}
+            onClick={() => {
+              if (installPrompt) {
+                installPrompt.prompt();
+                installPrompt.userChoice.then(() => setInstallPrompt(null));
+              } else {
+                toast({ title: t('nav.installApp'), description: t('nav.installAppHint') });
+              }
+            }}
+          >
+            <Smartphone className="w-4 h-4" />
+          </Button>
 
           {/* Language selector */}
           <DropdownMenu>
