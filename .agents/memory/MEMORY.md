@@ -6,3 +6,4 @@
 - [VPS deploy](vps-deploy.md) — SSH key at .agents/deploy_key (gitignored); GitHub Actions auto-deploys on push to main; fallback: sshpass with VPS_ROOT_PASSWORD
 - [Supabase → PostgreSQL](supabase-complete.md) — 100% migrated; zero supabaseAdmin calls in production; documents/upload uses local /tmp storage
 - [Estado da plataforma](platform-state.md) — status pós-refinamento mobile: o que funciona, o que está pendente, infra
+- [APEX deployment](apex-deployment.md) — apex.techsites.ai → VPS 179.197.229.207; PM2 apex-api port 8080; nginx self-signed SSL; CF proxied
