@@ -3,6 +3,3 @@ export * from "./generations";
 export * from "./favorites";
 export * from "./plans";
 export * from "./tools_config";
-export * from "./meetings";
-export * from "./meeting_sessions";
-export * from "./whitelabel_configs";
