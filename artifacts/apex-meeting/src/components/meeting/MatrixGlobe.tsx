@@ -3,12 +3,13 @@ import { useEffect, useRef } from 'react';
 interface MatrixGlobeProps {
   isProcessing?: boolean;
   isListening?: boolean;
+  isSpeaking?: boolean;
   size?: number;
 }
 
 const matrixChars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-export function MatrixGlobe({ isProcessing = false, isListening = false, size = 400 }: MatrixGlobeProps) {
+export function MatrixGlobe({ isProcessing = false, isListening = false, isSpeaking = false, size = 400 }: MatrixGlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
   const particlesRef = useRef<Array<{
@@ -62,12 +63,15 @@ export function MatrixGlobe({ isProcessing = false, isListening = false, size = 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
       ctx.fillRect(0, 0, size, size);
 
-      const rotationSpeed = isProcessing ? 0.015 : 0.005;
+      // Speed: speaking > processing > idle; listening same as idle
+      const rotationSpeed = isProcessing ? 0.015 : isSpeaking ? 0.01 : 0.005;
       rotation += rotationSpeed;
-      pulsePhase += isProcessing ? 0.08 : 0.02;
+      pulsePhase += isProcessing ? 0.08 : isSpeaking ? 0.06 : 0.02;
 
-      const pulseScale = isProcessing 
-        ? 1 + Math.sin(pulsePhase) * 0.12 
+      const pulseScale = isProcessing
+        ? 1 + Math.sin(pulsePhase) * 0.12
+        : isSpeaking
+        ? 1 + Math.sin(pulsePhase) * 0.08
         : 1 + Math.sin(pulsePhase) * 0.03;
 
       const currentRadius = radius * pulseScale;
@@ -103,28 +107,43 @@ export function MatrixGlobe({ isProcessing = false, isListening = false, size = 
         const depthOpacity = (z3d + currentRadius) / (currentRadius * 2);
         const opacity = depthOpacity * particle.brightness;
 
-        // Brighter when processing
-        const baseBrightness = isProcessing ? 1.4 : 1.0;
-        const brightness = opacity * baseBrightness;
+        // Color mode: speaking = cyan, processing = bright green, idle = green
+        let r = 0, g = 0, b = 65;
+        if (isSpeaking) {
+          // Cyan/teal for speaking
+          const baseBrightness = 1.3;
+          const brightness = opacity * baseBrightness;
+          r = Math.floor(0 * brightness);
+          g = Math.floor(200 * brightness);
+          b = Math.floor(255 * brightness);
+        } else {
+          // Green for processing/idle
+          const baseBrightness = isProcessing ? 1.4 : 1.0;
+          const brightness = opacity * baseBrightness;
+          r = 0;
+          g = Math.floor(255 * brightness);
+          b = 65;
+        }
 
-        // Matrix green color
-        const green = Math.floor(255 * brightness);
-        
         // Draw particle
         ctx.font = `${12 * scale}px "Space Mono", monospace`;
-        ctx.fillStyle = `rgba(0, ${green}, 65, ${opacity})`;
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
         ctx.fillText(particle.char, x2d - 6 * scale, y2d + 4 * scale);
 
         // Add glow for front particles
         if (z3d > 0 && opacity > 0.7) {
-          ctx.shadowBlur = isProcessing ? 15 : 8;
-          ctx.shadowColor = `rgba(0, 255, 65, ${opacity * 0.8})`;
+          ctx.shadowBlur = isProcessing ? 15 : isSpeaking ? 12 : 8;
+          if (isSpeaking) {
+            ctx.shadowColor = `rgba(0, 200, 255, ${opacity * 0.8})`;
+          } else {
+            ctx.shadowColor = `rgba(0, 255, 65, ${opacity * 0.8})`;
+          }
           ctx.fillText(particle.char, x2d - 6 * scale, y2d + 4 * scale);
           ctx.shadowBlur = 0;
         }
       });
 
-      // Draw listening pulse rings
+      // Draw listening pulse rings (green)
       if (isListening) {
         const pulseRings = 3;
         for (let i = 0; i < pulseRings; i++) {
@@ -140,11 +159,32 @@ export function MatrixGlobe({ isProcessing = false, isListening = false, size = 
         }
       }
 
+      // Draw speaking pulse rings (cyan)
+      if (isSpeaking) {
+        const pulseRings = 4;
+        for (let i = 0; i < pulseRings; i++) {
+          const ringPhase = (pulsePhase * 1.5 + i * 0.4) % 2;
+          const ringRadius = currentRadius * (0.9 + ringPhase * 0.5);
+          const ringOpacity = Math.max(0, 1 - ringPhase);
+          
+          ctx.strokeStyle = `rgba(0, 200, 255, ${ringOpacity * 0.4})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
       // Draw core glow
       const glowRadius = currentRadius * 0.3;
       const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, glowRadius);
-      gradient.addColorStop(0, `rgba(0, 255, 65, ${isProcessing ? 0.4 : 0.2})`);
-      gradient.addColorStop(1, 'rgba(0, 255, 65, 0)');
+      if (isSpeaking) {
+        gradient.addColorStop(0, `rgba(0, 200, 255, 0.35)`);
+        gradient.addColorStop(1, 'rgba(0, 200, 255, 0)');
+      } else {
+        gradient.addColorStop(0, `rgba(0, 255, 65, ${isProcessing ? 0.4 : 0.2})`);
+        gradient.addColorStop(1, 'rgba(0, 255, 65, 0)');
+      }
       ctx.fillStyle = gradient;
       ctx.fillRect(centerX - glowRadius, centerY - glowRadius, glowRadius * 2, glowRadius * 2);
 
@@ -158,14 +198,20 @@ export function MatrixGlobe({ isProcessing = false, isListening = false, size = 
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [size, isProcessing, isListening]);
+  }, [size, isProcessing, isListening, isSpeaking]);
+
+  const filterStyle = isProcessing
+    ? 'brightness(1.2)'
+    : isSpeaking
+    ? 'brightness(1.15) hue-rotate(160deg)'
+    : 'brightness(1)';
 
   return (
     <div className="relative flex items-center justify-center">
       <canvas
         ref={canvasRef}
         className="relative z-10"
-        style={{ filter: isProcessing ? 'brightness(1.2)' : 'brightness(1)' }}
+        style={{ filter: filterStyle }}
       />
       {isListening && (
         <div 
@@ -174,6 +220,16 @@ export function MatrixGlobe({ isProcessing = false, isListening = false, size = 
             width: size, 
             height: size,
             boxShadow: '0 0 0 0 rgba(0, 255, 65, 0.7)'
+          }}
+        />
+      )}
+      {isSpeaking && (
+        <div
+          className="absolute inset-0 rounded-full animate-[listening-pulse_1.5s_ease-out_infinite]"
+          style={{
+            width: size,
+            height: size,
+            boxShadow: '0 0 0 0 rgba(0, 200, 255, 0.6)'
           }}
         />
       )}
