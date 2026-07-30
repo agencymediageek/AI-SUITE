@@ -10,13 +10,15 @@ description: Full infrastructure map for apex.techsites.ai — CF Pages (fronten
 
 ## Frontend — Cloudflare Pages
 - Project name: `apex-meeting`
-- CF Zone techsites.ai: `aaa2418ffbb69192aa3546436397ccac`
+- CF Zone techsites.ai (MEDIAGEEK account): `aaa2418ffbb69192aa3546436397ccac` — NOT the active zone
+- CF Zone techsites.ai (MAIN account, active): `4a436c01e12cf1ec5780ea67e0605e73` — purge fails with available tokens; must use CF dashboard
 - Deploy command (from workspace root):
   ```bash
   PORT=3001 BASE_PATH=/ pnpm --filter @workspace/apex-meeting run build
   CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... npx wrangler pages deploy artifacts/apex-meeting/dist/public --project-name apex-meeting --branch main
   ```
-- After deploy: purge CF cache via API (`purge_everything: true`)
+- After deploy: purge CF cache via CF dashboard (Caching → Purge Everything) — API tokens lack zone purge permission on the active zone
+- Nginx updated to serve index.html with Cache-Control: no-store (prevents future CF HTML caching)
 - Cache issue: if bundle filename doesn't change, browser caches immutably. Force new filename by adding suffix to vite.config build.rollupOptions.output
 
 ## Backend — VPS PM2
