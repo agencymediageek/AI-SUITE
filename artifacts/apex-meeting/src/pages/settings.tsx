@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useMemo } from 'react';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
@@ -17,19 +18,26 @@ import { useToast } from '@/hooks/use-toast';
 import { useI18n } from '@/lib/i18n';
 import { Save, Palette } from 'lucide-react';
 
-const whiteLabelSchema = z.object({
-  aiName: z.string().min(2, 'AI name must be at least 2 characters'),
-  logoUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
-  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color hex'),
-  accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color hex'),
-  companyName: z.string().optional(),
-  subdomain: z.string().regex(/^[a-z0-9-]*$/, 'Only lowercase, numbers, and hyphens').optional().or(z.literal('')),
-});
-
-type WhiteLabelForm = z.infer<typeof whiteLabelSchema>;
+type WhiteLabelForm = {
+  aiName: string;
+  logoUrl?: string;
+  primaryColor: string;
+  accentColor: string;
+  companyName?: string;
+  subdomain?: string;
+};
 
 function SettingsContent() {
   const { t } = useI18n();
+
+  const whiteLabelSchema = useMemo(() => z.object({
+    aiName: z.string().min(2, t('settings.valid.aiName')),
+    logoUrl: z.string().url(t('settings.valid.url')).optional().or(z.literal('')),
+    primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, t('settings.valid.color')),
+    accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, t('settings.valid.color')),
+    companyName: z.string().optional(),
+    subdomain: z.string().regex(/^[a-z0-9-]*$/, t('settings.valid.subdomain')).optional().or(z.literal('')),
+  }), [t]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -54,10 +62,10 @@ function SettingsContent() {
     try {
       await updateWhiteLabel.mutateAsync({ data });
       await queryClient.invalidateQueries({ queryKey: getGetWhiteLabelQueryKey() });
-      toast({ title: 'Settings saved', description: 'Your white-label configuration has been updated' });
+      toast({ title: t('settings.saved'), description: t('settings.saved.desc') });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save settings';
-      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
+      const errorMessage = error instanceof Error ? error.message : t('settings.error.save');
+      toast({ title: t('common.error'), description: errorMessage, variant: 'destructive' });
     }
   };
 
@@ -66,7 +74,7 @@ function SettingsContent() {
       <div className="min-h-[100dvh] bg-black flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-primary font-mono">Loading settings...</p>
+          <p className="text-primary font-mono">{t('settings.loading')}</p>
         </div>
       </div>
     );
@@ -80,7 +88,7 @@ function SettingsContent() {
         <div className="container mx-auto max-w-4xl">
           <div className="mb-8">
             <h1 className="text-4xl font-bold matrix-text mb-2">{t('settings.title')}</h1>
-            <p className="text-muted-foreground">Customize your APEX CORE experience</p>
+            <p className="text-muted-foreground">{t('settings.subtitle')}</p>
           </div>
 
           <Card className="bg-card/50 border-primary/20 p-8">
@@ -90,7 +98,7 @@ function SettingsContent() {
                 {t('settings.whiteLabel')}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Customize the AI branding and appearance for your organization
+                {t('settings.whiteLabel.desc')}
               </p>
             </div>
 
@@ -107,7 +115,7 @@ function SettingsContent() {
                           <Input {...field} placeholder="APEX CORE" className="bg-background/50" data-testid="input-ai-name" />
                         </FormControl>
                         <FormDescription className="text-xs">
-                          The name displayed for your AI assistant
+                          {t('settings.aiName.desc')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -119,12 +127,12 @@ function SettingsContent() {
                     name="companyName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Company Name</FormLabel>
+                        <FormLabel>{t('settings.companyName')}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Your Company" className="bg-background/50" data-testid="input-company-name" />
+                          <Input {...field} placeholder={t('settings.companyName')} className="bg-background/50" data-testid="input-company-name" />
                         </FormControl>
                         <FormDescription className="text-xs">
-                          Your organization name
+                          {t('settings.companyName.desc')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -137,7 +145,7 @@ function SettingsContent() {
                   name="logoUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Logo URL</FormLabel>
+                      <FormLabel>{t('settings.logoUrl')}</FormLabel>
                       <FormControl>
                         <Input {...field} type="url" placeholder="https://example.com/logo.png" className="bg-background/50" data-testid="input-logo-url" />
                       </FormControl>
@@ -165,7 +173,7 @@ function SettingsContent() {
                           </FormControl>
                         </div>
                         <FormDescription className="text-xs">
-                          Main brand color (hex format)
+                          {t('settings.primaryColor.desc')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -177,7 +185,7 @@ function SettingsContent() {
                     name="accentColor"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Accent Color</FormLabel>
+                        <FormLabel>{t('settings.accentColor')}</FormLabel>
                         <div className="flex gap-3">
                           <FormControl>
                             <Input {...field} type="color" className="bg-background/50 w-20 h-10 p-1 cursor-pointer" data-testid="input-accent-color" />
@@ -187,7 +195,7 @@ function SettingsContent() {
                           </FormControl>
                         </div>
                         <FormDescription className="text-xs">
-                          Secondary brand color (hex format)
+                          {t('settings.accentColor.desc')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -200,15 +208,15 @@ function SettingsContent() {
                   name="subdomain"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Custom Subdomain</FormLabel>
+                      <FormLabel>{t('settings.subdomain')}</FormLabel>
                       <FormControl>
                         <div className="flex items-center gap-2">
                           <Input {...field} placeholder="your-company" className="bg-background/50 font-mono flex-1" data-testid="input-subdomain" />
-                          <span className="text-muted-foreground text-sm">.apex-core.ai</span>
+                          <span className="text-muted-foreground text-sm">{t('settings.subdomain.suffix')}</span>
                         </div>
                       </FormControl>
                       <FormDescription className="text-xs">
-                        Custom subdomain for your organization (optional)
+                        {t('settings.subdomain.desc')}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -225,7 +233,7 @@ function SettingsContent() {
                     {updateWhiteLabel.isPending ? (
                       <>
                         <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                        Saving...
+                        {t('settings.saving')}
                       </>
                     ) : (
                       <>

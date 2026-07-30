@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useI18n } from '@/lib/i18n';
 import { useParams, useLocation } from 'wouter';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { MatrixGlobe } from '@/components/meeting/MatrixGlobe';
@@ -61,6 +62,7 @@ function LiveMeetingContent() {
   const meetingId = Number(params.id);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   const { data: meeting } = useGetMeeting(meetingId, {
@@ -114,10 +116,10 @@ function LiveMeetingContent() {
           data: { notes: `Started at ${new Date().toISOString()}` } 
         });
         setSessionId(session.id);
-        toast({ title: 'Session started', description: 'APEX CORE is now active' });
+        toast({ title: t('live.session.started'), description: t('live.session.active') });
       } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to start session';
-        toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
+        const errorMessage = error instanceof Error ? error.message : t('live.session.failStart');
+        toast({ title: t('common.error'), description: errorMessage, variant: 'destructive' });
       }
     };
 
@@ -128,8 +130,8 @@ function LiveMeetingContent() {
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       toast({ 
-        title: 'Voice not supported', 
-        description: 'Your browser does not support voice recognition',
+        title: t('live.voice.notSupported'), 
+        description: t('live.voice.notSupportedDesc'),
         variant: 'destructive'
       });
       return;
@@ -186,9 +188,9 @@ function LiveMeetingContent() {
         videoRef.current.srcObject = stream;
       }
       setCameraEnabled(true);
-      toast({ title: 'Camera enabled', description: 'APEX CORE can now see your feed' });
+      toast({ title: t('live.camera.enabled'), description: t('live.camera.enabledDesc') });
     } catch (error) {
-      toast({ title: 'Camera error', description: 'Failed to access camera', variant: 'destructive' });
+      toast({ title: t('live.camera.error'), description: t('live.camera.errorDesc'), variant: 'destructive' });
     }
   };
 
@@ -216,7 +218,7 @@ function LiveMeetingContent() {
         recognitionRef.current?.start();
         setIsListening(true);
       } catch (err) {
-        toast({ title: 'Mic error', description: 'Could not access microphone', variant: 'destructive' });
+        toast({ title: t('live.mic.error'), description: t('live.mic.errorDesc'), variant: 'destructive' });
       }
     }
   };
@@ -284,8 +286,8 @@ function LiveMeetingContent() {
       speakResponse(response.message);
 
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to process command';
-      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
+      const errorMessage = error instanceof Error ? error.message : t('live.command.failed');
+      toast({ title: t('common.error'), description: errorMessage, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
       // Resume recognition if still in listening mode
@@ -316,7 +318,7 @@ function LiveMeetingContent() {
       const response = await askApex.mutateAsync({
         meetingId,
         data: { 
-          message: 'Analyze this scene and describe what you see', 
+          message: t('live.scene.prompt'), 
           sessionId: sessionId || undefined,
           imageBase64
         }
@@ -325,8 +327,8 @@ function LiveMeetingContent() {
       setTranscript(prev => [...prev, { type: 'ai', message: response.message, timestamp: new Date() }]);
       speakResponse(response.message);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze scene';
-      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
+      const errorMessage = error instanceof Error ? error.message : t('live.scene.failed');
+      toast({ title: t('common.error'), description: errorMessage, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
@@ -352,22 +354,22 @@ function LiveMeetingContent() {
         }
       });
       await queryClient.invalidateQueries({ queryKey: getListMeetingSessionsQueryKey(meetingId) });
-      toast({ title: 'Session ended' });
+      toast({ title: t('live.session.ended') });
       setLocation(`/meetings/${meetingId}`);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to end session';
-      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
+      const errorMessage = error instanceof Error ? error.message : t('live.session.failEnd');
+      toast({ title: t('common.error'), description: errorMessage, variant: 'destructive' });
     }
   };
 
   // Globe mode label
   const globeMode = isProcessing
-    ? 'PROCESSING'
+    ? t('live.mode.processing')
     : isSpeaking
-    ? 'SPEAKING'
+    ? t('live.mode.speaking')
     : isListening
-    ? 'LISTENING'
-    : 'STANDBY';
+    ? t('live.mode.listening')
+    : t('live.mode.standby');
 
   const globeModeColor = isProcessing
     ? 'text-primary'
@@ -382,7 +384,7 @@ function LiveMeetingContent() {
       <div className="min-h-[100dvh] bg-black flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-primary font-mono">Initializing APEX CORE...</p>
+          <p className="text-primary font-mono">{t('live.initializing')}</p>
         </div>
       </div>
     );
@@ -401,7 +403,7 @@ function LiveMeetingContent() {
             <div>
               <h1 className="text-lg font-bold matrix-text" data-testid="text-meeting-title">{meeting.title}</h1>
               <p className="text-xs text-muted-foreground font-mono">
-                {meeting.company} • AI: {meeting.aiName}
+                {meeting.company} • {t('meeting.aiLabel')}{meeting.aiName}
               </p>
             </div>
           </div>
@@ -418,7 +420,7 @@ function LiveMeetingContent() {
               data-testid="button-end-session"
             >
               <Power className="w-4 h-4 mr-2" />
-              End Session
+              {t('meeting.endSession')}
             </Button>
           </div>
         </div>
@@ -490,7 +492,7 @@ function LiveMeetingContent() {
           {/* Voice Control */}
           <Card className="bg-card/50 border-primary/20 p-6 terminal-glow flex-shrink-0">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Voice Control</h2>
+              <h2 className="text-lg font-bold">{t('live.voiceControl')}</h2>
               {isSpeaking && (
                 <Badge
                   variant="outline"
@@ -498,7 +500,7 @@ function LiveMeetingContent() {
                   onClick={stopSpeaking}
                 >
                   <VolumeX className="w-3 h-3 mr-1" />
-                  Stop
+                  {t('live.stop')}
                 </Badge>
               )}
             </div>
@@ -511,7 +513,7 @@ function LiveMeetingContent() {
                 disabled={isProcessing}
               >
                 {isListening ? <MicOff className="w-6 h-6 mr-2" /> : <Mic className="w-6 h-6 mr-2" />}
-                {isListening ? 'Stop Listening' : 'Start Listening'}
+                {isListening ? t('live.stopListening') : t('live.startListening')}
               </Button>
             </div>
 
@@ -525,7 +527,7 @@ function LiveMeetingContent() {
                     handleManualSubmit();
                   }
                 }}
-                placeholder="Or type your command… (Ctrl+Enter to send)"
+                placeholder={t('live.typePlaceholder')}
                 className="bg-background/50 border-primary/30 resize-none font-mono text-sm"
                 rows={3}
                 data-testid="input-manual-command"
@@ -540,10 +542,10 @@ function LiveMeetingContent() {
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing…
+                    {t('meeting.processing')}
                   </>
                 ) : (
-                  'Send Command'
+                  t('live.sendCommand')
                 )}
               </Button>
             </div>
@@ -552,7 +554,7 @@ function LiveMeetingContent() {
           {/* Camera Feed */}
           <Card className="bg-card/50 border-primary/20 p-6 terminal-glow flex-shrink-0">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Camera Feed</h2>
+              <h2 className="text-lg font-bold">{t('live.cameraFeed')}</h2>
               <Button
                 onClick={cameraEnabled ? stopCamera : initCamera}
                 size="sm"
@@ -561,7 +563,7 @@ function LiveMeetingContent() {
                 data-testid="button-toggle-camera"
               >
                 {cameraEnabled ? <VideoOff className="w-4 h-4 mr-2" /> : <Video className="w-4 h-4 mr-2" />}
-                {cameraEnabled ? 'Stop' : 'Start'}
+                {cameraEnabled ? t('live.stop') : t('meeting.startSession')}
               </Button>
             </div>
 
@@ -582,12 +584,12 @@ function LiveMeetingContent() {
                   data-testid="button-analyze-scene"
                 >
                   <Camera className="w-4 h-4 mr-2" />
-                  Analyze Scene
+                  {t('live.analyzeScene')}
                 </Button>
               </div>
             ) : (
               <div className="w-full h-48 bg-background/30 rounded border border-primary/30 flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">Camera disabled</p>
+                <p className="text-sm text-muted-foreground">{t('live.cameraDisabled')}</p>
               </div>
             )}
           </Card>
@@ -600,7 +602,7 @@ function LiveMeetingContent() {
         <Card className="flex-1 bg-card/90 border-primary/20 p-4 terminal-glow overflow-hidden flex flex-col">
           <div className="flex items-center gap-2 mb-3">
             <TerminalIcon className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-bold font-mono">EXECUTION LOG</h3>
+            <h3 className="text-sm font-bold font-mono">{t('live.execLog')}</h3>
           </div>
           <div
             ref={execScrollRef}
@@ -617,7 +619,7 @@ function LiveMeetingContent() {
               </div>
             ))}
             {executionLog.length === 0 && (
-              <p className="text-muted-foreground">No executions yet. Start speaking commands...</p>
+              <p className="text-muted-foreground">{t('live.noExecutions')}</p>
             )}
           </div>
         </Card>
@@ -626,7 +628,7 @@ function LiveMeetingContent() {
         <Card className="flex-1 bg-card/90 border-primary/20 p-4 terminal-glow overflow-hidden flex flex-col">
           <div className="flex items-center gap-2 mb-3">
             <MessageSquare className="w-4 h-4 text-secondary" />
-            <h3 className="text-sm font-bold font-mono">TRANSCRIPT</h3>
+            <h3 className="text-sm font-bold font-mono">{t('live.transcript')}</h3>
           </div>
           <div
             ref={transcriptScrollRef}
@@ -644,7 +646,7 @@ function LiveMeetingContent() {
               </div>
             ))}
             {transcript.length === 0 && (
-              <p className="text-muted-foreground text-sm">No conversation yet. Start speaking...</p>
+              <p className="text-muted-foreground text-sm">{t('live.noConversation')}</p>
             )}
           </div>
         </Card>

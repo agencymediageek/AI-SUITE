@@ -35,7 +35,7 @@ function DashboardContent() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-4xl font-bold matrix-text mb-2">{t('dashboard.title')}</h1>
-              <p className="text-muted-foreground">Manage your AI-powered meetings</p>
+              <p className="text-muted-foreground">{t('dashboard.subtitle')}</p>
             </div>
             <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 terminal-glow" data-testid="button-new-meeting">
               <Link href="/meetings/new">
@@ -122,12 +122,12 @@ function DashboardContent() {
                       </div>
                       
                       <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                        {meeting.description || 'No description'}
+                        {meeting.description || t('meeting.noDesc')}
                       </p>
 
                       <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
                         <div className="flex items-center gap-4">
-                          <span>{meeting.sessionCount || 0} sessions</span>
+                          <span>{meeting.sessionCount || 0} {t('meeting.sessionsLabel')}</span>
                         </div>
                         {meeting.lastSessionAt && (
                           <span>{formatDistanceToNow(new Date(meeting.lastSessionAt), { addSuffix: true })}</span>
@@ -136,7 +136,7 @@ function DashboardContent() {
 
                       <div className="mt-4 pt-4 border-t border-primary/20">
                         <p className="text-xs text-muted-foreground">
-                          AI: <span className="text-primary font-medium">{meeting.aiName}</span>
+                          {t('meeting.aiLabel')}<span className="text-primary font-medium">{meeting.aiName}</span>
                         </p>
                       </div>
                     </Card>
@@ -146,12 +146,12 @@ function DashboardContent() {
             ) : (
               <Card className="bg-card/50 border-primary/20 p-12 text-center">
                 <Video className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                <h3 className="text-xl font-bold mb-2">No meetings yet</h3>
-                <p className="text-muted-foreground mb-6">Create your first meeting room to get started</p>
+                <h3 className="text-xl font-bold mb-2">{t('dashboard.noMeetings')}</h3>
+                <p className="text-muted-foreground mb-6">{t('dashboard.createFirst')}</p>
                 <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
                   <Link href="/meetings/new">
                     <Plus className="w-4 h-4 mr-2" />
-                    Create Meeting
+                    {t('dashboard.newMeeting')}
                   </Link>
                 </Button>
               </Card>

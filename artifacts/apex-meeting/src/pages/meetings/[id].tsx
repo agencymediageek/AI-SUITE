@@ -1,4 +1,5 @@
 import { useParams, useLocation } from 'wouter';
+import { useI18n } from '@/lib/i18n';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ function MeetingDetailContent() {
   const meetingId = Number(params.id);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   const { data: meeting, isLoading: meetingLoading } = useGetMeeting(meetingId, {
@@ -49,11 +51,11 @@ function MeetingDetailContent() {
     try {
       await deleteMeeting.mutateAsync({ meetingId });
       await queryClient.invalidateQueries({ queryKey: getListMeetingsQueryKey() });
-      toast({ title: 'Meeting deleted' });
+      toast({ title: t('meeting.deleted') });
       setLocation('/dashboard');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete meeting';
-      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
+      const errorMessage = error instanceof Error ? error.message : t('meeting.failDelete');
+      toast({ title: t('common.error'), description: errorMessage, variant: 'destructive' });
     }
   };
 
@@ -62,7 +64,7 @@ function MeetingDetailContent() {
       <div className="min-h-[100dvh] bg-black flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-primary font-mono">Loading meeting...</p>
+          <p className="text-primary font-mono">{t('meeting.loading')}</p>
         </div>
       </div>
     );
@@ -72,8 +74,8 @@ function MeetingDetailContent() {
     return (
       <div className="min-h-[100dvh] bg-black flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-destructive text-xl">Meeting not found</p>
-          <Button onClick={() => setLocation('/dashboard')}>Back to Dashboard</Button>
+          <p className="text-destructive text-xl">{t('meeting.notFound')}</p>
+          <Button onClick={() => setLocation('/dashboard')}>{t('meeting.backDashboard')}</Button>
         </div>
       </div>
     );
@@ -87,7 +89,7 @@ function MeetingDetailContent() {
         <div className="container mx-auto max-w-7xl">
           <Button variant="ghost" onClick={() => setLocation('/dashboard')} className="mb-6 text-muted-foreground hover:text-primary" data-testid="button-back">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+            {t('meeting.backDashboard')}
           </Button>
 
           {/* Meeting Header */}
@@ -99,11 +101,11 @@ function MeetingDetailContent() {
                   {meeting.language.toUpperCase()}
                 </Badge>
               </div>
-              <p className="text-muted-foreground mb-4">{meeting.description || 'No description'}</p>
+              <p className="text-muted-foreground mb-4">{meeting.description || t('meeting.noDesc')}</p>
               <div className="flex items-center gap-6 text-sm text-muted-foreground font-mono">
-                {meeting.company && <span>Company: <span className="text-foreground">{meeting.company}</span></span>}
-                <span>AI: <span className="text-primary">{meeting.aiName}</span></span>
-                <span>{meeting.sessionCount || 0} sessions</span>
+                {meeting.company && <span>{t('meeting.companyLabel')}<span className="text-foreground">{meeting.company}</span></span>}
+                <span>{t('meeting.aiLabel')}<span className="text-primary">{meeting.aiName}</span></span>
+                <span>{meeting.sessionCount || 0} {t('meeting.sessionsLabel')}</span>
               </div>
             </div>
 
@@ -111,7 +113,7 @@ function MeetingDetailContent() {
               <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 terminal-glow" data-testid="button-start-session">
                 <a href={`/meetings/${meetingId}/live`}>
                   <Play className="w-4 h-4 mr-2" />
-                  Start Session
+                  {t('meeting.startSession')}
                 </a>
               </Button>
 
@@ -127,15 +129,15 @@ function MeetingDetailContent() {
                 </AlertDialogTrigger>
                 <AlertDialogContent className="bg-card border-primary/20">
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Meeting?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('meeting.deleteTitle')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently delete "{meeting.title}" and all its sessions. This action cannot be undone.
+                      {t('meeting.deleteDescPre')}"{meeting.title}"{t('meeting.deleteDescPost')}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                      Delete
+                      {t('common.delete')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -145,7 +147,7 @@ function MeetingDetailContent() {
 
           {/* Resources */}
           <Card className="bg-card/50 border-primary/20 p-6 mb-8">
-            <h2 className="text-lg font-bold mb-4">Available Resources</h2>
+            <h2 className="text-lg font-bold mb-4">{t('meeting.resources')}</h2>
             <div className="flex flex-wrap gap-2">
               {(meeting.resources ?? []).map((resource) => (
                 <Badge key={resource} variant="outline" className="bg-primary/10 text-primary border-primary/30">
@@ -162,7 +164,7 @@ function MeetingDetailContent() {
 
           {/* Sessions History */}
           <div>
-            <h2 className="text-2xl font-bold mb-6">Session History</h2>
+            <h2 className="text-2xl font-bold mb-6">{t('meeting.history')}</h2>
             
             {sessionsLoading ? (
               <div className="space-y-4">
@@ -185,7 +187,7 @@ function MeetingDetailContent() {
                           </Badge>
                           {session.durationMinutes && (
                             <span className="text-sm text-muted-foreground font-mono">
-                              {session.durationMinutes} minutes
+                              {session.durationMinutes} {t('meeting.minutes')}
                             </span>
                           )}
                         </div>
@@ -197,7 +199,7 @@ function MeetingDetailContent() {
                           {session.endedAt && (
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              Ended {formatDistanceToNow(new Date(session.endedAt), { addSuffix: true })}
+                              {t('meeting.endedAt')}{formatDistanceToNow(new Date(session.endedAt), { addSuffix: true })}
                             </span>
                           )}
                         </div>
@@ -206,7 +208,7 @@ function MeetingDetailContent() {
                         )}
                         {session.builtAssets && session.builtAssets.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-primary/20">
-                            <p className="text-xs text-muted-foreground mb-2 font-mono">Built Assets:</p>
+                            <p className="text-xs text-muted-foreground mb-2 font-mono">{t('meeting.builtAssets')}</p>
                             <div className="flex flex-wrap gap-2">
                               {session.builtAssets.split('\n').filter(Boolean).map((asset, i) => (
                                 <Badge key={i} variant="outline" className="bg-secondary/10 text-secondary border-secondary/30 text-xs font-mono">
@@ -224,12 +226,12 @@ function MeetingDetailContent() {
             ) : (
               <Card className="bg-card/50 border-primary/20 p-12 text-center">
                 <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                <h3 className="text-xl font-bold mb-2">No sessions yet</h3>
-                <p className="text-muted-foreground mb-6">Start your first live session to begin executing</p>
+                <h3 className="text-xl font-bold mb-2">{t('meeting.noSessions')}</h3>
+                <p className="text-muted-foreground mb-6">{t('meeting.startFirst')}</p>
                 <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
                   <a href={`/meetings/${meetingId}/live`}>
                     <Play className="w-4 h-4 mr-2" />
-                    Start Session
+                    {t('meeting.startSession')}
                   </a>
                 </Button>
               </Card>
