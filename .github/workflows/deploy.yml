@@ -112,3 +112,19 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Build apex-video
+        run: pnpm --filter @workspace/apex-video run build
+        env:
+          PORT: 3001
+          BASE_PATH: /
+          NODE_ENV: production
+
+      - name: Deploy apex-video to Cloudflare Pages
+        run: |
+          npx wrangler pages deploy artifacts/apex-video/dist/public \
+            --project-name apex-video \
+            --branch main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
