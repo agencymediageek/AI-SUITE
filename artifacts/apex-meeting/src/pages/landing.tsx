@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { MatrixGlobe } from '@/components/meeting/MatrixGlobe';
 import step1Img from '@/assets/step1-configure.jpg';
@@ -119,17 +119,24 @@ export function LandingFooter() {
 
         {/* App install + video row */}
         <div className="border-t border-primary/10 pt-8 mb-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-          {installPrompt && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-primary/40 text-primary hover:bg-primary/10 gap-2 font-mono text-sm"
-              onClick={() => { installPrompt.prompt(); installPrompt.userChoice.then(() => setInstallPrompt(null)); }}
-            >
-              <Smartphone className="w-4 h-4" />
-              {t('nav.installApp')}
-            </Button>
-          )}
+          {/* Install button — always visible */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-primary/40 text-primary hover:bg-primary/10 gap-2 font-mono text-sm"
+            onClick={() => {
+              if (installPrompt) {
+                installPrompt.prompt();
+                installPrompt.userChoice.then(() => setInstallPrompt(null));
+              } else {
+                const msg = t('nav.installAppHint');
+                alert(msg);
+              }
+            }}
+          >
+            <Smartphone className="w-4 h-4" />
+            {t('nav.installApp')}
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -231,6 +238,20 @@ export default function Landing() {
   ];
 
   const globeSize = useGlobeSize();
+
+  // Lazy-load the video iframe only when the section scrolls into view
+  const videoRef = useRef<HTMLDivElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVideoLoaded(true); obs.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground relative overflow-x-hidden">
@@ -427,6 +448,60 @@ export default function Landing() {
                 </Card>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── DEMO VIDEO ── */}
+      <section id="demo" className="py-24 px-4 relative bg-gradient-to-b from-transparent via-[#00FFFF]/3 to-transparent">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-12">
+            <span className="text-xs font-mono text-[#00FFFF] tracking-widest uppercase bg-[#00FFFF]/10 border border-[#00FFFF]/30 px-4 py-1.5 rounded-full">
+              {t('landing.demo.badge')}
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-6 mb-4 text-foreground">
+              {t('landing.demo.title')}{' '}
+              <span className="text-[#00FFFF]">{t('landing.demo.title2')}</span>
+            </h2>
+            <p className="text-lg text-muted-foreground">{t('landing.demo.subtitle')}</p>
+          </div>
+
+          {/* Iframe carregado ao scrollar (Intersection Observer) */}
+          <div
+            ref={videoRef}
+            className="relative rounded-2xl overflow-hidden border border-[#00FFFF]/30 shadow-2xl shadow-[#00FFFF]/10 bg-black"
+          >
+            <div className="aspect-video">
+              {videoLoaded ? (
+                <iframe
+                  src="/apex-video"
+                  title="APEX CORE MEETING — Demo"
+                  className="w-full h-full"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                /* Placeholder enquanto não entrou no viewport */
+                <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-[#00FFFF]/60 bg-black/60">
+                  <Play className="w-16 h-16 opacity-40" />
+                  <span className="text-sm font-mono uppercase tracking-widest opacity-60">
+                    {t('landing.demo.badge')}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <a
+              href="/apex-video"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-mono text-[#00FFFF]/70 hover:text-[#00FFFF] transition-colors"
+            >
+              <Play className="w-4 h-4 fill-current" />
+              {t('landing.demo.open')}
+            </a>
           </div>
         </div>
       </section>

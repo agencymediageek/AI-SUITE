@@ -77,6 +77,13 @@ const translations: Translations = {
   'landing.cta.secondary':     { pt: 'Ver demonstração', en: 'Watch demo',        es: 'Ver demostración' },
   'landing.faq.title':         { pt: 'Perguntas',        en: 'Frequently',        es: 'Preguntas' },
   'landing.faq.title2':        { pt: 'frequentes',       en: 'asked questions',   es: 'frecuentes' },
+
+  // ── Demo Video section ──────────────────────────────────────────────────────
+  'landing.demo.badge':    { pt: 'VEJA EM AÇÃO',    en: 'SEE IT IN ACTION', es: 'VER EN ACCIÓN' },
+  'landing.demo.title':    { pt: 'Demo ao',          en: 'Live',             es: 'Demo en' },
+  'landing.demo.title2':   { pt: 'vivo',             en: 'Demo',             es: 'vivo' },
+  'landing.demo.subtitle': { pt: 'Assista o APEX CORE executando tarefas reais durante uma reunião.', en: 'Watch APEX CORE executing real tasks during a live meeting.', es: 'Mira APEX CORE ejecutando tareas reales durante una reunión en vivo.' },
+  'landing.demo.open':     { pt: 'Abrir em tela cheia →', en: 'Open fullscreen →', es: 'Abrir en pantalla completa →' },
   'landing.faq.more':          { pt: 'Ver todas as perguntas →', en: 'See all questions →', es: 'Ver todas las preguntas →' },
 
   // ── Stats bar ───────────────────────────────────────────────────────────────
