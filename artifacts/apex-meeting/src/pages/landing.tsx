@@ -142,7 +142,7 @@ export function LandingFooter() {
             variant="outline"
             size="sm"
             className="border-[#00FFFF]/40 text-[#00FFFF] hover:bg-[#00FFFF]/10 gap-2 font-mono text-sm"
-            onClick={() => window.open('https://demo.techsites.ai', '_blank')}
+            onClick={() => window.open(`https://demo.techsites.ai?lang=${language}`, '_blank')}
           >
             <Play className="w-4 h-4 fill-current" />
             {t('hero.demo')}
@@ -293,7 +293,7 @@ export default function Landing() {
                   className="border-[#00FFFF] text-[#00FFFF] hover:bg-[#00FFFF]/10 text-base px-6 sm:px-8"
                   asChild
                 >
-                  <a href="https://demo.techsites.ai" target="_blank" rel="noopener noreferrer">
+                  <a href={`https://demo.techsites.ai?lang=${language}`} target="_blank" rel="noopener noreferrer">
                     {t('hero.demo')}
                   </a>
                 </Button>

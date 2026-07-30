@@ -2,6 +2,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ChevronDown, ChevronUp, Repeat, Volume2, VolumeX } from "lucide-react";
 import VideoTemplate, { SCENE_DURATIONS } from "./VideoTemplate";
 import { useSceneControls } from "./useSceneControls";
+import { type Lang } from "@/lib/video/i18n";
+
+// ── Read ?lang= from URL ──────────────────────────────────────────────────────
+function useLangParam(): Lang {
+  const params = new URLSearchParams(
+    typeof window !== 'undefined' ? window.location.search : ''
+  );
+  const raw = params.get('lang') ?? 'en';
+  return (['en', 'pt', 'es'].includes(raw) ? raw : 'en') as Lang;
+}
 
 // ── Progress bar (isolated timer) ────────────────────────────────────────────
 const PROGRESS_TICK_MS = 60;
@@ -122,7 +132,7 @@ function ControlBar({
   );
 }
 
-// ── Shared overlays (back + sound hint) ──────────────────────────────────────
+// ── Shared overlays ───────────────────────────────────────────────────────────
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button
@@ -147,9 +157,8 @@ function SoundHint({ onActivate }: { onActivate: () => void }) {
   );
 }
 
-// ── Direct view (new tab): VideoTemplate + overlays, sem controles de pulo ───
-// Preserva o fluxo original do useVideoPlayer com SCENE_DURATIONS estático.
-function DirectView() {
+// ── Direct view (nova aba) ────────────────────────────────────────────────────
+function DirectView({ lang }: { lang: Lang }) {
   const [muted, setMuted] = useState(true);
   const [hintDismissed, setHintDismissed] = useState(false);
 
@@ -165,8 +174,7 @@ function DirectView() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* VideoTemplate direto — usa SCENE_DURATIONS estático, sem rotação */}
-      <VideoTemplate muted={muted} />
+      <VideoTemplate muted={muted} lang={lang} />
 
       <BackButton onClick={handleBack} />
 
@@ -174,7 +182,6 @@ function DirectView() {
         <SoundHint onActivate={handleActivateSound} />
       )}
 
-      {/* Botão mudo flutuante (canto inferior direito) após hint ser dispensado */}
       {hintDismissed && (
         <button
           onClick={() => setMuted(m => !m)}
@@ -190,17 +197,15 @@ function DirectView() {
 
 // ── Main wrapper ──────────────────────────────────────────────────────────────
 export default function VideoWithControls() {
+  const lang = useLangParam();
   const isIframed = typeof window !== 'undefined' && window.self !== window.top;
 
-  // View direta (nova aba): VideoTemplate sem rotação de cenas (corrige embaralhamento)
-  if (!isIframed) return <DirectView />;
-
-  // View em iframe (embutido na landing): controles completos
-  return <VideoWithControlsInner />;
+  if (!isIframed) return <DirectView lang={lang} />;
+  return <VideoWithControlsInner lang={lang} />;
 }
 
-// ── Iframe view: controles completos com jumpTo/loop ─────────────────────────
-function VideoWithControlsInner() {
+// ── Iframe view ───────────────────────────────────────────────────────────────
+function VideoWithControlsInner({ lang }: { lang: Lang }) {
   const {
     sceneKeys, activeIndex, locked, mountKey, tick,
     durations, activeDuration, onSceneChange, jumpTo, toggleLock,
@@ -257,6 +262,7 @@ function VideoWithControlsInner() {
         durations={durations}
         loop
         muted={muted}
+        lang={lang}
         onSceneChange={onSceneChange}
       />
 

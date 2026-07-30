@@ -1,29 +1,28 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { type Lang, VIDEO_I18N, t } from "@/lib/video/i18n";
 
 const MATRIX_CHARS = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ01";
 const LOGO_TEXT = "APEX CORE";
 
-export function Scene1() {
+export function Scene1({ lang = 'en' }: { lang?: Lang }) {
   const [revealedChars, setRevealedChars] = useState<number>(0);
   const [showTagline, setShowTagline] = useState(false);
 
   useEffect(() => {
-    // Reveal logo characters one by one
     const charTimers: NodeJS.Timeout[] = [];
     LOGO_TEXT.split("").forEach((_, idx) => {
       charTimers.push(
         setTimeout(() => setRevealedChars(idx + 1), 200 + idx * 150)
       );
     });
-
-    // Show tagline after logo is fully revealed
     charTimers.push(
       setTimeout(() => setShowTagline(true), 200 + LOGO_TEXT.length * 150 + 600)
     );
-
     return () => charTimers.forEach((t) => clearTimeout(t));
   }, []);
+
+  const tagline = t(VIDEO_I18N.scene1.tagline, lang);
 
   return (
     <motion.div
@@ -47,9 +46,7 @@ export function Scene1() {
             <motion.span
               key={idx}
               initial={{ opacity: 0 }}
-              animate={{
-                opacity: idx < revealedChars ? 1 : 0,
-              }}
+              animate={{ opacity: idx < revealedChars ? 1 : 0 }}
               transition={{ duration: 0.1 }}
             >
               {char === " " ? "\u00A0" : char}
@@ -57,7 +54,6 @@ export function Scene1() {
           ))}
         </motion.h1>
 
-        {/* Matrix character corruption effect during reveal */}
         {revealedChars < LOGO_TEXT.length && (
           <motion.span
             className="absolute text-[12vw] font-bold"
@@ -87,17 +83,13 @@ export function Scene1() {
         animate={showTagline ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
         transition={{ duration: 0.6 }}
       >
-        AI THAT CONDUCTS YOUR MEETINGS
+        {tagline}
       </motion.p>
 
-      {/* Pulsing border box around content */}
+      {/* Pulsing border box */}
       <motion.div
         className="absolute border-2 pointer-events-none"
-        style={{
-          borderColor: "#00FF41",
-          width: "80vw",
-          height: "50vh",
-        }}
+        style={{ borderColor: "#00FF41", width: "80vw", height: "50vh" }}
         initial={{ opacity: 0, scale: 1.2 }}
         animate={{ opacity: [0, 0.4, 0.4], scale: 1 }}
         transition={{ duration: 1.5, times: [0, 0.5, 1] }}

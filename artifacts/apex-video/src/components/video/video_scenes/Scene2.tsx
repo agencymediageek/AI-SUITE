@@ -1,26 +1,22 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { type Lang, VIDEO_I18N, t } from "@/lib/video/i18n";
 
-const CONFIG_ITEMS = [
-  { label: "LANGUAGE", value: "PT-BR / EN / ES" },
-  { label: "AI NAME", value: "APEX_ASSISTANT_01" },
-  { label: "VOICE_ENABLED", value: "TRUE" },
-  { label: "CAMERA_ENABLED", value: "TRUE" },
-  { label: "SITE_BUILDER", value: "ACTIVE" },
-  { label: "DOCUMENT_GEN", value: "ACTIVE" },
-  { label: "DNS_CONFIG", value: "AUTO" },
-];
-
-export function Scene2() {
+export function Scene2({ lang = 'en' }: { lang?: Lang }) {
   const [visibleItems, setVisibleItems] = useState<number>(0);
 
+  const items = VIDEO_I18N.scene2.items[lang] ?? VIDEO_I18N.scene2.items.en;
+  const header = t(VIDEO_I18N.scene2.header, lang);
+  const pressStart = t(VIDEO_I18N.scene2.pressStart, lang);
+
   useEffect(() => {
+    setVisibleItems(0);
     const timers: NodeJS.Timeout[] = [];
-    CONFIG_ITEMS.forEach((_, idx) => {
+    items.forEach((_, idx) => {
       timers.push(setTimeout(() => setVisibleItems(idx + 1), 400 + idx * 600));
     });
     return () => timers.forEach((t) => clearTimeout(t));
-  }, []);
+  }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <motion.div
@@ -45,31 +41,24 @@ export function Scene2() {
             textShadow: "0 0 20px rgba(0, 255, 65, 0.8)",
           }}
         >
-          MEETING CONFIGURATION
+          {header}
         </h2>
         <div className="mt-2 h-[2px] bg-[#00FFFF] w-[30vw] mx-auto opacity-60" />
       </motion.div>
 
       {/* Config items */}
       <div className="space-y-[2vh] w-full max-w-[60vw]">
-        {CONFIG_ITEMS.map((item, idx) => (
+        {items.map((item, idx) => (
           <motion.div
             key={idx}
             className="flex items-center justify-between border border-[#003311] bg-black/60 px-[2vw] py-[1.5vh]"
             initial={{ opacity: 0, x: -50 }}
-            animate={
-              idx < visibleItems
-                ? { opacity: 1, x: 0 }
-                : { opacity: 0, x: -50 }
-            }
+            animate={idx < visibleItems ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
             transition={{ duration: 0.4 }}
           >
             <span
               className="text-[1.8vw] font-bold"
-              style={{
-                fontFamily: "Space Mono, monospace",
-                color: "#00FFFF",
-              }}
+              style={{ fontFamily: "Space Mono, monospace", color: "#00FFFF" }}
             >
               {item.label}
             </span>
@@ -87,19 +76,16 @@ export function Scene2() {
         ))}
       </div>
 
-      {/* Blinking cursor indicator at bottom */}
-      {visibleItems >= CONFIG_ITEMS.length && (
+      {/* Blinking cursor */}
+      {visibleItems >= items.length && (
         <motion.div
           className="mt-[4vh] text-[2vw]"
-          style={{
-            fontFamily: "Space Mono, monospace",
-            color: "#00FF41",
-          }}
+          style={{ fontFamily: "Space Mono, monospace", color: "#00FF41" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          PRESS START TO ACTIVATE_
+          {pressStart}
           <motion.span
             animate={{ opacity: [1, 0] }}
             transition={{ duration: 0.8, repeat: Infinity }}

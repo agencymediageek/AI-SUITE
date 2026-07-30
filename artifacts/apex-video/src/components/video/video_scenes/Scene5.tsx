@@ -1,28 +1,24 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { type Lang, VIDEO_I18N, t } from "@/lib/video/i18n";
 
-const STATS = [
-  { label: "TASKS COMPLETED", value: "3" },
-  { label: "WEBSITES DEPLOYED", value: "1" },
-  { label: "DOCUMENTS GENERATED", value: "2" },
-];
-
-export function Scene5() {
+export function Scene5({ lang = 'en' }: { lang?: Lang }) {
   const [showHeader, setShowHeader] = useState(false);
   const [visibleStats, setVisibleStats] = useState<number>(0);
 
-  useEffect(() => {
-    setTimeout(() => setShowHeader(true), 400);
-    
-    const timers: NodeJS.Timeout[] = [];
-    STATS.forEach((_, idx) => {
-      timers.push(
-        setTimeout(() => setVisibleStats(idx + 1), 1200 + idx * 800)
-      );
-    });
+  const header = t(VIDEO_I18N.scene5.header, lang);
+  const stats  = VIDEO_I18N.scene5.stats[lang] ?? VIDEO_I18N.scene5.stats.en;
 
+  useEffect(() => {
+    setShowHeader(false);
+    setVisibleStats(0);
+    setTimeout(() => setShowHeader(true), 400);
+    const timers: NodeJS.Timeout[] = [];
+    stats.forEach((_, idx) => {
+      timers.push(setTimeout(() => setVisibleStats(idx + 1), 1200 + idx * 800));
+    });
     return () => timers.forEach((t) => clearTimeout(t));
-  }, []);
+  }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <motion.div
@@ -47,7 +43,7 @@ export function Scene5() {
             textShadow: "0 0 30px rgba(0, 255, 65, 0.9)",
           }}
         >
-          REPORT GENERATED
+          {header}
         </h2>
         <div className="mt-4 h-[3px] bg-[#00FFFF] w-[40vw] mx-auto" />
       </motion.div>
@@ -63,24 +59,17 @@ export function Scene5() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.6, duration: 0.5 }}
       >
-        {STATS.map((stat, idx) => (
+        {stats.map((stat, idx) => (
           <motion.div
             key={idx}
             className="flex items-center justify-between gap-[8vw]"
             initial={{ opacity: 0, x: -30 }}
-            animate={
-              idx < visibleStats
-                ? { opacity: 1, x: 0 }
-                : { opacity: 0, x: -30 }
-            }
+            animate={idx < visibleStats ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
             transition={{ duration: 0.5 }}
           >
             <span
               className="text-[2.2vw] font-bold"
-              style={{
-                fontFamily: "Space Mono, monospace",
-                color: "#00FFFF",
-              }}
+              style={{ fontFamily: "Space Mono, monospace", color: "#00FFFF" }}
             >
               {stat.label}
             </span>
@@ -98,7 +87,7 @@ export function Scene5() {
         ))}
       </motion.div>
 
-      {/* Checkmark animation */}
+      {/* Checkmark */}
       <motion.div
         className="mt-[6vh]"
         initial={{ opacity: 0, scale: 0 }}
@@ -110,9 +99,7 @@ export function Scene5() {
           height="80"
           viewBox="0 0 100 100"
           className="stroke-[#00FF41]"
-          style={{
-            filter: "drop-shadow(0 0 20px rgba(0, 255, 65, 0.8))",
-          }}
+          style={{ filter: "drop-shadow(0 0 20px rgba(0, 255, 65, 0.8))" }}
         >
           <motion.path
             d="M 20 50 L 40 70 L 80 30"

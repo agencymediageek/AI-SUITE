@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { type Lang, VIDEO_I18N, t } from "@/lib/video/i18n";
 
 const MATRIX_CHARS = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ";
 
-export function Scene6() {
+export function Scene6({ lang = 'en' }: { lang?: Lang }) {
   const [showGlobe, setShowGlobe] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
   const [showTagline, setShowTagline] = useState(false);
@@ -14,6 +15,8 @@ export function Scene6() {
     setTimeout(() => setShowTagline(true), 2000);
   }, []);
 
+  const tagline = t(VIDEO_I18N.scene6.tagline, lang);
+
   return (
     <motion.div
       className="absolute inset-0 flex flex-col items-center justify-center"
@@ -22,7 +25,7 @@ export function Scene6() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8 }}
     >
-      {/* Matrix Globe (smaller, centered) */}
+      {/* Matrix Globe */}
       <motion.div
         className="relative flex items-center justify-center mb-[6vh]"
         initial={{ opacity: 0, scale: 0.5 }}
@@ -44,7 +47,6 @@ export function Scene6() {
           }}
           transition={{ duration: 3, repeat: Infinity }}
         >
-          {/* Matrix characters on sphere */}
           {Array.from({ length: 30 }).map((_, idx) => (
             <motion.div
               key={idx}
@@ -97,10 +99,10 @@ export function Scene6() {
         animate={showTagline ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.8 }}
       >
-        THE FUTURE OF MEETINGS
+        {tagline}
       </motion.div>
 
-      {/* Corner accent lines */}
+      {/* Corner accents */}
       <motion.div
         className="absolute top-[10vh] left-[10vw] w-[15vw] h-[15vh] border-t-4 border-l-4"
         style={{ borderColor: "#00FF41" }}

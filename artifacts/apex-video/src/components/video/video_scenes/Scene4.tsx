@@ -1,44 +1,19 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { type Lang, VIDEO_I18N } from "@/lib/video/i18n";
 
-const TERMINAL_LINES = [
-  "> INITIALIZING SESSION...",
-  "[ OK ] SESSION ID: APEX-2024-04X71",
-  "",
-  "> BUILDING WEBSITE...",
-  "[ OK ] SITE LIVE AT: https://meeting-report-04x71.techsites.ai",
-  "",
-  "> CONFIGURING DNS...",
-  "[ OK ] DNS RECORDS UPDATED",
-  "[ OK ] SSL CERTIFICATE ISSUED",
-  "",
-  "> GENERATING DOCUMENT...",
-  "[ OK ] MEETING MINUTES: meeting_04x71_minutes.pdf",
-  "[ OK ] ACTION ITEMS: meeting_04x71_tasks.pdf",
-  "",
-  "> PUBLISHING ASSETS...",
-  "[ OK ] DOCUMENTS PUBLISHED TO CLOUD",
-  "[ OK ] SITE DEPLOYED",
-  "",
-  "SESSION COMPLETE.",
-];
-
-export function Scene4() {
+export function Scene4({ lang = 'en' }: { lang?: Lang }) {
+  const lines = VIDEO_I18N.scene4.lines[lang] ?? VIDEO_I18N.scene4.lines.en;
   const [visibleLines, setVisibleLines] = useState<number>(0);
 
   useEffect(() => {
+    setVisibleLines(0);
     const timers: NodeJS.Timeout[] = [];
-    
-    TERMINAL_LINES.forEach((_, idx) => {
-      timers.push(
-        setTimeout(() => {
-          setVisibleLines(idx + 1);
-        }, idx * 400 + 600)
-      );
+    lines.forEach((_, idx) => {
+      timers.push(setTimeout(() => setVisibleLines(idx + 1), idx * 400 + 600));
     });
-
     return () => timers.forEach((t) => clearTimeout(t));
-  }, []);
+  }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <motion.div
@@ -78,7 +53,7 @@ export function Scene4() {
         }}
       >
         <div className="space-y-[1vh]">
-          {TERMINAL_LINES.map((line, idx) => (
+          {lines.map((line, idx) => (
             <motion.div
               key={idx}
               className="text-[1.6vw]"
@@ -87,15 +62,11 @@ export function Scene4() {
                 textShadow: "0 0 8px rgba(0, 255, 65, 0.5)",
               }}
               initial={{ opacity: 0, x: -10 }}
-              animate={
-                idx < visibleLines
-                  ? { opacity: 1, x: 0 }
-                  : { opacity: 0, x: -10 }
-              }
+              animate={idx < visibleLines ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
               transition={{ duration: 0.15 }}
             >
               {line}
-              {idx === visibleLines - 1 && idx < TERMINAL_LINES.length - 1 && (
+              {idx === visibleLines - 1 && idx < lines.length - 1 && (
                 <motion.span
                   className="inline-block ml-1"
                   animate={{ opacity: [1, 0] }}
@@ -109,21 +80,12 @@ export function Scene4() {
         </div>
       </div>
 
-      {/* Glitch effect on terminal border */}
+      {/* Glitch effect */}
       <motion.div
         className="absolute w-[80vw] h-[60vh] border-2 pointer-events-none"
-        style={{
-          borderColor: "#00FFFF",
-        }}
-        animate={{
-          opacity: [0, 0.3, 0],
-          x: [0, 2, -2, 0],
-        }}
-        transition={{
-          duration: 0.2,
-          repeat: Infinity,
-          repeatDelay: 3,
-        }}
+        style={{ borderColor: "#00FFFF" }}
+        animate={{ opacity: [0, 0.3, 0], x: [0, 2, -2, 0] }}
+        transition={{ duration: 0.2, repeat: Infinity, repeatDelay: 3 }}
       />
     </motion.div>
   );

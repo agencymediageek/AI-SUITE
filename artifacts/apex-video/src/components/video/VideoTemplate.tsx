@@ -9,6 +9,7 @@ import { Scene5 } from "./video_scenes/Scene5";
 import { Scene6 } from "./video_scenes/Scene6";
 import { MatrixRain } from "./MatrixRain";
 import { Scanlines } from "./Scanlines";
+import { type Lang } from "@/lib/video/i18n";
 
 export const SCENE_DURATIONS: Record<string, number> = {
   scene1: 10000,
@@ -19,7 +20,8 @@ export const SCENE_DURATIONS: Record<string, number> = {
   scene6: 15000,
 };
 
-const SCENE_COMPONENTS: Record<string, React.ComponentType> = {
+type SceneProps = { lang: Lang };
+const SCENE_COMPONENTS: Record<string, React.ComponentType<SceneProps>> = {
   scene1: Scene1,
   scene2: Scene2,
   scene3: Scene3,
@@ -44,11 +46,13 @@ export default function VideoTemplate({
   durations = SCENE_DURATIONS,
   loop = true,
   muted = false,
+  lang = 'en',
   onSceneChange,
 }: {
   durations?: Record<string, number>;
   loop?: boolean;
   muted?: boolean;
+  lang?: Lang;
   onSceneChange?: (sceneKey: string) => void;
 } = {}) {
   const { currentSceneKey } = useVideoPlayer({ durations, loop });
@@ -75,18 +79,15 @@ export default function VideoTemplate({
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
-      {/* Persistent matrix rain background */}
       <MatrixRain />
-
-      {/* Persistent scanline overlay */}
       <Scanlines />
 
-      {/* Scene container */}
       <AnimatePresence mode="popLayout">
-        {SceneComponent && <SceneComponent key={currentSceneKey} />}
+        {SceneComponent && (
+          <SceneComponent key={currentSceneKey} lang={lang} />
+        )}
       </AnimatePresence>
 
-      {/* Background music */}
       <audio
         ref={audioRef}
         src={`${import.meta.env.BASE_URL}audio/bg_music.mp3`}

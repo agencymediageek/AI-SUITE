@@ -1,24 +1,23 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { type Lang, VIDEO_I18N, t } from "@/lib/video/i18n";
 
-export function Scene3() {
-  const [waveAmplitudes, setWaveAmplitudes] = useState<number[]>(
-    Array(24).fill(0)
-  );
+export function Scene3({ lang = 'en' }: { lang?: Lang }) {
+  const [waveAmplitudes, setWaveAmplitudes] = useState<number[]>(Array(24).fill(0));
   const [showLabel, setShowLabel] = useState(false);
 
   useEffect(() => {
-    // Animate wave bars to simulate AI speaking
     const interval = setInterval(() => {
-      setWaveAmplitudes((prev) =>
-        prev.map(() => Math.random() * 0.7 + 0.3)
-      );
+      setWaveAmplitudes((prev) => prev.map(() => Math.random() * 0.7 + 0.3));
     }, 120);
-
     setTimeout(() => setShowLabel(true), 800);
-
     return () => clearInterval(interval);
   }, []);
+
+  const sessionActive = t(VIDEO_I18N.scene3.sessionActive, lang);
+  const listening     = t(VIDEO_I18N.scene3.listening,     lang);
+  const processing    = t(VIDEO_I18N.scene3.processing,    lang);
+  const executing     = t(VIDEO_I18N.scene3.executing,     lang);
 
   return (
     <motion.div
@@ -43,11 +42,11 @@ export function Scene3() {
             textShadow: "0 0 15px rgba(0, 255, 255, 0.8)",
           }}
         >
-          SESSION ACTIVE
+          {sessionActive}
         </h3>
       </motion.div>
 
-      {/* Matrix Globe - pulsing green sphere */}
+      {/* Matrix Globe */}
       <motion.div
         className="relative flex items-center justify-center"
         animate={{
@@ -66,7 +65,6 @@ export function Scene3() {
             background: "radial-gradient(circle at 30% 30%, #00FF41, #003311, #000000)",
           }}
         >
-          {/* Matrix characters on the sphere surface */}
           {Array.from({ length: 40 }).map((_, idx) => (
             <motion.div
               key={idx}
@@ -92,19 +90,14 @@ export function Scene3() {
         </div>
       </motion.div>
 
-      {/* Sound wave bars around the globe */}
+      {/* Sound wave bars */}
       <div className="absolute flex items-end gap-[0.8vw] justify-center">
         {waveAmplitudes.map((amplitude, idx) => (
           <motion.div
             key={idx}
             className="w-[1.2vw] bg-[#00FFFF] rounded-t"
-            style={{
-              height: `${amplitude * 15}vh`,
-              boxShadow: "0 0 10px rgba(0, 255, 255, 0.8)",
-            }}
-            animate={{
-              height: `${amplitude * 15}vh`,
-            }}
+            style={{ height: `${amplitude * 15}vh`, boxShadow: "0 0 10px rgba(0, 255, 255, 0.8)" }}
+            animate={{ height: `${amplitude * 15}vh` }}
             transition={{ duration: 0.1 }}
           />
         ))}
@@ -113,10 +106,7 @@ export function Scene3() {
       {/* Status indicators */}
       <motion.div
         className="absolute bottom-[10vh] flex gap-[4vw] text-[1.5vw]"
-        style={{
-          fontFamily: "Space Mono, monospace",
-          color: "#00FF41",
-        }}
+        style={{ fontFamily: "Space Mono, monospace", color: "#00FF41" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
@@ -127,7 +117,7 @@ export function Scene3() {
             animate={{ opacity: [1, 0.3, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
-          <span>LISTENING</span>
+          <span>{listening}</span>
         </div>
         <div className="flex items-center gap-2">
           <motion.div
@@ -135,7 +125,7 @@ export function Scene3() {
             animate={{ opacity: [1, 0.3, 1] }}
             transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
           />
-          <span>PROCESSING</span>
+          <span>{processing}</span>
         </div>
         <div className="flex items-center gap-2">
           <motion.div
@@ -143,7 +133,7 @@ export function Scene3() {
             animate={{ opacity: [1, 0.3, 1] }}
             transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
           />
-          <span>EXECUTING</span>
+          <span>{executing}</span>
         </div>
       </motion.div>
     </motion.div>
