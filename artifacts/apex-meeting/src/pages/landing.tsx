@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { MatrixGlobe } from '@/components/meeting/MatrixGlobe';
 import step1Img from '@/assets/step1-configure.jpg';
@@ -239,19 +239,8 @@ export default function Landing() {
 
   const globeSize = useGlobeSize();
 
-  // Lazy-load the video iframe only when the section scrolls into view
-  const videoRef = useRef<HTMLDivElement>(null);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVideoLoaded(true); obs.disconnect(); } },
-      { threshold: 0.15 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+  // Click-to-play: iframe only loads when user clicks → no performance penalty on page load
+  const [videoPlaying, setVideoPlaying] = useState(false);
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground relative overflow-x-hidden">
@@ -466,33 +455,99 @@ export default function Landing() {
             <p className="text-lg text-muted-foreground">{t('landing.demo.subtitle')}</p>
           </div>
 
-          {/* Iframe carregado ao scrollar (Intersection Observer) */}
-          <div
-            ref={videoRef}
-            className="relative rounded-2xl overflow-hidden border border-[#00FFFF]/30 shadow-2xl shadow-[#00FFFF]/10 bg-black"
-          >
-            <div className="aspect-video">
-              {videoLoaded ? (
+          {/* Player click-to-play — iframe só carrega quando o usuário clica */}
+          <div className="relative rounded-2xl overflow-hidden border border-[#00FFFF]/30 shadow-2xl shadow-[#00FFFF]/10 bg-black group">
+            <div className="aspect-video relative">
+              {videoPlaying ? (
+                /* ── PLAYING: iframe ocupa tudo ── */
                 <iframe
                   src="https://apex-video.pages.dev"
                   title="APEX CORE MEETING — Demo"
-                  className="w-full h-full"
-                  allow="autoplay; encrypted-media"
+                  className="w-full h-full border-0"
+                  allow="autoplay; encrypted-media; fullscreen"
                   allowFullScreen
+                  loading="eager"
                 />
               ) : (
-                /* Placeholder enquanto não entrou no viewport */
-                <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-[#00FFFF]/60 bg-black/60">
-                  <Play className="w-16 h-16 opacity-40" />
-                  <span className="text-sm font-mono uppercase tracking-widest opacity-60">
-                    {t('landing.demo.badge')}
-                  </span>
-                </div>
+                /* ── POSTER: clique para iniciar ── */
+                <button
+                  onClick={() => setVideoPlaying(true)}
+                  className="w-full h-full relative flex items-center justify-center cursor-pointer overflow-hidden bg-black"
+                  aria-label="Reproduzir demo APEX CORE"
+                >
+                  {/* Grid background */}
+                  <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(#00FF41 1px, transparent 1px), linear-gradient(90deg, #00FF41 1px, transparent 1px)',
+                      backgroundSize: '40px 40px',
+                    }}
+                  />
+
+                  {/* Radial vignette */}
+                  <div className="absolute inset-0 bg-radial-to-br from-transparent via-black/60 to-black/90" />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: 'radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.85) 75%)',
+                    }}
+                  />
+
+                  {/* Corner brackets */}
+                  <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-[#00FFFF]/60" />
+                  <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-[#00FFFF]/60" />
+                  <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-[#00FFFF]/60" />
+                  <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-[#00FFFF]/60" />
+
+                  {/* APEX logo text top-left */}
+                  <div className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                    <span className="text-xs font-mono text-[#00FF41] tracking-[0.3em] uppercase opacity-80">
+                      APEX CORE MEETING
+                    </span>
+                  </div>
+
+                  {/* Center play button */}
+                  <div className="relative flex flex-col items-center gap-5 z-10">
+                    {/* Pulse rings */}
+                    <div className="relative flex items-center justify-center">
+                      <span className="absolute w-32 h-32 rounded-full border border-[#00FFFF]/20 animate-ping" style={{ animationDuration: '2s' }} />
+                      <span className="absolute w-24 h-24 rounded-full border border-[#00FFFF]/30 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.4s' }} />
+                      <span className="absolute w-20 h-20 rounded-full bg-[#00FFFF]/5" />
+
+                      {/* Play button circle */}
+                      <div className="relative w-16 h-16 rounded-full bg-[#00FFFF] flex items-center justify-center shadow-lg shadow-[#00FFFF]/40 group-hover:scale-110 group-hover:shadow-[#00FFFF]/60 transition-all duration-300">
+                        <Play className="w-6 h-6 fill-black text-black ml-1" />
+                      </div>
+                    </div>
+
+                    {/* Labels */}
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-white font-semibold text-base sm:text-lg tracking-wide group-hover:text-[#00FFFF] transition-colors">
+                        {t('landing.demo.open')}
+                      </span>
+                      <span className="text-[#00FF41]/60 font-mono text-xs tracking-widest uppercase">
+                        6 cenas · ~90 segundos
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bottom scan line */}
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00FFFF]/40 to-transparent" />
+                </button>
               )}
             </div>
           </div>
 
-          <div className="text-center mt-8">
+          <div className="text-center mt-8 flex items-center justify-center gap-6">
+            {videoPlaying && (
+              <button
+                onClick={() => setVideoPlaying(false)}
+                className="inline-flex items-center gap-2 text-sm font-mono text-white/40 hover:text-white/70 transition-colors"
+              >
+                ✕ Fechar player
+              </button>
+            )}
             <a
               href="https://apex-video.pages.dev"
               target="_blank"
@@ -500,7 +555,7 @@ export default function Landing() {
               className="inline-flex items-center gap-2 text-sm font-mono text-[#00FFFF]/70 hover:text-[#00FFFF] transition-colors"
             >
               <Play className="w-4 h-4 fill-current" />
-              {t('landing.demo.open')}
+              Abrir em tela cheia ↗
             </a>
           </div>
         </div>
