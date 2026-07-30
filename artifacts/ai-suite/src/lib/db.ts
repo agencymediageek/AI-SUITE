@@ -411,6 +411,29 @@ class SystemDB {
         }
     }
 
+    async initFreeBalance(email: string): Promise<void> {
+        try {
+            const settings = await this.getSettings();
+            const freeTokens = (settings as any).defaultTokens || 1000;
+            // Insert free balance if user has no balance yet
+            await query(
+                `INSERT INTO user_balances (email, balance, updated_at)
+                 VALUES ($1, $2, NOW())
+                 ON CONFLICT (email) DO NOTHING`,
+                [email.toLowerCase(), freeTokens]
+            );
+            // Log the free credit
+            await query(
+                `INSERT INTO token_logs (email, amount, action, feature, model, timestamp)
+                 VALUES ($1, $2, 'credit', 'signup_bonus', NULL, NOW())`,
+                [email.toLowerCase(), freeTokens]
+            );
+        } catch (error) {
+            console.error("Error in initFreeBalance:", error);
+            // Non-fatal: don't block registration if balance init fails
+        }
+    }
+
     async getTokenLogs(email: string): Promise<TokenLog[]> {
         try {
             const res = await query(`

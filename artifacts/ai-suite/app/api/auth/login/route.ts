@@ -9,6 +9,9 @@ import { checkLoginRateLimit, recordLoginAttempt, resetLoginAttempts } from '@/l
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-dev-only';
 
+// Force dynamic to ensure cookies() works at runtime in production
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
     try {
         const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || '127.0.0.1';
