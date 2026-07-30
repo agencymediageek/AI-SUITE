@@ -210,7 +210,7 @@ function MeetingDetailContent() {
                           <div className="mt-3 pt-3 border-t border-primary/20">
                             <p className="text-xs text-muted-foreground mb-2 font-mono">{t('meeting.builtAssets')}</p>
                             <div className="flex flex-wrap gap-2">
-                              {session.builtAssets.split('\n').filter(Boolean).map((asset, i) => (
+                              {session.builtAssets.filter(Boolean).map((asset, i) => (
                                 <Badge key={i} variant="outline" className="bg-secondary/10 text-secondary border-secondary/30 text-xs font-mono">
                                   {asset}
                                 </Badge>
