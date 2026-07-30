@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Moon, Sun, Globe, LogOut, User, Settings, LayoutDashboard, Menu } from 'lucide-react';
+import { Globe, LogOut, User, Settings, LayoutDashboard, Menu, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useAuthStore } from '@/lib/auth';
-import { useTheme } from '@/lib/theme';
 import { useI18n, Language } from '@/lib/i18n';
 import { MatrixGlobe } from '@/components/meeting/MatrixGlobe';
 import { useGetMe, useLogoutUser, getGetMeQueryKey } from '@workspace/api-client-react';
@@ -36,8 +35,15 @@ function scrollTo(id: string) {
 
 export function Navbar() {
   const { isAuthenticated, clearToken } = useAuthStore();
-  const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useI18n();
+
+  // PWA install prompt
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  useEffect(() => {
+    const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
   const { toast } = useToast();
   const { data: user } = useGetMe({ query: { enabled: isAuthenticated, queryKey: getGetMeQueryKey() } });
   const logout = useLogoutUser();
@@ -116,6 +122,19 @@ export function Navbar() {
             </>
           )}
 
+          {/* Install App button — shown only when PWA install is available */}
+          {installPrompt && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-foreground hover:text-primary"
+              title={t('nav.installApp')}
+              onClick={() => { installPrompt.prompt(); installPrompt.userChoice.then(() => setInstallPrompt(null)); }}
+            >
+              <Smartphone className="w-4 h-4" />
+            </Button>
+          )}
+
           {/* Language selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -136,17 +155,6 @@ export function Navbar() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="text-foreground hover:text-primary"
-            data-testid="button-theme-toggle"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </Button>
 
           {/* Auth buttons or user dropdown */}
           {isAuthenticated && user ? (

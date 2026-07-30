@@ -17,6 +17,7 @@ const translations: Translations = {
   'nav.meetings':     { pt: 'Reuniões',       en: 'Meetings',   es: 'Reuniones' },
   'nav.pricing':      { pt: 'Planos',         en: 'Pricing',    es: 'Precios' },
   'nav.settings':     { pt: 'Configurações',  en: 'Settings',   es: 'Configuración' },
+  'nav.installApp': { pt: 'Instalar App', en: 'Install App', es: 'Instalar App' },
   'nav.admin':        { pt: 'Admin',          en: 'Admin',      es: 'Admin' },
   'nav.logout':       { pt: 'Sair',           en: 'Logout',     es: 'Salir' },
   'nav.login':        { pt: 'Entrar',         en: 'Login',      es: 'Entrar' },

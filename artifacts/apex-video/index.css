@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --matrix-green: #00FF41;
+  --matrix-cyan: #00FFFF;
+  --matrix-black: #000000;
+  --matrix-dim: #003311;
+  --matrix-glow: rgba(0, 255, 65, 0.6);
+  
+  --font-mono: 'Space Mono', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-mono);
+  background: var(--matrix-black);
+  color: var(--matrix-green);
+  overflow: hidden;
+}
+
+/* Matrix character rain animations */
+@keyframes rain {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px var(--matrix-glow));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px var(--matrix-glow)) drop-shadow(0 0 60px var(--matrix-glow));
+  }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes cursor-blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+.matrix-text {
+  font-family: var(--font-mono);
+  color: var(--matrix-green);
+  text-shadow: 0 0 10px var(--matrix-glow);
+  letter-spacing: 0.05em;
+}
+
+.matrix-glow {
+  filter: drop-shadow(0 0 20px var(--matrix-glow));
+}
+
+.scanline-overlay {
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 255, 65, 0.05) 50%,
+    transparent 100%
+  );
+  height: 100px;
+  animation: scanline 8s linear infinite;
+}
+
+.cursor {
+  animation: cursor-blink 1s step-end infinite;
+}
+
+/* Terminal text effect */
+.terminal-text {
+  font-family: var(--font-mono);
+  color: var(--matrix-green);
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.8);
+}
