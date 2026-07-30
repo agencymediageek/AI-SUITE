@@ -15,7 +15,7 @@ jobs:
           response=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST https://mediageek.io/webhook/deploy \
             -H "Content-Type: application/json" \
-            -d '{"secret":"mediageek-deploy-2026"}' \
+            -d "{\"secret\":\"${{ secrets.DEPLOY_WEBHOOK_SECRET }}\"}" \
             --max-time 15)
           if [ "$response" = "200" ]; then
             echo "✅ Deploy triggered successfully (HTTP $response)"

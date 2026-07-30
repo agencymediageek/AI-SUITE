@@ -147,7 +147,7 @@ function MeetingDetailContent() {
           <Card className="bg-card/50 border-primary/20 p-6 mb-8">
             <h2 className="text-lg font-bold mb-4">Available Resources</h2>
             <div className="flex flex-wrap gap-2">
-              {meeting.resources.map((resource) => (
+              {(meeting.resources ?? []).map((resource) => (
                 <Badge key={resource} variant="outline" className="bg-primary/10 text-primary border-primary/30">
                   {resource}
                 </Badge>
@@ -208,7 +208,7 @@ function MeetingDetailContent() {
                           <div className="mt-3 pt-3 border-t border-primary/20">
                             <p className="text-xs text-muted-foreground mb-2 font-mono">Built Assets:</p>
                             <div className="flex flex-wrap gap-2">
-                              {session.builtAssets.map((asset, i) => (
+                              {session.builtAssets.split('\n').filter(Boolean).map((asset, i) => (
                                 <Badge key={i} variant="outline" className="bg-secondary/10 text-secondary border-secondary/30 text-xs font-mono">
                                   {asset}
                                 </Badge>

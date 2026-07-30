@@ -34,5 +34,5 @@ export const useAuthStore = create<AuthStore>((set) => {
 // Configure API client to use token from store
 setAuthTokenGetter(() => {
   const token = useAuthStore.getState().token;
-  return token || undefined;
+  return token || null;
 });

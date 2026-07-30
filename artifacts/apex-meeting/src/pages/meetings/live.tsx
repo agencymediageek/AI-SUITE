@@ -176,8 +176,8 @@ function LiveMeetingContent() {
 
       if (response.action && response.actionResult) {
         setExecutionLog(prev => [...prev, { 
-          action: response.action, 
-          result: response.actionResult, 
+          action: response.action ?? '', 
+          result: response.actionResult ?? '', 
           timestamp: new Date() 
         }]);
       }
@@ -246,7 +246,7 @@ function LiveMeetingContent() {
           status: 'ended',
           endedAt: new Date().toISOString(),
           transcript: JSON.stringify(transcript),
-          builtAssets: executionLog.map(e => e.result)
+          builtAssets: executionLog.map(e => e.result).join('\n')
         }
       });
       await queryClient.invalidateQueries({ queryKey: getListMeetingSessionsQueryKey(meetingId) });

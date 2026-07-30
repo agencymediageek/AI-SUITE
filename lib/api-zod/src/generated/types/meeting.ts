@@ -5,7 +5,6 @@
  * AI Suite Platform API
  * OpenAPI spec version: 0.1.0
  */
-import type { MeetingStatus } from './meetingStatus';
 
 export interface Meeting {
   id: number;
@@ -21,13 +20,12 @@ export interface Meeting {
   logoUrl?: string | null;
   aiName: string;
   language: string;
-  resources: string[];
+  resources?: string[];
   /** @nullable */
   briefingText?: string | null;
-  status: MeetingStatus;
-  /** @nullable */
-  sessionCount?: number | null;
+  status: string;
+  createdAt: string;
+  sessionCount: number;
   /** @nullable */
   lastSessionAt?: string | null;
-  createdAt: string;
 }
