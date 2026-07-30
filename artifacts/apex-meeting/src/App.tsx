@@ -16,6 +16,7 @@ import LiveMeeting from '@/pages/meetings/live';
 import Settings from '@/pages/settings';
 import Pricing from '@/pages/pricing';
 import Admin from '@/pages/admin';
+import AdminMetrics from '@/pages/admin-metrics';
 import NotFound from '@/pages/not-found';
 import Sobre from '@/pages/sobre';
 import Contato from '@/pages/contato';
@@ -43,6 +44,7 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/admin" component={Admin} />
+      <Route path="/admin/metrics" component={AdminMetrics} />
       <Route path="/sobre" component={Sobre} />
       <Route path="/contato" component={Contato} />
       <Route path="/faq" component={Faq} />

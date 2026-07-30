@@ -153,6 +153,26 @@ const translations: Translations = {
   'pricing.noPlans':   { pt: 'Nenhum plano disponível no momento', en: 'No plans available at the moment', es: 'No hay planes disponibles en este momento' },
   'pricing.loading':   { pt: 'Carregando planos...', en: 'Loading plans...', es: 'Cargando planes...' },
 
+  // ── Admin Metrics ────────────────────────────────────────────────────────────
+  'admin.metrics':           { pt: 'Métricas',         en: 'Metrics',          es: 'Métricas' },
+  'metrics.title':           { pt: 'Métricas ao Vivo', en: 'Live Metrics',     es: 'Métricas en Vivo' },
+  'metrics.subtitle':        { pt: 'KPIs da plataforma — atualiza a cada 30 s', en: 'Platform KPIs — refreshes every 30 s', es: 'KPIs de plataforma — se actualiza cada 30 s' },
+  'metrics.back':            { pt: 'Voltar ao Admin',  en: 'Back to Admin',    es: 'Volver al Admin' },
+  'metrics.totalUsers':      { pt: 'Total de Usuários', en: 'Total Users',     es: 'Usuarios Totales' },
+  'metrics.meetingsToday':   { pt: 'Reuniões Hoje',    en: 'Meetings Today',   es: 'Reuniones Hoy' },
+  'metrics.mrr':             { pt: 'MRR Estimado',     en: 'Estimated MRR',    es: 'MRR Estimado' },
+  'metrics.activeSessions':  { pt: 'Sessões Ativas',   en: 'Active Sessions',  es: 'Sesiones Activas' },
+  'metrics.newUsers.title':  { pt: 'Novos Usuários / Dia', en: 'New Users / Day', es: 'Nuevos Usuarios / Día' },
+  'metrics.meetings.title':  { pt: 'Reuniões / Dia',   en: 'Meetings / Day',   es: 'Reuniones / Día' },
+  'metrics.byPlan.title':    { pt: 'Usuários por Plano', en: 'Users by Plan',  es: 'Usuarios por Plan' },
+  'metrics.topUsers.title':  { pt: 'Top 10 Usuários Mais Ativos', en: 'Top 10 Most Active Users', es: 'Top 10 Usuarios Más Activos' },
+  'metrics.days30':          { pt: 'Últimos 30 dias',  en: 'Last 30 days',     es: 'Últimos 30 días' },
+  'metrics.rank':            { pt: '#',                en: '#',                es: '#' },
+  'metrics.col.user':        { pt: 'Usuário',          en: 'User',             es: 'Usuario' },
+  'metrics.col.meetings':    { pt: 'Reuniões',         en: 'Meetings',         es: 'Reuniones' },
+  'metrics.col.plan':        { pt: 'Plano',            en: 'Plan',             es: 'Plan' },
+  'metrics.loading':         { pt: 'Carregando métricas...', en: 'Loading metrics...', es: 'Cargando métricas...' },
+
   // ── Admin ────────────────────────────────────────────────────────────────────
   'admin.title':        { pt: 'Painel Admin',        en: 'Admin Dashboard',    es: 'Panel Admin' },
   'admin.subtitle':     { pt: 'Visão geral e gestão de usuários', en: 'Platform overview and user management', es: 'Resumen de plataforma y gestión de usuarios' },

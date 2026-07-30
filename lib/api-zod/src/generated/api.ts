@@ -751,3 +751,42 @@ export const DeleteUserResponse = zod.object({
 })
 
 
+/**
+ * @summary Get comprehensive platform metrics for the last 30 days
+ */
+export const GetAdminMetricsResponse = zod.object({
+  "totalUsers": zod.number(),
+  "meetingsToday": zod.number(),
+  "estimatedMRR": zod.number(),
+  "activeSessions": zod.number(),
+  "usersByPlan": zod.array(zod.object({
+  "planName": zod.string(),
+  "count": zod.number()
+})),
+  "meetingsPerDay": zod.array(zod.object({
+  "date": zod.string(),
+  "count": zod.number()
+})),
+  "newUsersPerDay": zod.array(zod.object({
+  "date": zod.string(),
+  "count": zod.number()
+})),
+  "topUsers": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "planName": zod.string().nullish(),
+  "meetingCount": zod.number()
+}))
+})
+
+
+/**
+ * @summary Get real-time counts (active sessions + meetings today)
+ */
+export const GetAdminMetricsRealtimeResponse = zod.object({
+  "activeSessions": zod.number(),
+  "meetingsToday": zod.number()
+})
+
+

@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminMetrics,
+  AdminMetricsRealtime,
   AdminStats,
   AdminUserUpdate,
   AiModel,
@@ -3018,4 +3020,158 @@ export const useDeleteUser = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteUserMutationOptions(options));
     }
+
+export const getGetAdminMetricsUrl = () => {
+
+
+
+
+  return `/api/admin/metrics`
+}
+
+/**
+ * @summary Get comprehensive platform metrics for the last 30 days
+ */
+export const getAdminMetrics = async ( options?: RequestInit): Promise<AdminMetrics> => {
+
+  return customFetch<AdminMetrics>(getGetAdminMetricsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminMetricsQueryKey = () => {
+    return [
+    `/api/admin/metrics`
+    ] as const;
+    }
+
+
+export const getGetAdminMetricsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminMetrics>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminMetrics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminMetricsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminMetrics>>> = ({ signal }) => getAdminMetrics({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminMetrics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminMetricsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminMetrics>>>
+export type GetAdminMetricsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get comprehensive platform metrics for the last 30 days
+ */
+
+export function useGetAdminMetrics<TData = Awaited<ReturnType<typeof getAdminMetrics>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminMetrics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminMetricsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAdminMetricsRealtimeUrl = () => {
+
+
+
+
+  return `/api/admin/metrics/realtime`
+}
+
+/**
+ * @summary Get real-time counts (active sessions + meetings today)
+ */
+export const getAdminMetricsRealtime = async ( options?: RequestInit): Promise<AdminMetricsRealtime> => {
+
+  return customFetch<AdminMetricsRealtime>(getGetAdminMetricsRealtimeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminMetricsRealtimeQueryKey = () => {
+    return [
+    `/api/admin/metrics/realtime`
+    ] as const;
+    }
+
+
+export const getGetAdminMetricsRealtimeQueryOptions = <TData = Awaited<ReturnType<typeof getAdminMetricsRealtime>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminMetricsRealtime>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminMetricsRealtimeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminMetricsRealtime>>> = ({ signal }) => getAdminMetricsRealtime({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminMetricsRealtime>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminMetricsRealtimeQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminMetricsRealtime>>>
+export type GetAdminMetricsRealtimeQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get real-time counts (active sessions + meetings today)
+ */
+
+export function useGetAdminMetricsRealtime<TData = Awaited<ReturnType<typeof getAdminMetricsRealtime>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminMetricsRealtime>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminMetricsRealtimeQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

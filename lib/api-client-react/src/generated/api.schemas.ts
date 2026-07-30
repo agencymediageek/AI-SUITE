@@ -389,6 +389,41 @@ export interface WhiteLabel {
   subdomain?: string | null;
 }
 
+export interface DailyMetric {
+  date: string;
+  count: number;
+}
+
+export interface UserByPlan {
+  planName: string;
+  count: number;
+}
+
+export interface TopUser {
+  id: number;
+  name: string;
+  email: string;
+  /** @nullable */
+  planName?: string | null;
+  meetingCount: number;
+}
+
+export interface AdminMetrics {
+  totalUsers: number;
+  meetingsToday: number;
+  estimatedMRR: number;
+  activeSessions: number;
+  usersByPlan: UserByPlan[];
+  meetingsPerDay: DailyMetric[];
+  newUsersPerDay: DailyMetric[];
+  topUsers: TopUser[];
+}
+
+export interface AdminMetricsRealtime {
+  activeSessions: number;
+  meetingsToday: number;
+}
+
 export interface WhiteLabelInput {
   /** @nullable */
   aiName?: string | null;

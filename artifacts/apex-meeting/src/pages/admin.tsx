@@ -2,6 +2,8 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { Navbar } from '@/components/layout/Navbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Link } from 'wouter';
 import {
   useGetAdminStats,
   useListUsers,
@@ -9,7 +11,7 @@ import {
   getListUsersQueryKey
 } from '@workspace/api-client-react';
 import { useI18n } from '@/lib/i18n';
-import { Users, Activity, TrendingUp, DollarSign } from 'lucide-react';
+import { Users, Activity, TrendingUp, DollarSign, BarChart2 } from 'lucide-react';
 
 function AdminContent() {
   const { t } = useI18n();
@@ -27,9 +29,17 @@ function AdminContent() {
 
       <div className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-7xl">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold matrix-text mb-2">{t('admin.title')}</h1>
-            <p className="text-muted-foreground">{t('admin.subtitle')}</p>
+          <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold matrix-text mb-2">{t('admin.title')}</h1>
+              <p className="text-muted-foreground">{t('admin.subtitle')}</p>
+            </div>
+            <Link href="/admin/metrics">
+              <Button variant="outline" className="border-primary/40 text-primary hover:bg-primary/10 gap-2">
+                <BarChart2 className="w-4 h-4" />
+                {t('admin.metrics')}
+              </Button>
+            </Link>
           </div>
 
           {/* Stats Overview */}

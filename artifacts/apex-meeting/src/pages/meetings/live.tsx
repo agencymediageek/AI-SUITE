@@ -350,7 +350,7 @@ function LiveMeetingContent() {
           status: 'ended',
           endedAt: new Date().toISOString(),
           transcript: JSON.stringify(transcript),
-          builtAssets: executionLog.map(e => e.result)
+          builtAssets: executionLog.map(e => e.result).join('\n')
         }
       });
       await queryClient.invalidateQueries({ queryKey: getListMeetingSessionsQueryKey(meetingId) });

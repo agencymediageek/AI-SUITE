@@ -788,6 +788,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /admin/metrics:
+    get:
+      operationId: getAdminMetrics
+      tags: [admin]
+      summary: Get comprehensive platform metrics for the last 30 days
+      responses:
+        "200":
+          description: Platform metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminMetrics"
+
+  /admin/metrics/realtime:
+    get:
+      operationId: getAdminMetricsRealtime
+      tags: [admin]
+      summary: Get real-time counts (active sessions + meetings today)
+      responses:
+        "200":
+          description: Realtime metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminMetricsRealtime"
+
 components:
   schemas:
     HealthStatus:
@@ -1337,6 +1363,77 @@ components:
           type: ["string", "null"]
         subdomain:
           type: ["string", "null"]
+
+    DailyMetric:
+      type: object
+      required: [date, count]
+      properties:
+        date:
+          type: string
+        count:
+          type: integer
+
+    UserByPlan:
+      type: object
+      required: [planName, count]
+      properties:
+        planName:
+          type: string
+        count:
+          type: integer
+
+    TopUser:
+      type: object
+      required: [id, name, email, meetingCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        planName:
+          type: ["string", "null"]
+        meetingCount:
+          type: integer
+
+    AdminMetrics:
+      type: object
+      required: [totalUsers, meetingsToday, estimatedMRR, activeSessions, usersByPlan, meetingsPerDay, newUsersPerDay, topUsers]
+      properties:
+        totalUsers:
+          type: integer
+        meetingsToday:
+          type: integer
+        estimatedMRR:
+          type: number
+        activeSessions:
+          type: integer
+        usersByPlan:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserByPlan"
+        meetingsPerDay:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyMetric"
+        newUsersPerDay:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyMetric"
+        topUsers:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopUser"
+
+    AdminMetricsRealtime:
+      type: object
+      required: [activeSessions, meetingsToday]
+      properties:
+        activeSessions:
+          type: integer
+        meetingsToday:
+          type: integer
 
     WhiteLabelInput:
       type: object
