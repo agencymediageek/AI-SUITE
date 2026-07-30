@@ -23,6 +23,7 @@ import {
   Cloud,
 } from 'lucide-react';
 import { BackToTop } from '@/components/ui/back-to-top';
+import { useI18n } from '@/lib/i18n';
 
 function useGlobeSize() {
   const [size, setSize] = useState(() =>
@@ -45,6 +46,7 @@ function scrollTo(id: string) {
 
 // ─── Shared Footer ────────────────────────────────────────────────────────────
 export function LandingFooter() {
+  const { t } = useI18n();
   return (
     <footer className="bg-background border-t border-primary/20 py-16 px-4">
       <div className="container mx-auto max-w-7xl">
@@ -57,47 +59,47 @@ export function LandingFooter() {
               <span className="text-base font-bold matrix-text">APEX CORE</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              IA que executa enquanto você fala. Enterprise AI para C-Suite.
+              {t('landing.footer.brand')}
             </p>
           </div>
 
           {/* Produto */}
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Produto</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">{t('footer.product')}</h4>
             <ul className="space-y-2">
-              <li><button onClick={() => scrollTo('recursos')} className="text-sm text-muted-foreground hover:text-primary transition-colors">Recursos</button></li>
-              <li><button onClick={() => scrollTo('planos')} className="text-sm text-muted-foreground hover:text-primary transition-colors">Planos</button></li>
-              <li><button onClick={() => scrollTo('como-funciona')} className="text-sm text-muted-foreground hover:text-primary transition-colors">Como Funciona</button></li>
-              <li><Link href="/pricing" className="text-sm text-muted-foreground hover:text-primary transition-colors">Preços</Link></li>
+              <li><button onClick={() => scrollTo('recursos')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.resources')}</button></li>
+              <li><button onClick={() => scrollTo('planos')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.pricing')}</button></li>
+              <li><button onClick={() => scrollTo('como-funciona')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.howWorks')}</button></li>
+              <li><Link href="/pricing" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.pricing')}</Link></li>
             </ul>
           </div>
 
           {/* Empresa */}
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Empresa</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">{t('footer.company')}</h4>
             <ul className="space-y-2">
-              <li><Link href="/sobre" className="text-sm text-muted-foreground hover:text-primary transition-colors">Sobre</Link></li>
-              <li><Link href="/contato" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contato</Link></li>
+              <li><Link href="/sobre" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.about')}</Link></li>
+              <li><Link href="/contato" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('nav.contato')}</Link></li>
               <li><Link href="/faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">FAQ</Link></li>
             </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Legal</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">{t('footer.legal')}</h4>
             <ul className="space-y-2">
-              <li><span className="text-sm text-muted-foreground">Termos de Uso</span></li>
-              <li><span className="text-sm text-muted-foreground">Privacidade</span></li>
-              <li><span className="text-sm text-muted-foreground">LGPD</span></li>
+              <li><span className="text-sm text-muted-foreground">{t('footer.terms')}</span></li>
+              <li><span className="text-sm text-muted-foreground">{t('footer.privacy')}</span></li>
+              <li><span className="text-sm text-muted-foreground">{t('footer.lgpd')}</span></li>
             </ul>
           </div>
 
           {/* Suporte */}
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Suporte</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">{t('footer.support')}</h4>
             <ul className="space-y-2">
-              <li><Link href="/faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">Central de Ajuda</Link></li>
-              <li><Link href="/contato" className="text-sm text-muted-foreground hover:text-primary transition-colors">Falar com vendas</Link></li>
+              <li><Link href="/faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.help')}</Link></li>
+              <li><Link href="/contato" className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('footer.sales')}</Link></li>
               <li><a href="mailto:contato@techsites.ai" className="text-sm text-muted-foreground hover:text-primary transition-colors">contato@techsites.ai</a></li>
             </ul>
           </div>
@@ -106,7 +108,7 @@ export function LandingFooter() {
         {/* Bottom row */}
         <div className="border-t border-primary/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground font-mono">
-            © 2026 APEX CORE MEETING. Powered by TechSites AI.
+            {t('footer.copyright')}
           </p>
           <div className="flex items-center gap-4 text-sm text-muted-foreground font-mono">
             <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-primary" /> LGPD</span>
@@ -121,134 +123,75 @@ export function LandingFooter() {
 
 // ─── Landing Page ─────────────────────────────────────────────────────────────
 export default function Landing() {
+  const { t } = useI18n();
+
   const features = [
-    {
-      icon: Zap,
-      title: 'Execução em Tempo Real',
-      description: 'Deploy de sites, configuração de DNS e publicação de documentos enquanto a reunião ainda acontece.',
-    },
-    {
-      icon: Globe,
-      title: 'White-Label Total',
-      description: 'Renomeie o APEX CORE com a identidade da sua empresa. Sua marca, sua inteligência.',
-    },
-    {
-      icon: Terminal,
-      title: 'Terminal ao Vivo',
-      description: 'Acompanhe a infraestrutura sendo construída em tempo real com total transparência.',
-    },
-    {
-      icon: Shield,
-      title: 'Segurança Enterprise',
-      description: 'Criptografia de ponta a ponta, conformidade com LGPD e arquitetura zero-knowledge.',
-    },
-    {
-      icon: Sparkles,
-      title: 'Voz + Visão',
-      description: 'O APEX CORE lê sua câmera e escuta seus comandos simultaneamente.',
-    },
-    {
-      icon: Rocket,
-      title: 'Deploy em < 60s',
-      description: 'Da palavra falada à infraestrutura ao vivo em menos de 60 segundos.',
-    },
+    { icon: Zap,      title: t('landing.f1.title'), description: t('landing.f1.desc') },
+    { icon: Globe,    title: t('landing.f2.title'), description: t('landing.f2.desc') },
+    { icon: Terminal, title: t('landing.f3.title'), description: t('landing.f3.desc') },
+    { icon: Shield,   title: t('landing.f4.title'), description: t('landing.f4.desc') },
+    { icon: Sparkles, title: t('landing.f5.title'), description: t('landing.f5.desc') },
+    { icon: Rocket,   title: t('landing.f6.title'), description: t('landing.f6.desc') },
   ];
 
   const useCases = [
-    {
-      title: 'Lançamento de Produtos',
-      description: 'O executivo diz "construa a landing page" — o APEX CORE publica antes da reunião terminar.',
-    },
-    {
-      title: 'Apresentação para Clientes',
-      description: 'Demonstre provas de conceito ao vivo durante a apresentação. Sem delays, sem follow-ups.',
-    },
-    {
-      title: 'Board Sessions',
-      description: 'Gere e publique documentos do board, relatórios financeiros e ativos de conformidade sob comando.',
-    },
-    {
-      title: 'Revisões de Engenharia',
-      description: 'Configure ambientes de staging, registros DNS e pipelines CI/CD por voz.',
-    },
+    { title: t('landing.uc1.title'), description: t('landing.uc1.desc') },
+    { title: t('landing.uc2.title'), description: t('landing.uc2.desc') },
+    { title: t('landing.uc3.title'), description: t('landing.uc3.desc') },
+    { title: t('landing.uc4.title'), description: t('landing.uc4.desc') },
   ];
 
   const plans = [
     {
       name: 'Starter',
       price: 'R$297',
-      period: '/mês',
+      period: t('landing.p1.period'),
       highlight: false,
-      features: [
-        '1 sala de reunião',
-        '5 sessões por mês',
-        'IA APEX CORE padrão',
-        'Suporte por email',
-        'Terminal ao vivo',
-      ],
-      cta: 'Começar agora',
+      features: [t('landing.p1.f1'), t('landing.p1.f2'), t('landing.p1.f3'), t('landing.p1.f4'), t('landing.p1.f5')],
+      cta: t('landing.p1.cta'),
       ctaHref: '/register',
     },
     {
       name: 'Pro',
       price: 'R$697',
-      period: '/mês',
+      period: t('landing.p2.period'),
       highlight: true,
-      badge: 'Mais Popular',
-      features: [
-        '10 salas de reunião',
-        'Sessões ilimitadas',
-        'White-label completo',
-        'Deploy automático',
-        'Terminal ao vivo',
-        'Suporte prioritário',
-      ],
-      cta: 'Começar agora',
+      badge: t('landing.plans.popular'),
+      features: [t('landing.p2.f1'), t('landing.p2.f2'), t('landing.p2.f3'), t('landing.p2.f4'), t('landing.p2.f5'), t('landing.p2.f6')],
+      cta: t('landing.p2.cta'),
       ctaHref: '/register',
     },
     {
       name: 'Enterprise',
-      price: 'Sob consulta',
+      price: t('landing.p3.price'),
       period: '',
       highlight: false,
-      features: [
-        'Salas ilimitadas',
-        'Subdomínio próprio',
-        'SLA 99.9%',
-        'Onboarding dedicado',
-        'Integrações customizadas',
-        'Suporte 24/7',
-      ],
-      cta: 'Falar com vendas',
+      features: [t('landing.p3.f1'), t('landing.p3.f2'), t('landing.p3.f3'), t('landing.p3.f4'), t('landing.p3.f5'), t('landing.p3.f6')],
+      cta: t('landing.p3.cta'),
       ctaHref: '/contato',
     },
   ];
 
   const faqItems = [
-    {
-      q: 'O que é o APEX CORE MEETING?',
-      a: 'O APEX CORE MEETING é uma plataforma de inteligência artificial enterprise que executa ações reais durante suas reuniões — deploy de sites, publicação de documentos, configuração de infraestrutura — tudo em tempo real, enquanto você fala.',
-    },
-    {
-      q: 'Preciso instalar alguma coisa?',
-      a: 'Não. O APEX CORE MEETING é 100% no navegador. Basta criar sua conta, configurar sua sala e começar a operar. Sem downloads, sem instalações.',
-    },
-    {
-      q: 'Como o APEX CORE executa ações reais?',
-      a: 'Via APIs de DNS, hospedagem, documentos e serviços de nuvem. Quando você fala um comando, o APEX CORE interpreta, planeja e executa as ações necessárias usando integrações seguras com provedores de infraestrutura.',
-    },
-    {
-      q: 'Posso renomear a IA com minha marca?',
-      a: 'Sim! A partir do plano Pro você tem acesso ao White-Label completo. Renomeie a IA, personalize a interface e apresente como sua própria solução de inteligência artificial.',
-    },
-    {
-      q: 'Meus dados de reunião são seguros?',
-      a: 'Absolutamente. Utilizamos criptografia end-to-end (E2E) em todos os dados de reunião. Estamos em conformidade com a LGPD e adotamos arquitetura zero-knowledge — seus dados são seus.',
-    },
-    {
-      q: 'Posso cancelar quando quiser?',
-      a: 'Sim, sem fidelidade. Você pode cancelar sua assinatura a qualquer momento sem multas ou custos adicionais. Oferecemos também 7 dias de garantia de satisfação.',
-    },
+    { q: t('landing.faq.q1'), a: t('landing.faq.a1') },
+    { q: t('landing.faq.q2'), a: t('landing.faq.a2') },
+    { q: t('landing.faq.q3'), a: t('landing.faq.a3') },
+    { q: t('landing.faq.q4'), a: t('landing.faq.a4') },
+    { q: t('landing.faq.q5'), a: t('landing.faq.a5') },
+    { q: t('landing.faq.q6'), a: t('landing.faq.a6') },
+  ];
+
+  const steps = [
+    { step: '01', title: t('landing.step1.title'), desc: t('landing.step1.desc') },
+    { step: '02', title: t('landing.step2.title'), desc: t('landing.step2.desc') },
+    { step: '03', title: t('landing.step3.title'), desc: t('landing.step3.desc') },
+  ];
+
+  const stats = [
+    { value: '3', label: t('stats.setup') },
+    { value: 'AI 24/7', label: t('stats.available') },
+    { value: '< 60s', label: t('stats.execution') },
+    { value: '∞', label: t('stats.possibilities') },
   ];
 
   const globeSize = useGlobeSize();
@@ -266,18 +209,18 @@ export default function Landing() {
             {/* Left */}
             <div className="space-y-6 sm:space-y-8 min-w-0">
               <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-primary/10 border border-primary/30 rounded-full">
-                <span className="text-xs font-mono text-primary tracking-widest">⚡ ENTERPRISE AI INTELLIGENCE</span>
+                <span className="text-xs font-mono text-primary tracking-widest">{t('landing.badge')}</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
-                <span className="text-foreground">IA que </span>
-                <span className="matrix-text">executa</span>
+                <span className="text-foreground">{t('landing.hero.p1')}</span>
+                <span className="matrix-text">{t('landing.hero.hl')}</span>
                 <br />
-                <span className="text-foreground">enquanto você fala</span>
+                <span className="text-foreground">{t('landing.hero.p2')}</span>
               </h1>
 
               <p className="text-base sm:text-xl text-muted-foreground leading-relaxed max-w-xl">
-                APEX CORE não apenas assiste reuniões — ele constrói sites, publica documentos e configura infraestrutura antes da reunião terminar.
+                {t('hero.subtitle')}
               </p>
 
               <div className="flex flex-wrap gap-3">
@@ -288,7 +231,7 @@ export default function Landing() {
                 >
                   <Link href="/register" data-testid="link-hero-cta">
                     <Zap className="w-5 h-5 mr-2" />
-                    Começar grátis
+                    {t('landing.hero.ctaFree')}
                   </Link>
                 </Button>
                 <Button
@@ -297,20 +240,20 @@ export default function Landing() {
                   className="border-[#00FFFF] text-[#00FFFF] hover:bg-[#00FFFF]/10 text-base px-6 sm:px-8"
                   onClick={() => scrollTo('como-funciona')}
                 >
-                  Ver demo →
+                  {t('hero.demo')}
                 </Button>
               </div>
 
               {/* Trust badges */}
               <div className="flex flex-wrap gap-3 sm:gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
-                  <Lock className="w-4 h-4 text-primary" /> Sem fidelidade
+                  <Lock className="w-4 h-4 text-primary" /> {t('landing.trust.noContract')}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Cloud className="w-4 h-4 text-primary" /> 100% em nuvem
+                  <Cloud className="w-4 h-4 text-primary" /> {t('landing.trust.cloud')}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-primary" /> Setup em 3 min
+                  <Zap className="w-4 h-4 text-primary" /> {t('landing.trust.setup')}
                 </span>
               </div>
             </div>
@@ -326,12 +269,7 @@ export default function Landing() {
 
           {/* Stats bar */}
           <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-6 border border-primary/20 rounded-2xl bg-card/40 backdrop-blur p-6">
-            {[
-              { value: '3 passos', label: 'de setup' },
-              { value: 'IA 24/7', label: 'disponível' },
-              { value: '< 60s', label: 'execução' },
-              { value: '∞', label: 'possibilidades' },
-            ].map((stat, i) => (
+            {stats.map((stat, i) => (
               <div key={i} className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold matrix-text font-mono">{stat.value}</div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{stat.label}</div>
@@ -346,32 +284,16 @@ export default function Landing() {
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-16">
             <span className="text-xs font-mono text-primary tracking-widest uppercase bg-primary/10 border border-primary/30 px-4 py-1.5 rounded-full">
-              COMO FUNCIONA
+              {t('landing.how.badge')}
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-6 mb-4 text-foreground">
-              Da reunião ao mundo real em{' '}
-              <span className="matrix-text">3 passos</span>
+              {t('landing.how.title')}{' '}
+              <span className="matrix-text">{t('landing.how.title2')}</span>
             </h2>
           </div>
 
           <div className="space-y-12">
-            {[
-              {
-                step: '01',
-                title: 'Configure sua sala',
-                desc: 'Defina o nome da IA, idioma e recursos disponíveis (voz, câmera, construtor de sites, documentos).',
-              },
-              {
-                step: '02',
-                title: 'Inicie a sessão ao vivo',
-                desc: 'O APEX CORE ativa. Fale seus comandos — o Matrix Globe pulsa enquanto processa.',
-              },
-              {
-                step: '03',
-                title: 'Assista a execução',
-                desc: 'O terminal em tempo real mostra a infraestrutura sendo construída. Sites entram no ar. Documentos publicados. DNS configurado.',
-              },
-            ].map((item, i) => (
+            {steps.map((item, i) => (
               <div key={i} className="flex items-start gap-6 sm:gap-10 group">
                 <div className="text-5xl sm:text-6xl font-bold font-mono matrix-text opacity-30 group-hover:opacity-100 transition-opacity shrink-0">
                   {item.step}
@@ -392,13 +314,13 @@ export default function Landing() {
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <span className="text-xs font-mono text-primary tracking-widest uppercase bg-primary/10 border border-primary/30 px-4 py-1.5 rounded-full">
-              RECURSOS
+              {t('landing.features.badge')}
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-6 mb-4 text-foreground">
-              Superpoderes para o{' '}
-              <span className="matrix-text">C-Suite</span>
+              {t('landing.features.title')}{' '}
+              <span className="matrix-text">{t('landing.features.title2')}</span>
             </h2>
-            <p className="text-lg text-muted-foreground">Execute na velocidade do pensamento</p>
+            <p className="text-lg text-muted-foreground">{t('landing.features.subtitle')}</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -426,10 +348,10 @@ export default function Landing() {
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-foreground">
-              Feito para{' '}
-              <span className="text-[#00FFFF]">Momentos de Decisão</span>
+              {t('landing.cases.title')}{' '}
+              <span className="text-[#00FFFF]">{t('landing.cases.title2')}</span>
             </h2>
-            <p className="text-lg text-muted-foreground">Onde decisões se transformam em realidade instantaneamente</p>
+            <p className="text-lg text-muted-foreground">{t('landing.cases.subtitle')}</p>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-6">
@@ -458,10 +380,10 @@ export default function Landing() {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <span className="text-xs font-mono text-primary tracking-widest uppercase bg-primary/10 border border-primary/30 px-4 py-1.5 rounded-full">
-              PLANOS
+              {t('landing.plans.badge')}
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-6 mb-4 text-foreground">
-              Escolha seu <span className="matrix-text">plano</span>
+              {t('landing.plans.title')} <span className="matrix-text">{t('landing.plans.title2')}</span>
             </h2>
           </div>
 
@@ -514,9 +436,9 @@ export default function Landing() {
           </div>
 
           <p className="text-center text-sm text-muted-foreground mt-8 space-x-4">
-            <span>✓ 7 dias de garantia</span>
-            <span>✓ Cancele quando quiser</span>
-            <span>✓ Sem fidelidade</span>
+            <span>{t('landing.guarantee.days')}</span>
+            <span>{t('landing.guarantee.cancel')}</span>
+            <span>{t('landing.guarantee.noLock')}</span>
           </p>
         </div>
       </section>
@@ -526,10 +448,10 @@ export default function Landing() {
         <div className="container mx-auto max-w-3xl">
           <div className="text-center mb-16">
             <span className="text-xs font-mono text-primary tracking-widest uppercase bg-primary/10 border border-primary/30 px-4 py-1.5 rounded-full">
-              FAQ
+              {t('faq.badge')}
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-6 mb-4 text-foreground">
-              Perguntas <span className="matrix-text">frequentes</span>
+              {t('landing.faq.title')} <span className="matrix-text">{t('landing.faq.title2')}</span>
             </h2>
           </div>
 
@@ -559,11 +481,11 @@ export default function Landing() {
             <div className="absolute inset-0 bg-primary/10 blur-[120px] pointer-events-none" />
             <div className="relative bg-gradient-to-br from-primary/10 to-[#00FFFF]/5 border border-primary/40 rounded-2xl p-10 sm:p-16 text-center terminal-glow">
               <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-6 text-foreground">
-                Pronto para{' '}
-                <span className="matrix-text">Executar</span>?
+                {t('landing.hero.readyTitle')}{' '}
+                <span className="matrix-text">{t('landing.hero.readyHl')}</span>?
               </h2>
               <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-                Junte-se aos executivos que operam na velocidade das máquinas. Sua primeira sala de reunião é gratuita.
+                {t('landing.hero.readySub')}
               </p>
               <Button
                 size="lg"
@@ -571,12 +493,12 @@ export default function Landing() {
                 className="bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-12 py-6 h-auto terminal-glow"
               >
                 <Link href="/register" data-testid="link-cta-register">
-                  Criar conta grátis
+                  {t('landing.hero.ctaFinal')}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
               </Button>
               <p className="mt-8 text-sm text-muted-foreground">
-                Dúvidas?{' '}
+                {t('landing.hero.doubt')}{' '}
                 <a href="mailto:contato@techsites.ai" className="text-primary hover:underline">
                   contato@techsites.ai
                 </a>
