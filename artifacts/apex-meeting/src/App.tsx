@@ -17,6 +17,9 @@ import Settings from '@/pages/settings';
 import Pricing from '@/pages/pricing';
 import Admin from '@/pages/admin';
 import NotFound from '@/pages/not-found';
+import Sobre from '@/pages/sobre';
+import Contato from '@/pages/contato';
+import Faq from '@/pages/faq';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +43,9 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/admin" component={Admin} />
+      <Route path="/sobre" component={Sobre} />
+      <Route path="/contato" component={Contato} />
+      <Route path="/faq" component={Faq} />
       <Route component={NotFound} />
     </Switch>
   );
