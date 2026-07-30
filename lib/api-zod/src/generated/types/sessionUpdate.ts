@@ -14,8 +14,7 @@ export interface SessionUpdate {
   summary?: string | null;
   /** @nullable */
   transcript?: string | null;
-  /** @nullable */
-  builtAssets?: string | null;
+  builtAssets?: string[];
   /** @nullable */
   endedAt?: string | null;
 }

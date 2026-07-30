@@ -308,8 +308,7 @@ export interface MeetingSession {
   summary?: string | null;
   /** @nullable */
   transcript?: string | null;
-  /** @nullable */
-  builtAssets?: string | null;
+  builtAssets?: string[];
 }
 
 export interface SessionInput {
@@ -335,8 +334,7 @@ export interface SessionUpdate {
   summary?: string | null;
   /** @nullable */
   transcript?: string | null;
-  /** @nullable */
-  builtAssets?: string | null;
+  builtAssets?: string[];
   /** @nullable */
   endedAt?: string | null;
 }

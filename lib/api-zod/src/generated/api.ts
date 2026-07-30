@@ -535,7 +535,7 @@ export const ListMeetingSessionsResponseItem = zod.object({
   "durationMinutes": zod.number().nullish(),
   "summary": zod.string().nullish(),
   "transcript": zod.string().nullish(),
-  "builtAssets": zod.string().nullish()
+  "builtAssets": zod.array(zod.string()).optional()
 })
 export const ListMeetingSessionsResponse = zod.array(ListMeetingSessionsResponseItem)
 
@@ -560,7 +560,7 @@ export const StartMeetingSessionResponse = zod.object({
   "durationMinutes": zod.number().nullish(),
   "summary": zod.string().nullish(),
   "transcript": zod.string().nullish(),
-  "builtAssets": zod.string().nullish()
+  "builtAssets": zod.array(zod.string()).optional()
 })
 
 
@@ -581,7 +581,7 @@ export const GetMeetingSessionResponse = zod.object({
   "durationMinutes": zod.number().nullish(),
   "summary": zod.string().nullish(),
   "transcript": zod.string().nullish(),
-  "builtAssets": zod.string().nullish()
+  "builtAssets": zod.array(zod.string()).optional()
 })
 
 
@@ -597,7 +597,7 @@ export const EndMeetingSessionBody = zod.object({
   "status": zod.union([zod.literal('active'),zod.literal('ended'),zod.literal(null)]).nullish(),
   "summary": zod.string().nullish(),
   "transcript": zod.string().nullish(),
-  "builtAssets": zod.string().nullish(),
+  "builtAssets": zod.array(zod.string()).optional(),
   "endedAt": zod.string().nullish()
 })
 
@@ -610,7 +610,7 @@ export const EndMeetingSessionResponse = zod.object({
   "durationMinutes": zod.number().nullish(),
   "summary": zod.string().nullish(),
   "transcript": zod.string().nullish(),
-  "builtAssets": zod.string().nullish()
+  "builtAssets": zod.array(zod.string()).optional()
 })
 
 

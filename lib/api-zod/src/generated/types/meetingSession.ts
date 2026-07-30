@@ -20,6 +20,5 @@ export interface MeetingSession {
   summary?: string | null;
   /** @nullable */
   transcript?: string | null;
-  /** @nullable */
-  builtAssets?: string | null;
+  builtAssets?: string[];
 }

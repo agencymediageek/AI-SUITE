@@ -1265,7 +1265,9 @@ components:
         transcript:
           type: ["string", "null"]
         builtAssets:
-          type: ["string", "null"]
+          type: array
+          items:
+            type: string
 
     SessionInput:
       type: object
@@ -1284,7 +1286,9 @@ components:
         transcript:
           type: ["string", "null"]
         builtAssets:
-          type: ["string", "null"]
+          type: array
+          items:
+            type: string
         endedAt:
           type: ["string", "null"]
 
