@@ -26,6 +26,10 @@ export async function GET() {
                 defaultTheme: data.metadata?.defaultTheme,
                 // public flags only — no tokens
                 mercadoPagoEnabled: !!(data.mercadoPagoAccessToken || process.env.MERCADO_PAGO_ACCESS_TOKEN),
+                // tool visibility flags — safe to expose publicly (just IDs, no secrets)
+                disabledTools: data.metadata?.disabledTools || [],
+                features: data.metadata?.features || {},
+                freeTools: data.metadata?.freeTools || {},
             }
         });
     } catch (error) {

@@ -41,6 +41,7 @@ export interface SystemSettings {
         platformCurrency?: string;
         features?: Record<string, boolean>;
         freeTools?: Record<string, boolean>;
+        disabledTools?: string[];
         smtp?: {
             host?: string;
             port?: string;

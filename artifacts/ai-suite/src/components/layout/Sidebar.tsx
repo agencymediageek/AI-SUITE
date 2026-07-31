@@ -240,12 +240,16 @@ interface CategorySectionProps {
     user: User | null;
     settingsFeatures?: Record<string, boolean>;
     freeTools?: Record<string, boolean>;
+    disabledTools?: string[];
 }
 
-function CategorySection({ category, pathname, isCollapsed, isMobile, onClose, user, settingsFeatures, freeTools }: CategorySectionProps) {
+function CategorySection({ category, pathname, isCollapsed, isMobile, onClose, user, settingsFeatures, freeTools, disabledTools }: CategorySectionProps) {
     const [isOpen, setIsOpen] = useState(true);
 
     const filteredItems = category.items.filter((item) => {
+        // White-label admin toggle — hides tool for all users when disabled
+        if (disabledTools && disabledTools.includes(item.id)) return false;
+
         // System level check (unless admin)
         if (user?.role !== 'admin' && settingsFeatures && settingsFeatures[item.id] === false) return false;
 
@@ -401,6 +405,7 @@ function SidebarContent({ isCollapsed, isMobile, onClose, onToggleCollapse }: Si
                             user={user}
                             settingsFeatures={settings?.metadata?.features}
                             freeTools={settings?.metadata?.freeTools}
+                            disabledTools={settings?.metadata?.disabledTools}
                         />
                     ))}
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Zap, TrendingUp, DollarSign, Activity } from "lucide-react";
+import { Users, Zap, TrendingUp, DollarSign, Activity, Radio } from "lucide-react";
 
 interface Metrics {
   totalUsers: number;
@@ -15,15 +15,55 @@ interface Metrics {
   recentUsers: { id: string; email: string; name: string; role: string; created_at: string }[];
 }
 
+interface ActivityItem {
+  id: string;
+  feature: string;
+  action: string;
+  amount: number;
+  model: string;
+  created_at: string;
+  email: string;
+  name: string;
+}
+
+function timeAgo(dateStr: string) {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60) return `${diff}s atrás`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m atrás`;
+  return `${Math.floor(diff / 3600)}h atrás`;
+}
+
+function maskEmail(email: string) {
+  if (!email) return "—";
+  const [user, domain] = email.split("@");
+  if (!domain) return email;
+  return `${user[0]}***@${domain}`;
+}
+
 export default function AdminMgDashboard() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const activityRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetch("/api/admin-mg/metrics")
       .then((r) => r.json())
       .then((d) => { setMetrics(d); setLoading(false); })
       .catch(() => setLoading(false));
+  }, []);
+
+  // Activity feed — poll every 8s
+  const loadActivity = () => {
+    fetch("/api/admin-mg/activity?limit=20")
+      .then((r) => r.json())
+      .then((d) => { if (d.activity) setActivity(d.activity); });
+  };
+
+  useEffect(() => {
+    loadActivity();
+    activityRef.current = setInterval(loadActivity, 8000);
+    return () => { if (activityRef.current) clearInterval(activityRef.current); };
   }, []);
 
   const statCards = [
@@ -38,7 +78,7 @@ export default function AdminMgDashboard() {
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => (
+          {[1, 2, 3, 4].map(i => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6 h-24 bg-muted/30 rounded-xl" />
             </Card>
@@ -77,8 +117,45 @@ export default function AdminMgDashboard() {
         })}
       </div>
 
-      {/* Top Tools + Recent Users */}
+      {/* Activity Feed + Top Tools */}
       <div className="grid lg:grid-cols-2 gap-6">
+        {/* Live Activity Feed */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Radio className="h-4 w-4 text-green-500 animate-pulse" />
+              Atividade ao Vivo
+              <span className="ml-auto text-xs text-muted-foreground font-normal">atualiza a cada 8s</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {activity.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-6">Sem atividade recente</p>
+            ) : (
+              <div className="divide-y max-h-80 overflow-y-auto">
+                {activity.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[10px] font-bold text-primary">
+                        {(item.name || item.email || "?")[0].toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{maskEmail(item.email)}</p>
+                      <p className="text-xs text-muted-foreground capitalize truncate">
+                        {item.feature || "—"} {item.amount ? `· ${Math.abs(item.amount)} tokens` : ""}
+                      </p>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground flex-shrink-0 whitespace-nowrap">
+                      {timeAgo(item.created_at)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Top Tools */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">
@@ -89,7 +166,7 @@ export default function AdminMgDashboard() {
               <p className="text-muted-foreground text-sm text-center py-4">Sem dados ainda</p>
             ) : (
               <div className="space-y-3">
-                {(metrics?.topTools || []).map((tool, i) => {
+                {(metrics?.topTools || []).map((tool) => {
                   const max = metrics?.topTools?.[0]?.count || 1;
                   const pct = Math.round((Number(tool.count) / Number(max)) * 100);
                   return (
@@ -108,38 +185,38 @@ export default function AdminMgDashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
 
-        {/* Recent Users */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Últimos Usuários</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {(metrics?.recentUsers || []).length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-4">Sem usuários ainda</p>
-            ) : (
-              <div className="space-y-3">
-                {(metrics?.recentUsers || []).map((u) => (
-                  <div key={u.id} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-semibold text-primary">
-                        {(u.name || u.email)[0].toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{u.name || "—"}</p>
-                      <p className="text-xs text-muted-foreground truncate">{u.email}</p>
-                    </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                      {u.role}
+      {/* Recent Users */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Últimos Usuários Cadastrados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(metrics?.recentUsers || []).length === 0 ? (
+            <p className="text-muted-foreground text-sm text-center py-4">Sem usuários ainda</p>
+          ) : (
+            <div className="space-y-3">
+              {(metrics?.recentUsers || []).map((u) => (
+                <div key={u.id} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-semibold text-primary">
+                      {(u.name || u.email)[0].toUpperCase()}
                     </span>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{u.name || "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    {u.role}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
