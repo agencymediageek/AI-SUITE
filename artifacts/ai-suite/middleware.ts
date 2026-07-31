@@ -102,8 +102,8 @@ export async function middleware(request: NextRequest) {
             const secret = new TextEncoder().encode(JWT_SECRET);
             const { payload } = await jose.jwtVerify(session, secret);
 
-            // Protect Admin routes
-            if (pathname?.startsWith('/admin') && payload.role !== 'admin') {
+            // Protect Admin routes (both /admin and /admin-mg require admin role)
+            if ((pathname?.startsWith('/admin') || pathname?.startsWith('/admin-mg')) && payload.role !== 'admin') {
                 return NextResponse.redirect(new URL('/dashboard', request.url));
             }
 
@@ -168,6 +168,7 @@ export const config = {
         '/',
         '/dashboard/:path*',
         '/admin/:path*',
+        '/admin-mg/:path*',
         '/login',
         '/register',
         '/api/:path*',
