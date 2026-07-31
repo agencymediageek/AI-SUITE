@@ -173,6 +173,36 @@ const translations: Translations = {
   'pricing.note':      { pt: 'Todos os planos incluem suporte por voz, câmera e terminal ao vivo.', en: 'All plans include voice, camera support, and live terminal.', es: 'Todos los planes incluyen voz, cámara y terminal en vivo.' },
   'pricing.noPlans':   { pt: 'Nenhum plano disponível no momento', en: 'No plans available at the moment', es: 'No hay planes disponibles en este momento' },
   'pricing.loading':   { pt: 'Carregando planos...', en: 'Loading plans...', es: 'Cargando planes...' },
+  'pricing.badge':     { pt: 'Planos e Preços',      en: 'Plans & Pricing',  es: 'Planes y Precios' },
+  'pricing.oneTime':   { pt: 'Sessão Única',          en: 'One-Time',        es: 'Sesión Única' },
+  'pricing.contact':   { pt: 'Falar com vendas',      en: 'Talk to sales',   es: 'Hablar con ventas' },
+  'pricing.guarantee': { pt: 'Garantia de 7 dias de satisfação. Cancele quando quiser.', en: '7-day satisfaction guarantee. Cancel anytime.', es: 'Garantía de 7 días. Cancela cuando quieras.' },
+
+  // ── Checkout Modal ────────────────────────────────────────────────────────────
+  'checkout.title':          { pt: 'Finalizar Assinatura',          en: 'Complete Purchase',              es: 'Finalizar Suscripción' },
+  'checkout.subtitle':       { pt: 'Escolha como deseja pagar',     en: 'Choose how you want to pay',     es: 'Elige cómo deseas pagar' },
+  'checkout.choose.gateway': { pt: 'Selecione o método de pagamento:', en: 'Select payment method:',      es: 'Selecciona el método de pago:' },
+  'checkout.oneTime':        { pt: 'Pagamento único',               en: 'One-time payment',               es: 'Pago único' },
+  'checkout.stripe.title':   { pt: 'Cartão Internacional (Stripe)', en: 'International Card (Stripe)',    es: 'Tarjeta Internacional (Stripe)' },
+  'checkout.stripe.desc':    { pt: 'Visa, Mastercard, Amex · USD · Checkout seguro', en: 'Visa, Mastercard, Amex · USD · Secure checkout', es: 'Visa, Mastercard, Amex · USD · Pago seguro' },
+  'checkout.mp.title':       { pt: 'Pagar com Mercado Pago (Brasil)', en: 'Pay with Mercado Pago (Brazil)', es: 'Pagar con Mercado Pago (Brasil)' },
+  'checkout.mp.desc':        { pt: 'Cartão, PIX ou boleto · BRL · Para clientes no Brasil', en: 'Card, PIX or boleto · BRL · For Brazil customers', es: 'Tarjeta, PIX o boleto · BRL · Para clientes en Brasil' },
+  'checkout.secure':         { pt: 'Pagamento 100% seguro e criptografado', en: '100% secure and encrypted payment', es: 'Pago 100% seguro y cifrado' },
+  'checkout.error':          { pt: 'Erro ao processar pagamento',   en: 'Payment error',                  es: 'Error al procesar pago' },
+  'checkout.enterprise.desc': { pt: 'Entre em contato com nossa equipe para um plano personalizado para sua empresa.', en: 'Contact our team for a custom plan tailored to your organization.', es: 'Contacta a nuestro equipo para un plan personalizado.' },
+  'checkout.enterprise.cta': { pt: 'Falar com a equipe de vendas', en: 'Talk to sales team',             es: 'Hablar con el equipo de ventas' },
+
+  // ── Payment Success / Cancel ──────────────────────────────────────────────────
+  'payment.success.title':   { pt: 'Pagamento Aprovado!',           en: 'Payment Approved!',              es: '¡Pago Aprobado!' },
+  'payment.success.desc':    { pt: 'Seu plano foi ativado com sucesso. Bem-vindo ao APEX CORE!', en: 'Your plan has been activated successfully. Welcome to APEX CORE!', es: '¡Tu plan fue activado con éxito. Bienvenido a APEX CORE!' },
+  'payment.success.cta':     { pt: 'Ir para o Dashboard',           en: 'Go to Dashboard',                es: 'Ir al Dashboard' },
+  'payment.success.plans':   { pt: 'Ver planos',                    en: 'View plans',                     es: 'Ver planes' },
+  'payment.pending.title':   { pt: 'Pagamento em Processamento',    en: 'Payment Processing',             es: 'Pago en Proceso' },
+  'payment.pending.desc':    { pt: 'Seu pagamento está sendo processado. Você receberá a confirmação por email em breve.', en: 'Your payment is being processed. You will receive confirmation by email shortly.', es: 'Tu pago está siendo procesado. Recibirás confirmación por email en breve.' },
+  'payment.cancel.title':    { pt: 'Pagamento Cancelado',           en: 'Payment Cancelled',              es: 'Pago Cancelado' },
+  'payment.cancel.desc':     { pt: 'Seu pagamento foi cancelado. Nenhuma cobrança foi realizada.', en: 'Your payment was cancelled. No charges were made.', es: 'Tu pago fue cancelado. No se realizó ningún cobro.' },
+  'payment.cancel.retry':    { pt: 'Tentar novamente',              en: 'Try again',                      es: 'Intentar de nuevo' },
+  'payment.cancel.cta':      { pt: 'Voltar ao Dashboard',           en: 'Back to Dashboard',              es: 'Volver al Dashboard' },
 
   // ── Admin Metrics ────────────────────────────────────────────────────────────
   'admin.metrics':           { pt: 'Métricas',         en: 'Metrics',          es: 'Métricas' },

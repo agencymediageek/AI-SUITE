@@ -21,6 +21,8 @@ import NotFound from '@/pages/not-found';
 import Sobre from '@/pages/sobre';
 import Contato from '@/pages/contato';
 import Faq from '@/pages/faq';
+import PaymentSuccess from '@/pages/payment-success';
+import PaymentCancel from '@/pages/payment-cancel';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,6 +50,8 @@ function Router() {
       <Route path="/sobre" component={Sobre} />
       <Route path="/contato" component={Contato} />
       <Route path="/faq" component={Faq} />
+      <Route path="/payment/success" component={PaymentSuccess} />
+      <Route path="/payment/cancel" component={PaymentCancel} />
       <Route component={NotFound} />
     </Switch>
   );

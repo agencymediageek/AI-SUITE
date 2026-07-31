@@ -107,7 +107,7 @@ router.post("/payments/mp/create-payment", requireAuth, async (req, res) => {
     const paymentPayload: Record<string, any> = {
       transaction_amount: priceBrl,
       token,
-      description: `MediaGeek AI Suite — Plano ${plan.name}`,
+      description: `APEX CORE MEETING — Plano ${plan.name}`,
       installments: Number(installments) || 1,
       payment_method_id: paymentMethodId,
       payer: {
@@ -281,6 +281,93 @@ router.post("/payments/mp/webhook", async (req, res) => {
   }
 });
 
+// ─── Mercado Pago: Checkout Pro (preference redirect) ────────────────────────
+//
+// Simpler than transparent checkout: create a preference → redirect user to MP
+// hosted checkout page → webhook handles activation.
+
+router.post("/payments/mp/create-preference", requireAuth, async (req, res) => {
+  try {
+    const accessToken = getMpToken();
+    const appBaseUrl = process.env["APP_BASE_URL"] || "https://apex.techsites.ai";
+
+    const { planId } = req.body;
+    if (!planId) {
+      res.status(400).json({ error: "planId is required" });
+      return;
+    }
+
+    const plan = await getPlan(planId);
+    if (!plan) {
+      res.status(404).json({ error: "Plano não encontrado" });
+      return;
+    }
+
+    if (plan.price <= 0) {
+      res.status(400).json({ error: "Plano não possui valor de cobrança" });
+      return;
+    }
+
+    const user = (req as any).user;
+    const USD_TO_BRL = 5.5; // fallback rate; live rate applied on frontend display
+    const priceBrl = Math.round(parseFloat(String(plan.price)) * USD_TO_BRL * 100) / 100;
+
+    const preferencePayload = {
+      items: [
+        {
+          id: plan.id,
+          title: `APEX CORE MEETING — Plano ${plan.name}`,
+          description: plan.description || `Acesso ao plano ${plan.name} por 30 dias`,
+          quantity: 1,
+          currency_id: "BRL",
+          unit_price: priceBrl,
+        },
+      ],
+      payer: { email: user.email },
+      external_reference: `${user.id}|${plan.id}`,
+      back_urls: {
+        success: `${appBaseUrl}/payment/success?gateway=mp&plan=${plan.id}`,
+        failure: `${appBaseUrl}/payment/cancel`,
+        pending: `${appBaseUrl}/payment/success?gateway=mp&plan=${plan.id}&status=pending`,
+      },
+      auto_return: "approved",
+      notification_url: `${appBaseUrl}/api/payments/mp/webhook`,
+      statement_descriptor: "APEX CORE",
+    };
+
+    const mpRes = await fetch("https://api.mercadopago.com/checkout/preferences", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(preferencePayload),
+    });
+
+    const preference = (await mpRes.json()) as any;
+
+    if (!mpRes.ok) {
+      req.log.error({ status: mpRes.status, preference }, "MP Preference API error");
+      res.status(422).json({ error: "Não foi possível criar preferência de pagamento" });
+      return;
+    }
+
+    req.log.info(
+      { preferenceId: preference.id, userId: user.id, planId },
+      "MP preference created"
+    );
+
+    res.json({
+      checkoutUrl: preference.init_point,
+      sandboxUrl: preference.sandbox_init_point,
+      preferenceId: preference.id,
+    });
+  } catch (err: any) {
+    req.log.error(err, "MP create-preference error");
+    res.status(500).json({ error: "Erro ao criar sessão de pagamento. Tente novamente." });
+  }
+});
+
 // ─── Stripe: Create Checkout Session ────────────────────────────────────────
 
 router.post("/payments/stripe/create-session", requireAuth, async (req, res) => {
@@ -318,8 +405,8 @@ router.post("/payments/stripe/create-session", requireAuth, async (req, res) => 
             currency: "usd",
             unit_amount: priceInCents,
             product_data: {
-              name: `MediaGeek AI Suite — ${plan.name} Plan`,
-              description: `Monthly access to ${plan.name} plan — 30 days`,
+              name: `APEX CORE MEETING — ${plan.name} Plan`,
+              description: `${plan.interval === 'one-time' ? 'Single session access' : 'Monthly access'} to ${plan.name} plan`,
             },
           },
         },
