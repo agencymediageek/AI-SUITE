@@ -26,6 +26,8 @@ tags:
     description: APEX meetings and sessions
   - name: whitelabel
     description: White label configuration
+  - name: wp
+    description: WP TechSites — plugin API and customer dashboard
 
 paths:
   /healthz:
@@ -801,6 +803,147 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminMetrics"
 
+  # ─── WP TechSites ───────────────────────────────────────────────────────────
+  /wp/register:
+    post:
+      operationId: registerWpSite
+      tags: [wp]
+      summary: Register a new WP TechSites account and receive an API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WpRegisterInput"
+      responses:
+        "200":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WpAccountCreated"
+
+  /wp/verify:
+    get:
+      operationId: verifyWpSite
+      tags: [wp]
+      summary: Verify API key and return site info (requires X-WP-Site-Key header)
+      responses:
+        "200":
+          description: Site verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WpSiteInfo"
+        "401":
+          description: Invalid key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /wp/chat:
+    post:
+      operationId: wpChat
+      tags: [wp]
+      summary: Send a chatbot message (requires X-WP-Site-Key header)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WpChatInput"
+      responses:
+        "200":
+          description: AI reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WpChatReply"
+
+  /wp/generate-content:
+    post:
+      operationId: wpGenerateContent
+      tags: [wp]
+      summary: Generate AI content for a WP page or post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WpContentInput"
+      responses:
+        "200":
+          description: Generated content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WpGeneratedContent"
+
+  /wp/apply-colors:
+    post:
+      operationId: wpApplyColors
+      tags: [wp]
+      summary: Get CSS for a brand color scheme
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WpColorsInput"
+      responses:
+        "200":
+          description: Brand CSS
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WpColorScheme"
+
+  /wp/generate-menu:
+    post:
+      operationId: wpGenerateMenu
+      tags: [wp]
+      summary: Generate a menu structure for a site niche
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WpMenuInput"
+      responses:
+        "200":
+          description: Menu items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WpMenuSuggestion"
+
+  /wp/tools:
+    get:
+      operationId: listWpTools
+      tags: [wp]
+      summary: List tools available for the connected site
+      responses:
+        "200":
+          description: Available tools
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WpToolsList"
+
+  /wp/dashboard:
+    get:
+      operationId: getWpDashboard
+      tags: [wp]
+      summary: Get dashboard data for the customer panel
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WpDashboardData"
+
   /admin/metrics/realtime:
     get:
       operationId: getAdminMetricsRealtime
@@ -1453,4 +1596,217 @@ components:
         companyName:
           type: ["string", "null"]
         subdomain:
+          type: ["string", "null"]
+
+    # ─── WP TechSites ─────────────────────────────────────────────────────────
+    WpRegisterInput:
+      type: object
+      required: [email, siteUrl]
+      properties:
+        email:
+          type: string
+        name:
+          type: ["string", "null"]
+        siteUrl:
+          type: string
+        siteName:
+          type: ["string", "null"]
+
+    WpAccountCreated:
+      type: object
+      required: [apiKey, credits, plan, message]
+      properties:
+        apiKey:
+          type: string
+        credits:
+          type: integer
+        plan:
+          type: string
+        message:
+          type: string
+
+    WpTool:
+      type: object
+      required: [id, name, icon, credits, available]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        icon:
+          type: string
+        credits:
+          type: integer
+        available:
+          type: boolean
+
+    WpSiteInfo:
+      type: object
+      required: [connected, siteName, siteUrl, credits, plan, tools]
+      properties:
+        connected:
+          type: boolean
+        siteName:
+          type: string
+        siteUrl:
+          type: string
+        credits:
+          type: integer
+        plan:
+          type: string
+        tools:
+          type: array
+          items:
+            $ref: "#/components/schemas/WpTool"
+
+    WpChatInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        siteUrl:
+          type: ["string", "null"]
+
+    WpChatReply:
+      type: object
+      required: [reply]
+      properties:
+        reply:
+          type: string
+
+    WpContentInput:
+      type: object
+      required: [topic]
+      properties:
+        topic:
+          type: string
+        type:
+          type: ["string", "null"]
+        tone:
+          type: ["string", "null"]
+        language:
+          type: ["string", "null"]
+
+    WpGeneratedContent:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        metaDescription:
+          type: ["string", "null"]
+        excerpt:
+          type: ["string", "null"]
+        creditsUsed:
+          type: integer
+        creditsRemaining:
+          type: integer
+
+    WpColorsInput:
+      type: object
+      properties:
+        primaryColor:
+          type: ["string", "null"]
+        secondaryColor:
+          type: ["string", "null"]
+        style:
+          type: ["string", "null"]
+
+    WpColorScheme:
+      type: object
+      required: [css, primaryColor, secondaryColor]
+      properties:
+        css:
+          type: string
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: string
+        creditsUsed:
+          type: integer
+
+    WpMenuInput:
+      type: object
+      properties:
+        niche:
+          type: ["string", "null"]
+        pages:
+          type: array
+          items:
+            type: string
+        language:
+          type: ["string", "null"]
+
+    WpMenuItem:
+      type: object
+      required: [label, slug, icon]
+      properties:
+        label:
+          type: string
+        slug:
+          type: string
+        icon:
+          type: string
+
+    WpMenuSuggestion:
+      type: object
+      required: [menuItems]
+      properties:
+        menuItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/WpMenuItem"
+        creditsUsed:
+          type: integer
+        creditsRemaining:
+          type: integer
+
+    WpToolsList:
+      type: object
+      required: [tools, credits]
+      properties:
+        tools:
+          type: array
+          items:
+            $ref: "#/components/schemas/WpTool"
+        credits:
+          type: integer
+
+    WpDashboardSite:
+      type: object
+      required: [id, siteName, siteUrl, ownerEmail, plan, credits, connectedAt]
+      properties:
+        id:
+          type: integer
+        siteName:
+          type: string
+        siteUrl:
+          type: string
+        ownerEmail:
+          type: string
+        ownerName:
+          type: ["string", "null"]
+        plan:
+          type: string
+        credits:
+          type: integer
+        connectedAt:
+          type: string
+        lastSeen:
+          type: ["string", "null"]
+
+    WpDashboardData:
+      type: object
+      required: [site, tools]
+      properties:
+        site:
+          $ref: "#/components/schemas/WpDashboardSite"
+        tools:
+          type: array
+          items:
+            $ref: "#/components/schemas/WpTool"
+        usageTip:
           type: ["string", "null"]

@@ -782,6 +782,154 @@ export const GetAdminMetricsResponse = zod.object({
 
 
 /**
+ * @summary Register a new WP TechSites account and receive an API key
+ */
+export const RegisterWpSiteBody = zod.object({
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "siteUrl": zod.string(),
+  "siteName": zod.string().nullish()
+})
+
+export const RegisterWpSiteResponse = zod.object({
+  "apiKey": zod.string(),
+  "credits": zod.number(),
+  "plan": zod.string(),
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Verify API key and return site info (requires X-WP-Site-Key header)
+ */
+export const VerifyWpSiteResponse = zod.object({
+  "connected": zod.boolean(),
+  "siteName": zod.string(),
+  "siteUrl": zod.string(),
+  "credits": zod.number(),
+  "plan": zod.string(),
+  "tools": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "icon": zod.string(),
+  "credits": zod.number(),
+  "available": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Send a chatbot message (requires X-WP-Site-Key header)
+ */
+export const WpChatBody = zod.object({
+  "message": zod.string(),
+  "siteUrl": zod.string().nullish()
+})
+
+export const WpChatResponse = zod.object({
+  "reply": zod.string()
+})
+
+
+/**
+ * @summary Generate AI content for a WP page or post
+ */
+export const WpGenerateContentBody = zod.object({
+  "topic": zod.string(),
+  "type": zod.string().nullish(),
+  "tone": zod.string().nullish(),
+  "language": zod.string().nullish()
+})
+
+export const WpGenerateContentResponse = zod.object({
+  "title": zod.string(),
+  "content": zod.string(),
+  "metaDescription": zod.string().nullish(),
+  "excerpt": zod.string().nullish(),
+  "creditsUsed": zod.number().optional(),
+  "creditsRemaining": zod.number().optional()
+})
+
+
+/**
+ * @summary Get CSS for a brand color scheme
+ */
+export const WpApplyColorsBody = zod.object({
+  "primaryColor": zod.string().nullish(),
+  "secondaryColor": zod.string().nullish(),
+  "style": zod.string().nullish()
+})
+
+export const WpApplyColorsResponse = zod.object({
+  "css": zod.string(),
+  "primaryColor": zod.string(),
+  "secondaryColor": zod.string(),
+  "creditsUsed": zod.number().optional()
+})
+
+
+/**
+ * @summary Generate a menu structure for a site niche
+ */
+export const WpGenerateMenuBody = zod.object({
+  "niche": zod.string().nullish(),
+  "pages": zod.array(zod.string()).optional(),
+  "language": zod.string().nullish()
+})
+
+export const WpGenerateMenuResponse = zod.object({
+  "menuItems": zod.array(zod.object({
+  "label": zod.string(),
+  "slug": zod.string(),
+  "icon": zod.string()
+})),
+  "creditsUsed": zod.number().optional(),
+  "creditsRemaining": zod.number().optional()
+})
+
+
+/**
+ * @summary List tools available for the connected site
+ */
+export const ListWpToolsResponse = zod.object({
+  "tools": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "icon": zod.string(),
+  "credits": zod.number(),
+  "available": zod.boolean()
+})),
+  "credits": zod.number()
+})
+
+
+/**
+ * @summary Get dashboard data for the customer panel
+ */
+export const GetWpDashboardResponse = zod.object({
+  "site": zod.object({
+  "id": zod.number(),
+  "siteName": zod.string(),
+  "siteUrl": zod.string(),
+  "ownerEmail": zod.string(),
+  "ownerName": zod.string().nullish(),
+  "plan": zod.string(),
+  "credits": zod.number(),
+  "connectedAt": zod.string(),
+  "lastSeen": zod.string().nullish()
+}),
+  "tools": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "icon": zod.string(),
+  "credits": zod.number(),
+  "available": zod.boolean()
+})),
+  "usageTip": zod.string().nullish()
+})
+
+
+/**
  * @summary Get real-time counts (active sessions + meetings today)
  */
 export const GetAdminMetricsRealtimeResponse = zod.object({

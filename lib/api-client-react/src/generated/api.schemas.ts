@@ -437,6 +437,132 @@ export interface WhiteLabelInput {
   subdomain?: string | null;
 }
 
+export interface WpRegisterInput {
+  email: string;
+  /** @nullable */
+  name?: string | null;
+  siteUrl: string;
+  /** @nullable */
+  siteName?: string | null;
+}
+
+export interface WpAccountCreated {
+  apiKey: string;
+  credits: number;
+  plan: string;
+  message: string;
+}
+
+export interface WpTool {
+  id: string;
+  name: string;
+  icon: string;
+  credits: number;
+  available: boolean;
+}
+
+export interface WpSiteInfo {
+  connected: boolean;
+  siteName: string;
+  siteUrl: string;
+  credits: number;
+  plan: string;
+  tools: WpTool[];
+}
+
+export interface WpChatInput {
+  message: string;
+  /** @nullable */
+  siteUrl?: string | null;
+}
+
+export interface WpChatReply {
+  reply: string;
+}
+
+export interface WpContentInput {
+  topic: string;
+  /** @nullable */
+  type?: string | null;
+  /** @nullable */
+  tone?: string | null;
+  /** @nullable */
+  language?: string | null;
+}
+
+export interface WpGeneratedContent {
+  title: string;
+  content: string;
+  /** @nullable */
+  metaDescription?: string | null;
+  /** @nullable */
+  excerpt?: string | null;
+  creditsUsed?: number;
+  creditsRemaining?: number;
+}
+
+export interface WpColorsInput {
+  /** @nullable */
+  primaryColor?: string | null;
+  /** @nullable */
+  secondaryColor?: string | null;
+  /** @nullable */
+  style?: string | null;
+}
+
+export interface WpColorScheme {
+  css: string;
+  primaryColor: string;
+  secondaryColor: string;
+  creditsUsed?: number;
+}
+
+export interface WpMenuInput {
+  /** @nullable */
+  niche?: string | null;
+  pages?: string[];
+  /** @nullable */
+  language?: string | null;
+}
+
+export interface WpMenuItem {
+  label: string;
+  slug: string;
+  icon: string;
+}
+
+export interface WpMenuSuggestion {
+  menuItems: WpMenuItem[];
+  creditsUsed?: number;
+  creditsRemaining?: number;
+}
+
+export interface WpToolsList {
+  tools: WpTool[];
+  credits: number;
+}
+
+export interface WpDashboardSite {
+  id: number;
+  siteName: string;
+  siteUrl: string;
+  ownerEmail: string;
+  /** @nullable */
+  ownerName?: string | null;
+  plan: string;
+  credits: number;
+  connectedAt: string;
+  /** @nullable */
+  lastSeen?: string | null;
+}
+
+export interface WpDashboardData {
+  site: WpDashboardSite;
+  tools: WpTool[];
+  /** @nullable */
+  usageTip?: string | null;
+}
+
 export type ListToolsParams = {
 category?: string;
 search?: string;

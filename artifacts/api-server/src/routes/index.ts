@@ -10,6 +10,7 @@ import adminRouter from "./admin.js";
 import paymentsRouter from "./payments.js";
 import meetingsRouter from "./meetings.js";
 import whitelabelRouter from "./whitelabel.js";
+import wpTechSitesRouter from "./wp-techsites.js";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(adminRouter);
 router.use(paymentsRouter);
 router.use(meetingsRouter);
 router.use(whitelabelRouter);
+router.use(wpTechSitesRouter);
 
 export default router;

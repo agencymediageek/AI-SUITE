@@ -57,7 +57,20 @@ import type {
   UserProfile,
   UserProfileUpdate,
   WhiteLabel,
-  WhiteLabelInput
+  WhiteLabelInput,
+  WpAccountCreated,
+  WpChatInput,
+  WpChatReply,
+  WpColorScheme,
+  WpColorsInput,
+  WpContentInput,
+  WpDashboardData,
+  WpGeneratedContent,
+  WpMenuInput,
+  WpMenuSuggestion,
+  WpRegisterInput,
+  WpSiteInfo,
+  WpToolsList
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -3086,6 +3099,592 @@ export function useGetAdminMetrics<TData = Awaited<ReturnType<typeof getAdminMet
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetAdminMetricsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRegisterWpSiteUrl = () => {
+
+
+
+
+  return `/api/wp/register`
+}
+
+/**
+ * @summary Register a new WP TechSites account and receive an API key
+ */
+export const registerWpSite = async (wpRegisterInput: WpRegisterInput, options?: RequestInit): Promise<WpAccountCreated> => {
+
+  return customFetch<WpAccountCreated>(getRegisterWpSiteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(wpRegisterInput)
+  }
+);}
+
+
+
+
+
+export const getRegisterWpSiteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerWpSite>>, TError,{data: BodyType<WpRegisterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registerWpSite>>, TError,{data: BodyType<WpRegisterInput>}, TContext> => {
+
+const mutationKey = ['registerWpSite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerWpSite>>, {data: BodyType<WpRegisterInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  registerWpSite(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegisterWpSiteMutationResult = NonNullable<Awaited<ReturnType<typeof registerWpSite>>>
+    export type RegisterWpSiteMutationBody = BodyType<WpRegisterInput>
+    export type RegisterWpSiteMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Register a new WP TechSites account and receive an API key
+ */
+export const useRegisterWpSite = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerWpSite>>, TError,{data: BodyType<WpRegisterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registerWpSite>>,
+        TError,
+        {data: BodyType<WpRegisterInput>},
+        TContext
+      > => {
+      return useMutation(getRegisterWpSiteMutationOptions(options));
+    }
+
+export const getVerifyWpSiteUrl = () => {
+
+
+
+
+  return `/api/wp/verify`
+}
+
+/**
+ * @summary Verify API key and return site info (requires X-WP-Site-Key header)
+ */
+export const verifyWpSite = async ( options?: RequestInit): Promise<WpSiteInfo> => {
+
+  return customFetch<WpSiteInfo>(getVerifyWpSiteUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getVerifyWpSiteQueryKey = () => {
+    return [
+    `/api/wp/verify`
+    ] as const;
+    }
+
+
+export const getVerifyWpSiteQueryOptions = <TData = Awaited<ReturnType<typeof verifyWpSite>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof verifyWpSite>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getVerifyWpSiteQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof verifyWpSite>>> = ({ signal }) => verifyWpSite({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof verifyWpSite>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type VerifyWpSiteQueryResult = NonNullable<Awaited<ReturnType<typeof verifyWpSite>>>
+export type VerifyWpSiteQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Verify API key and return site info (requires X-WP-Site-Key header)
+ */
+
+export function useVerifyWpSite<TData = Awaited<ReturnType<typeof verifyWpSite>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof verifyWpSite>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getVerifyWpSiteQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getWpChatUrl = () => {
+
+
+
+
+  return `/api/wp/chat`
+}
+
+/**
+ * @summary Send a chatbot message (requires X-WP-Site-Key header)
+ */
+export const wpChat = async (wpChatInput: WpChatInput, options?: RequestInit): Promise<WpChatReply> => {
+
+  return customFetch<WpChatReply>(getWpChatUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(wpChatInput)
+  }
+);}
+
+
+
+
+
+export const getWpChatMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wpChat>>, TError,{data: BodyType<WpChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof wpChat>>, TError,{data: BodyType<WpChatInput>}, TContext> => {
+
+const mutationKey = ['wpChat'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof wpChat>>, {data: BodyType<WpChatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  wpChat(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WpChatMutationResult = NonNullable<Awaited<ReturnType<typeof wpChat>>>
+    export type WpChatMutationBody = BodyType<WpChatInput>
+    export type WpChatMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a chatbot message (requires X-WP-Site-Key header)
+ */
+export const useWpChat = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wpChat>>, TError,{data: BodyType<WpChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof wpChat>>,
+        TError,
+        {data: BodyType<WpChatInput>},
+        TContext
+      > => {
+      return useMutation(getWpChatMutationOptions(options));
+    }
+
+export const getWpGenerateContentUrl = () => {
+
+
+
+
+  return `/api/wp/generate-content`
+}
+
+/**
+ * @summary Generate AI content for a WP page or post
+ */
+export const wpGenerateContent = async (wpContentInput: WpContentInput, options?: RequestInit): Promise<WpGeneratedContent> => {
+
+  return customFetch<WpGeneratedContent>(getWpGenerateContentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(wpContentInput)
+  }
+);}
+
+
+
+
+
+export const getWpGenerateContentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wpGenerateContent>>, TError,{data: BodyType<WpContentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof wpGenerateContent>>, TError,{data: BodyType<WpContentInput>}, TContext> => {
+
+const mutationKey = ['wpGenerateContent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof wpGenerateContent>>, {data: BodyType<WpContentInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  wpGenerateContent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WpGenerateContentMutationResult = NonNullable<Awaited<ReturnType<typeof wpGenerateContent>>>
+    export type WpGenerateContentMutationBody = BodyType<WpContentInput>
+    export type WpGenerateContentMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate AI content for a WP page or post
+ */
+export const useWpGenerateContent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wpGenerateContent>>, TError,{data: BodyType<WpContentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof wpGenerateContent>>,
+        TError,
+        {data: BodyType<WpContentInput>},
+        TContext
+      > => {
+      return useMutation(getWpGenerateContentMutationOptions(options));
+    }
+
+export const getWpApplyColorsUrl = () => {
+
+
+
+
+  return `/api/wp/apply-colors`
+}
+
+/**
+ * @summary Get CSS for a brand color scheme
+ */
+export const wpApplyColors = async (wpColorsInput: WpColorsInput, options?: RequestInit): Promise<WpColorScheme> => {
+
+  return customFetch<WpColorScheme>(getWpApplyColorsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(wpColorsInput)
+  }
+);}
+
+
+
+
+
+export const getWpApplyColorsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wpApplyColors>>, TError,{data: BodyType<WpColorsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof wpApplyColors>>, TError,{data: BodyType<WpColorsInput>}, TContext> => {
+
+const mutationKey = ['wpApplyColors'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof wpApplyColors>>, {data: BodyType<WpColorsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  wpApplyColors(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WpApplyColorsMutationResult = NonNullable<Awaited<ReturnType<typeof wpApplyColors>>>
+    export type WpApplyColorsMutationBody = BodyType<WpColorsInput>
+    export type WpApplyColorsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Get CSS for a brand color scheme
+ */
+export const useWpApplyColors = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wpApplyColors>>, TError,{data: BodyType<WpColorsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof wpApplyColors>>,
+        TError,
+        {data: BodyType<WpColorsInput>},
+        TContext
+      > => {
+      return useMutation(getWpApplyColorsMutationOptions(options));
+    }
+
+export const getWpGenerateMenuUrl = () => {
+
+
+
+
+  return `/api/wp/generate-menu`
+}
+
+/**
+ * @summary Generate a menu structure for a site niche
+ */
+export const wpGenerateMenu = async (wpMenuInput: WpMenuInput, options?: RequestInit): Promise<WpMenuSuggestion> => {
+
+  return customFetch<WpMenuSuggestion>(getWpGenerateMenuUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(wpMenuInput)
+  }
+);}
+
+
+
+
+
+export const getWpGenerateMenuMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wpGenerateMenu>>, TError,{data: BodyType<WpMenuInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof wpGenerateMenu>>, TError,{data: BodyType<WpMenuInput>}, TContext> => {
+
+const mutationKey = ['wpGenerateMenu'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof wpGenerateMenu>>, {data: BodyType<WpMenuInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  wpGenerateMenu(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WpGenerateMenuMutationResult = NonNullable<Awaited<ReturnType<typeof wpGenerateMenu>>>
+    export type WpGenerateMenuMutationBody = BodyType<WpMenuInput>
+    export type WpGenerateMenuMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate a menu structure for a site niche
+ */
+export const useWpGenerateMenu = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wpGenerateMenu>>, TError,{data: BodyType<WpMenuInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof wpGenerateMenu>>,
+        TError,
+        {data: BodyType<WpMenuInput>},
+        TContext
+      > => {
+      return useMutation(getWpGenerateMenuMutationOptions(options));
+    }
+
+export const getListWpToolsUrl = () => {
+
+
+
+
+  return `/api/wp/tools`
+}
+
+/**
+ * @summary List tools available for the connected site
+ */
+export const listWpTools = async ( options?: RequestInit): Promise<WpToolsList> => {
+
+  return customFetch<WpToolsList>(getListWpToolsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWpToolsQueryKey = () => {
+    return [
+    `/api/wp/tools`
+    ] as const;
+    }
+
+
+export const getListWpToolsQueryOptions = <TData = Awaited<ReturnType<typeof listWpTools>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWpTools>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWpToolsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWpTools>>> = ({ signal }) => listWpTools({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWpTools>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWpToolsQueryResult = NonNullable<Awaited<ReturnType<typeof listWpTools>>>
+export type ListWpToolsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List tools available for the connected site
+ */
+
+export function useListWpTools<TData = Awaited<ReturnType<typeof listWpTools>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWpTools>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWpToolsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetWpDashboardUrl = () => {
+
+
+
+
+  return `/api/wp/dashboard`
+}
+
+/**
+ * @summary Get dashboard data for the customer panel
+ */
+export const getWpDashboard = async ( options?: RequestInit): Promise<WpDashboardData> => {
+
+  return customFetch<WpDashboardData>(getGetWpDashboardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWpDashboardQueryKey = () => {
+    return [
+    `/api/wp/dashboard`
+    ] as const;
+    }
+
+
+export const getGetWpDashboardQueryOptions = <TData = Awaited<ReturnType<typeof getWpDashboard>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWpDashboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWpDashboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWpDashboard>>> = ({ signal }) => getWpDashboard({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWpDashboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWpDashboardQueryResult = NonNullable<Awaited<ReturnType<typeof getWpDashboard>>>
+export type GetWpDashboardQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get dashboard data for the customer panel
+ */
+
+export function useGetWpDashboard<TData = Awaited<ReturnType<typeof getWpDashboard>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWpDashboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWpDashboardQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

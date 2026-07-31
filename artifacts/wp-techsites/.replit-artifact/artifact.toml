@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/wp-techsites/"
+title = "WP TechSites — Dashboard"
+version = "1.0.0"
+id = "artifacts/wp-techsites"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/wp-techsites/" ]
+localPort = 20233
+
+[services.development]
+run = "pnpm --filter @workspace/wp-techsites run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/wp-techsites", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/wp-techsites/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20233"
+BASE_PATH = "/wp-techsites/"

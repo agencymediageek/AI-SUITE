@@ -6,3 +6,9 @@ id = "zcFdzK_vGwsjvgI18qU0N"
 uri = "file://artifacts/apex-video/public/audio/bg_music.mp3"
 type = "audio"
 title = "APEX CORE synthwave background music"
+
+[[outputs]]
+id = "yCVIfmHuop2jAfdIvAsLd"
+uri = "file://artifacts/wp-techsites-plugin/wp-techsites-plugin-v1.0.0.zip"
+type = "unspecified"
+title = "WP TechSites Plugin v1.0.0"
