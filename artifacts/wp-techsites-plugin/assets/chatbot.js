@@ -1,229 +1,153 @@
-/**
- * WP TechSites — Chatbot Widget
- * Injected by the WP TechSites plugin via wp_footer.
- * Reads config from data attributes on the script tag.
- */
+/* WP TechSites — Chatbot Frontend v2.0.0 */
 (function () {
-  'use strict';
+    'use strict';
 
-  // Read config from script data attributes
-  var scripts = document.querySelectorAll('script[data-wpts-key]');
-  var scriptTag = scripts[scripts.length - 1];
-  if (!scriptTag) return;
+    var cfg   = window.WPTS_CHAT || {};
+    var API   = cfg.api  || '';
+    var KEY   = cfg.key  || '';
+    var COLOR = cfg.color || '#6366f1';
+    var NAME  = cfg.name  || 'Assistente';
+    var open  = false;
+    var msgs  = [];
 
-  var API_KEY   = scriptTag.getAttribute('data-wpts-key') || '';
-  var API_URL   = scriptTag.getAttribute('data-wpts-api') || 'https://apex.techsites.ai/api/wp';
-  var BOT_NAME  = scriptTag.getAttribute('data-wpts-name') || 'TechSites AI';
-  var BOT_COLOR = scriptTag.getAttribute('data-wpts-color') || '#0ea5e9';
-  var SITE_URL  = window.location.origin;
+    // ── Build DOM ─────────────────────────────────────────────────────
+    var style = document.createElement('style');
+    style.textContent = [
+        '#wpts-chat-widget{position:fixed;bottom:24px;right:24px;z-index:99999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}',
+        '#wpts-chat-btn{width:58px;height:58px;border-radius:50%;background:' + COLOR + ';display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px ' + COLOR + '66;transition:transform .2s;border:none;outline:none}',
+        '#wpts-chat-btn:hover{transform:scale(1.08)}',
+        '#wpts-chat-btn svg{width:26px;height:26px;fill:#fff}',
+        '#wpts-chat-box{position:absolute;bottom:70px;right:0;width:340px;background:#fff;border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,.18);overflow:hidden;display:none;flex-direction:column;max-height:500px}',
+        '#wpts-chat-box.open{display:flex}',
+        '#wpts-chat-head{background:' + COLOR + ';padding:16px 18px;display:flex;align-items:center;gap:10px}',
+        '#wpts-chat-head .avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:18px}',
+        '#wpts-chat-head .info .name{color:#fff;font-weight:700;font-size:14px}',
+        '#wpts-chat-head .info .sub{color:rgba(255,255,255,.75);font-size:12px}',
+        '#wpts-chat-head .close-btn{margin-left:auto;background:rgba(255,255,255,.2);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center}',
+        '#wpts-chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#f8fafc}',
+        '.wpts-msg{display:flex;gap:8px;max-width:85%}',
+        '.wpts-msg.user{align-self:flex-end;flex-direction:row-reverse}',
+        '.wpts-bubble{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5}',
+        '.wpts-msg.bot .wpts-bubble{background:#fff;border:1px solid #e2e8f0;color:#1e293b;border-radius:4px 14px 14px 14px}',
+        '.wpts-msg.user .wpts-bubble{background:' + COLOR + ';color:#fff;border-radius:14px 14px 4px 14px}',
+        '.wpts-typing{display:flex;gap:4px;align-items:center;padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:4px 14px 14px 14px;width:fit-content}',
+        '.wpts-typing span{width:8px;height:8px;background:#94a3b8;border-radius:50%;animation:wpts-bounce .8s infinite}',
+        '.wpts-typing span:nth-child(2){animation-delay:.15s}.wpts-typing span:nth-child(3){animation-delay:.3s}',
+        '@keyframes wpts-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}',
+        '#wpts-chat-form{padding:12px;border-top:1px solid #e2e8f0;display:flex;gap:8px;background:#fff}',
+        '#wpts-chat-input{flex:1;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:13px;outline:none;resize:none;font-family:inherit}',
+        '#wpts-chat-input:focus{border-color:' + COLOR + '}',
+        '#wpts-chat-send{background:' + COLOR + ';color:#fff;border:none;border-radius:10px;width:38px;min-width:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}',
+        '#wpts-chat-send:hover{opacity:.9}',
+        '#wpts-chat-badge{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;display:none}',
+    ].join('');
+    document.head.appendChild(style);
 
-  // ── Styles ─────────────────────────────────────────────────────────────────
-  var styles = `
-    #wpts-btn {
-      position: fixed; bottom: 24px; right: 24px; z-index: 99999;
-      width: 56px; height: 56px; border-radius: 50%;
-      background: ${BOT_COLOR}; border: none; cursor: pointer;
-      box-shadow: 0 4px 24px rgba(0,0,0,.25);
-      display: flex; align-items: center; justify-content: center;
-      transition: transform .2s, box-shadow .2s;
-    }
-    #wpts-btn:hover { transform: scale(1.08); box-shadow: 0 6px 32px rgba(0,0,0,.32); }
-    #wpts-btn svg { width: 26px; height: 26px; fill: #fff; }
-    #wpts-bubble {
-      position: fixed; bottom: 92px; right: 24px; z-index: 99998;
-      width: 340px; max-height: 520px;
-      background: #fff; border-radius: 16px;
-      box-shadow: 0 8px 48px rgba(0,0,0,.18);
-      display: none; flex-direction: column; overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-    #wpts-bubble.open { display: flex; }
-    #wpts-header {
-      background: ${BOT_COLOR}; color: #fff;
-      padding: 14px 16px; display: flex; align-items: center; gap: 10px;
-    }
-    #wpts-header .avatar {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: rgba(255,255,255,.25);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-    }
-    #wpts-header .info { flex: 1; }
-    #wpts-header .name { font-weight: 600; font-size: 14px; }
-    #wpts-header .status { font-size: 11px; opacity: .85; }
-    #wpts-close {
-      background: none; border: none; color: #fff; cursor: pointer;
-      font-size: 18px; opacity: .8; padding: 4px;
-    }
-    #wpts-messages {
-      flex: 1; overflow-y: auto; padding: 16px;
-      display: flex; flex-direction: column; gap: 10px;
-      max-height: 340px;
-    }
-    .wpts-msg { display: flex; gap: 8px; align-items: flex-end; }
-    .wpts-msg.user { flex-direction: row-reverse; }
-    .wpts-bubble-text {
-      max-width: 75%; padding: 10px 14px; border-radius: 16px;
-      font-size: 13px; line-height: 1.45;
-    }
-    .wpts-msg.bot .wpts-bubble-text {
-      background: #f1f5f9; color: #1e293b; border-bottom-left-radius: 4px;
-    }
-    .wpts-msg.user .wpts-bubble-text {
-      background: ${BOT_COLOR}; color: #fff; border-bottom-right-radius: 4px;
-    }
-    .wpts-avatar-sm {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: ${BOT_COLOR}22; display: flex; align-items: center;
-      justify-content: center; font-size: 13px; flex-shrink: 0;
-    }
-    #wpts-input-row {
-      padding: 12px 12px 14px; border-top: 1px solid #f1f5f9;
-      display: flex; gap: 8px;
-    }
-    #wpts-input {
-      flex: 1; border: 1px solid #e2e8f0; border-radius: 20px;
-      padding: 8px 14px; font-size: 13px; outline: none;
-      transition: border-color .15s;
-    }
-    #wpts-input:focus { border-color: ${BOT_COLOR}; }
-    #wpts-send {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: ${BOT_COLOR}; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: opacity .15s;
-    }
-    #wpts-send:hover { opacity: .88; }
-    #wpts-send svg { width: 16px; height: 16px; fill: #fff; }
-    .wpts-typing { display: flex; gap: 4px; padding: 8px 4px; }
-    .wpts-typing span {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #94a3b8; animation: bounce 1s infinite;
-    }
-    .wpts-typing span:nth-child(2) { animation-delay: .15s; }
-    .wpts-typing span:nth-child(3) { animation-delay: .3s; }
-    @keyframes bounce {
-      0%,60%,100% { transform: translateY(0); }
-      30% { transform: translateY(-5px); }
-    }
-  `;
+    var widget = document.createElement('div');
+    widget.id  = 'wpts-chat-widget';
+    widget.innerHTML = [
+        '<div id="wpts-chat-box">',
+        '  <div id="wpts-chat-head">',
+        '    <div class="avatar">🤖</div>',
+        '    <div class="info"><div class="name">' + escHtml(NAME) + '</div><div class="sub">Online · IA powered</div></div>',
+        '    <button class="close-btn" id="wpts-chat-close">✕</button>',
+        '  </div>',
+        '  <div id="wpts-chat-msgs"></div>',
+        '  <form id="wpts-chat-form">',
+        '    <textarea id="wpts-chat-input" rows="1" placeholder="Digite sua mensagem..."></textarea>',
+        '    <button type="submit" id="wpts-chat-send">➤</button>',
+        '  </form>',
+        '</div>',
+        '<button id="wpts-chat-btn" aria-label="Abrir chat">',
+        '  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+        '  <div id="wpts-chat-badge">1</div>',
+        '</button>',
+    ].join('');
+    document.body.appendChild(widget);
 
-  var styleEl = document.createElement('style');
-  styleEl.textContent = styles;
-  document.head.appendChild(styleEl);
+    var $box    = document.getElementById('wpts-chat-box');
+    var $msgs   = document.getElementById('wpts-chat-msgs');
+    var $input  = document.getElementById('wpts-chat-input');
+    var $badge  = document.getElementById('wpts-chat-badge');
 
-  // ── HTML ───────────────────────────────────────────────────────────────────
-  var html = `
-    <button id="wpts-btn" title="${BOT_NAME}">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
-    </button>
-    <div id="wpts-bubble">
-      <div id="wpts-header">
-        <div class="avatar">🤖</div>
-        <div class="info">
-          <div class="name">${BOT_NAME}</div>
-          <div class="status">● Online — respondo em segundos</div>
-        </div>
-        <button id="wpts-close">✕</button>
-      </div>
-      <div id="wpts-messages"></div>
-      <div id="wpts-input-row">
-        <input id="wpts-input" type="text" placeholder="Digite sua mensagem..." maxlength="500" />
-        <button id="wpts-send">
-          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-      </div>
-    </div>
-  `;
+    // ── Welcome message ───────────────────────────────────────────────
+    setTimeout(function () {
+        addMsg('Olá! 👋 Sou o ' + NAME + '. Como posso te ajudar hoje?', 'bot');
+        $badge.style.display = 'flex';
+    }, 1500);
 
-  var wrapper = document.createElement('div');
-  wrapper.innerHTML = html;
-  document.body.appendChild(wrapper);
-
-  // ── State ──────────────────────────────────────────────────────────────────
-  var messages = [];
-  var isOpen = false;
-  var isTyping = false;
-
-  // ── Elements ───────────────────────────────────────────────────────────────
-  var btn      = document.getElementById('wpts-btn');
-  var bubble   = document.getElementById('wpts-bubble');
-  var closeBtn = document.getElementById('wpts-close');
-  var msgsEl   = document.getElementById('wpts-messages');
-  var input    = document.getElementById('wpts-input');
-  var sendBtn  = document.getElementById('wpts-send');
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function addMessage(role, text) {
-    messages.push({ role: role, text: text });
-    renderMessages();
-  }
-
-  function renderMessages() {
-    msgsEl.innerHTML = '';
-    messages.forEach(function (m) {
-      var div = document.createElement('div');
-      div.className = 'wpts-msg ' + m.role;
-      if (m.role === 'bot') {
-        div.innerHTML = '<div class="wpts-avatar-sm">🤖</div><div class="wpts-bubble-text">' + escapeHtml(m.text) + '</div>';
-      } else {
-        div.innerHTML = '<div class="wpts-bubble-text">' + escapeHtml(m.text) + '</div>';
-      }
-      msgsEl.appendChild(div);
+    // ── Toggle ─────────────────────────────────────────────────────────
+    document.getElementById('wpts-chat-btn').addEventListener('click', function () {
+        open = !open;
+        $box.classList.toggle('open', open);
+        $badge.style.display = 'none';
+        if (open) { $input.focus(); scrollBottom(); }
     });
-    if (isTyping) {
-      var t = document.createElement('div');
-      t.className = 'wpts-msg bot';
-      t.innerHTML = '<div class="wpts-avatar-sm">🤖</div><div class="wpts-bubble-text"><div class="wpts-typing"><span></span><span></span><span></span></div></div>';
-      msgsEl.appendChild(t);
+    document.getElementById('wpts-chat-close').addEventListener('click', function () {
+        open = false;
+        $box.classList.remove('open');
+    });
+
+    // ── Send ──────────────────────────────────────────────────────────
+    document.getElementById('wpts-chat-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var text = $input.value.trim();
+        if (!text) return;
+        $input.value = '';
+        autoResize($input);
+        addMsg(text, 'user');
+        msgs.push({ role: 'user', content: text });
+        sendToApi(text);
+    });
+
+    $input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('wpts-chat-form').dispatchEvent(new Event('submit')); }
+    });
+    $input.addEventListener('input', function () { autoResize(this); });
+
+    function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px'; }
+
+    function sendToApi(text) {
+        var $typing = addTyping();
+        var body    = JSON.stringify({ messages: msgs, siteUrl: window.location.origin });
+        fetch(API + '/chatbot', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', 'X-WP-Site-Key': KEY },
+            body:    body,
+        }).then(function (res) { return res.json(); }).then(function (data) {
+            removeTyping($typing);
+            var reply = data.reply || data.message || data.error || 'Desculpe, não consegui responder agora.';
+            addMsg(reply, 'bot');
+            msgs.push({ role: 'assistant', content: reply });
+        }).catch(function () {
+            removeTyping($typing);
+            addMsg('Desculpe, ocorreu um erro. Tente novamente em instantes.', 'bot');
+        });
     }
-    msgsEl.scrollTop = msgsEl.scrollHeight;
-  }
 
-  function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  function toggleChat() {
-    isOpen = !isOpen;
-    bubble.classList.toggle('open', isOpen);
-    if (isOpen && messages.length === 0) {
-      addMessage('bot', 'Olá! Sou o assistente de IA do seu site. Como posso ajudar hoje?');
+    function addMsg(text, who) {
+        var div = document.createElement('div');
+        div.className = 'wpts-msg ' + who;
+        var bubble = document.createElement('div');
+        bubble.className = 'wpts-bubble';
+        bubble.textContent = text;
+        div.appendChild(bubble);
+        $msgs.appendChild(div);
+        scrollBottom();
+        return div;
     }
-    if (isOpen) { input.focus(); }
-  }
 
-  async function sendMessage() {
-    var text = input.value.trim();
-    if (!text || isTyping) return;
-    input.value = '';
-    addMessage('user', text);
-    isTyping = true;
-    renderMessages();
-
-    try {
-      var res = await fetch(API_URL + '/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-WP-Site-Key': API_KEY,
-        },
-        body: JSON.stringify({ message: text, siteUrl: SITE_URL }),
-      });
-      var data = await res.json();
-      isTyping = false;
-      addMessage('bot', data.reply || 'Desculpe, não consegui processar sua mensagem.');
-    } catch (e) {
-      isTyping = false;
-      addMessage('bot', 'Erro de conexão. Verifique sua configuração do WP TechSites.');
+    function addTyping() {
+        var div = document.createElement('div');
+        div.className = 'wpts-msg bot';
+        div.innerHTML = '<div class="wpts-typing"><span></span><span></span><span></span></div>';
+        $msgs.appendChild(div);
+        scrollBottom();
+        return div;
     }
-  }
 
-  // ── Events ─────────────────────────────────────────────────────────────────
-  btn.addEventListener('click', toggleChat);
-  closeBtn.addEventListener('click', toggleChat);
-  sendBtn.addEventListener('click', sendMessage);
-  input.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') sendMessage();
-  });
+    function removeTyping(el) { el && el.parentNode && el.parentNode.removeChild(el); }
+    function scrollBottom()   { $msgs.scrollTop = $msgs.scrollHeight; }
+    function escHtml(s)       { return s.replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
 })();

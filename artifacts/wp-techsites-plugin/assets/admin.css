@@ -1,0 +1,621 @@
+/* WP TechSites Admin — v2.0.0 */
+/* Reset WP admin for our wrap */
+#wpcontent { padding-left: 0 !important; }
+#wpfooter { display: none; }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+.wpts-wrap {
+    display: flex;
+    min-height: 100vh;
+    margin: 0 -20px -10px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────────────── */
+.wpts-sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: #0f1117;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+.wpts-sidebar::-webkit-scrollbar { display: none; }
+
+.wpts-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid #1e2333;
+}
+.wpts-logo-mark {
+    font-size: 28px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+.wpts-logo-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: -.3px;
+}
+.wpts-logo-sub { font-size: 11px; color: #475569; }
+
+.wpts-credits-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 12px 8px;
+    background: #1e2333;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+.wpts-credits-icon { font-size: 20px; }
+.wpts-credits-number { font-size: 18px; font-weight: 700; color: #f8fafc; }
+.wpts-credits-label { font-size: 11px; color: #64748b; }
+.wpts-plan-tag {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 8px;
+    color: #fff;
+}
+.plan-trial   { background: #475569; }
+.plan-starter { background: #0ea5e9; }
+.plan-pro     { background: #6366f1; }
+.plan-agency  { background: #f59e0b; }
+
+.wpts-nav {
+    flex: 1;
+    padding: 8px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.wpts-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all .15s;
+    position: relative;
+}
+.wpts-nav-item:hover { background: #1e2333; color: #f1f5f9; text-decoration: none; }
+.wpts-nav-item.active { background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; }
+.wpts-nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.wpts-nav-label { flex: 1; }
+.wpts-nav-badge {
+    font-size: 9px;
+    font-weight: 700;
+    background: #f59e0b;
+    color: #000;
+    padding: 1px 5px;
+    border-radius: 6px;
+}
+
+.wpts-sidebar-footer {
+    padding: 12px;
+    border-top: 1px solid #1e2333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.wpts-theme-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #64748b;
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.wpts-upgrade-btn {
+    background: linear-gradient(135deg,#6366f1,#8b5cf6);
+    color: #fff !important;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.wpts-upgrade-btn:hover { opacity: .9; }
+
+/* ── Main ───────────────────────────────────────────────────────────── */
+.wpts-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.wpts-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.wpts-topbar-title { font-size: 18px; font-weight: 700; color: #0f1117; }
+.wpts-topbar-right { display: flex; align-items: center; gap: 12px; }
+.wpts-site-badge {
+    font-size: 13px;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+.wpts-view-btn {
+    font-size: 13px;
+    color: #6366f1;
+    border: 1px solid #c7d2fe;
+    padding: 5px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    background: #f5f3ff;
+}
+.wpts-view-btn:hover { background: #ede9fe; }
+
+.wpts-content { padding: 24px; flex: 1; }
+
+/* ── Cards ──────────────────────────────────────────────────────────── */
+.wpts-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+.wpts-card h3 { margin: 0 0 6px; font-size: 18px; font-weight: 700; color: #0f1117; }
+.wpts-card h4 { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: #1e293b; }
+.wpts-card-success { border-color: #86efac; background: #f0fdf4; }
+
+.wpts-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .wpts-two-col { grid-template-columns: 1fr; } }
+
+/* ── Alerts ─────────────────────────────────────────────────────────── */
+.wpts-alert {
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+.wpts-alert-info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+.wpts-alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+.wpts-alert-warn    { background: #fefce8; border: 1px solid #fde047; color: #713f12; }
+.wpts-alert a { color: inherit; font-weight: 600; }
+
+/* ── Theme Banner ───────────────────────────────────────────────────── */
+.wpts-theme-banner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+.wpts-theme-banner-icon { font-size: 36px; }
+.wpts-theme-banner-title { font-size: 15px; font-weight: 600; }
+.wpts-theme-banner-sub { font-size: 12px; color: #64748b; margin-top: 3px; }
+.wpts-chip {
+    display: inline-block;
+    background: #e0e7ff;
+    color: #4338ca;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 8px;
+    margin-right: 4px;
+    font-weight: 500;
+}
+
+.wpts-score-ring {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 4px solid;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.wpts-score-ring span { font-size: 18px; font-weight: 800; }
+.wpts-score-ring small { font-size: 9px; color: #64748b; }
+
+/* ── Stats ──────────────────────────────────────────────────────────── */
+.wpts-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.wpts-stat {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.wpts-stat-n { font-size: 28px; font-weight: 800; color: #0f1117; }
+.wpts-stat-l { font-size: 12px; color: #64748b; }
+
+/* ── Tool Grid ──────────────────────────────────────────────────────── */
+.wpts-section-title { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin: 0 0 14px; }
+.wpts-tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+}
+.wpts-tool-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 20px 14px;
+    text-align: center;
+    text-decoration: none;
+    color: #1e293b;
+    transition: all .15s;
+    position: relative;
+}
+.wpts-tool-card:hover {
+    border-color: #6366f1;
+    box-shadow: 0 4px 16px rgba(99,102,241,.15);
+    transform: translateY(-2px);
+    text-decoration: none;
+    color: #1e293b;
+}
+.wpts-tool-icon { font-size: 30px; margin-bottom: 8px; }
+.wpts-tool-name { font-size: 12px; font-weight: 600; }
+.wpts-tool-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #f59e0b;
+    color: #000;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 6px;
+}
+
+/* ── Forms ──────────────────────────────────────────────────────────── */
+.wpts-field { margin-bottom: 16px; }
+.wpts-field label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+.wpts-field-check label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500; }
+.wpts-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1e293b;
+    background: #fff;
+    box-sizing: border-box;
+    transition: border-color .15s;
+}
+.wpts-input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+.wpts-color-input { padding: 4px; height: 40px; cursor: pointer; }
+.wpts-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.wpts-radio-group { display: flex; flex-direction: column; gap: 8px; }
+.wpts-radio-group label { display: flex; align-items: center; gap: 8px; font-weight: 400; cursor: pointer; font-size: 13px; }
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+.wpts-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .15s;
+    line-height: 1;
+}
+.wpts-btn:hover { border-color: #6366f1; color: #6366f1; text-decoration: none; }
+.wpts-btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff !important;
+    border-color: transparent;
+}
+.wpts-btn-primary:hover { opacity: .9; color: #fff; }
+.wpts-btn:disabled { opacity: .5; cursor: not-allowed; }
+.wpts-btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+/* ── Help text ──────────────────────────────────────────────────────── */
+.wpts-help { font-size: 13px; color: #64748b; margin: 0 0 16px; line-height: 1.5; }
+.wpts-meta { font-size: 12px; color: #94a3b8; margin: 4px 0; }
+
+/* ── Loading ─────────────────────────────────────────────────────────── */
+.wpts-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #6366f1;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #f5f3ff;
+    border-radius: 8px;
+    animation: wpts-pulse 1.5s ease-in-out infinite;
+}
+@keyframes wpts-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+/* ── SEO Audit ──────────────────────────────────────────────────────── */
+.wpts-audit-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.wpts-grade-badge {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+.grade-a { background: #dcfce7; color: #15803d; }
+.grade-b { background: #dbeafe; color: #1d4ed8; }
+.grade-c { background: #fef9c3; color: #854d0e; }
+.grade-d { background: #fee2e2; color: #b91c1c; }
+
+.wpts-score-bar-wrap { margin-bottom: 16px; }
+.wpts-score-bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+.wpts-score-bar { height: 10px; background: #f1f5f9; border-radius: 99px; overflow: hidden; }
+.wpts-score-fill { height: 100%; border-radius: 99px; transition: width .8s ease; }
+
+.wpts-audit-summary { background: #f8fafc; border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #374151; line-height: 1.6; }
+
+.wpts-checklist { display: flex; flex-direction: column; gap: 8px; }
+.wpts-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+.wpts-check-ok   { background: #f0fdf4; }
+.wpts-check-fail { background: #fef2f2; }
+.wpts-check-warn { background: #fefce8; }
+.wpts-check-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.wpts-check-label  { font-size: 13px; font-weight: 600; }
+.wpts-check-detail { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+.wpts-recs { padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.wpts-recs li { font-size: 13px; color: #374151; padding: 8px 12px; background: #f8fafc; border-radius: 8px; }
+
+.wpts-audit-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.wpts-feature-list { list-style: none; padding: 0; margin: 0; }
+.wpts-feature-list li { padding: 6px 0; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
+.wpts-feature-list li:last-child { border-bottom: none; }
+
+/* ── Directory Builder ──────────────────────────────────────────────── */
+.wpts-code {
+    display: block;
+    background: #1e1e2e;
+    color: #a5b4fc;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+/* ── Scraping ───────────────────────────────────────────────────────── */
+.wpts-steps { padding-left: 20px; }
+.wpts-steps li { font-size: 13px; color: #374151; margin-bottom: 8px; line-height: 1.5; }
+
+/* ── Tabs ───────────────────────────────────────────────────────────── */
+.wpts-tab-bar { display: flex; gap: 4px; margin-bottom: 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 4px; width: fit-content; }
+.wpts-tab { padding: 8px 18px; border-radius: 8px; border: none; background: transparent; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; transition: all .15s; }
+.wpts-tab.active { background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; }
+.wpts-tab:hover:not(.active) { background: #f1f5f9; }
+
+/* ── Logo Builder ───────────────────────────────────────────────────── */
+.wpts-logo-composer { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.wpts-composer-preview {
+    background: linear-gradient(135deg,#f8fafc,#f1f5f9);
+    border: 2px dashed #e2e8f0;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    min-height: 200px;
+    text-align: center;
+    transition: all .3s;
+}
+.wpts-icon-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.wpts-icon-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .1s;
+}
+.wpts-icon-btn:hover { border-color: #6366f1; background: #f5f3ff; }
+
+/* ── Use Cases ──────────────────────────────────────────────────────── */
+.wpts-use-cases { display: flex; flex-direction: column; gap: 6px; }
+.wpts-use-case {
+    text-align: left;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+    color: #374151;
+}
+.wpts-use-case:hover { border-color: #6366f1; background: #f5f3ff; color: #4f46e5; }
+
+/* ── Monetization ───────────────────────────────────────────────────── */
+.wpts-monetize-options { display: flex; flex-direction: column; gap: 16px; }
+.wpts-monetize-card { border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px; }
+.wpts-monetize-icon { font-size: 28px; margin-bottom: 8px; }
+.wpts-monetize-card h4 { margin: 0 0 8px; }
+.wpts-monetize-card p { font-size: 13px; color: #64748b; margin: 0; }
+
+.wpts-product-list { display: flex; flex-direction: column; gap: 8px; }
+.wpts-product-item { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; }
+.wpts-product-name  { font-size: 14px; font-weight: 600; }
+.wpts-product-price { font-size: 18px; font-weight: 800; color: #6366f1; margin: 2px 0; }
+.wpts-product-features { font-size: 12px; color: #64748b; }
+
+/* ── Chat Editor ────────────────────────────────────────────────────── */
+.wpts-chat-editor-box {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.wpts-chat-msg { display: flex; gap: 10px; font-size: 13px; }
+.wpts-chat-system { color: #64748b; }
+.wpts-chat-user { flex-direction: row-reverse; }
+.wpts-chat-user .wpts-chat-bubble { background: #6366f1; color: #fff; }
+.wpts-chat-bubble {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    max-width: 80%;
+    line-height: 1.5;
+}
+.wpts-chat-input-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: flex-end; }
+
+.wpts-commands { display: flex; flex-direction: column; gap: 6px; }
+.wpts-cmd {
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    background: #fff;
+    transition: all .15s;
+    color: #374151;
+}
+.wpts-cmd:hover { border-color: #6366f1; background: #f5f3ff; }
+
+/* ── Settings ───────────────────────────────────────────────────────── */
+.wpts-info-grid { display: flex; flex-direction: column; gap: 8px; }
+.wpts-info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.wpts-info-row span { color: #64748b; }
+.wpts-info-row strong { color: #1e293b; }
+
+.wpts-plans { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.wpts-plan-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid;
+    border-radius: 10px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,.05);
+}
+.wpts-plan-row.current { background: rgba(99,102,241,.15); }
+.wpts-plan-name   { font-size: 14px; font-weight: 700; }
+.wpts-plan-credits { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.wpts-plan-price  { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+.wpts-badge-current { font-size: 11px; background: #4ade80; color: #052e16; padding: 2px 7px; border-radius: 8px; font-weight: 700; }
+.wpts-upgrade-link { font-size: 11px; color: #a5b4fc; text-decoration: none; }
+.wpts-upgrade-link:hover { color: #fff; }
+
+/* ── Table ──────────────────────────────────────────────────────────── */
+.wpts-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.wpts-table thead { background: #f8fafc; }
+.wpts-table th { padding: 12px 16px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid #e2e8f0; }
+.wpts-table td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.wpts-table tr:hover td { background: #f8fafc; }
+.wpts-link { color: #6366f1; text-decoration: none; margin-right: 8px; font-size: 12px; font-weight: 500; }
+.wpts-link:hover { text-decoration: underline; }
+
+.wpts-badge-premium { background: #6366f1; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+.wpts-badge-free    { background: #f1f5f9; color: #64748b; font-size: 11px; padding: 2px 8px; border-radius: 8px; }
+
+/* ── Empty state ────────────────────────────────────────────────────── */
+.wpts-empty { text-align: center; padding: 48px; color: #64748b; }
+.wpts-empty-icon { font-size: 48px; margin-bottom: 12px; }
+.wpts-empty a { color: #6366f1; }
+
+/* ── Scraping result ─────────────────────────────────────────────────── */
+.wpts-listing-result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+.wpts-listing-mini { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; font-size: 12px; }
+.wpts-listing-mini strong { display: block; font-size: 13px; margin-bottom: 4px; }
+
+/* ── Naming suggestions ──────────────────────────────────────────────── */
+.wpts-name-suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.wpts-name-chip {
+    padding: 6px 14px;
+    border: 1px solid #c7d2fe;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4f46e5;
+    background: #f5f3ff;
+    cursor: pointer;
+    transition: all .15s;
+}
+.wpts-name-chip:hover { background: #6366f1; color: #fff; border-color: #6366f1; }

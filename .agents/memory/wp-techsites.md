@@ -1,44 +1,65 @@
 ---
-name: WP TechSites
-description: Architecture and auth model for the WP TechSites product (WordPress plugin + SaaS dashboard)
+name: WP TechSites Plugin
+description: Architecture and decisions for the WP TechSites WordPress plugin (Trojan Horse SaaS strategy)
 ---
 
-## Auth model
-- NO JWT. Customers identify via `X-WP-Site-Key` header (UUID API key stored in localStorage as `wpts_api_key`).
-- Key is created via `POST /api/wp/register` (no auth required).
-- All other `/api/wp/*` routes require `X-WP-Site-Key` header validated by `requireSiteKey` middleware in `wp-techsites.ts`.
-- Dashboard checks localStorage on load → calls `useVerifyWpSite` → if invalid, shows registration screen.
+## Plugin v2.0.0 — Multi-file structure
 
-## API routes
-All routes mounted in `artifacts/api-server/src/routes/wp-techsites.ts`, registered in `routes/index.ts`.
-- POST /api/wp/register — create account (no auth)
-- GET  /api/wp/verify  — verify key, returns site info + tools
-- POST /api/wp/chat    — chatbot (1 credit/msg)
-- POST /api/wp/generate-content — AI content gen (5 credits)
-- POST /api/wp/apply-colors     — brand CSS (2 credits)
-- POST /api/wp/generate-menu    — menu suggestions (3 credits)
-- GET  /api/wp/tools    — list available tools
-- GET  /api/wp/dashboard — dashboard data
+```
+artifacts/wp-techsites-plugin/
+├── wp-techsites.php           # Main file, constants, module loader, chatbot hook
+├── includes/
+│   ├── theme-detector.php     # wpts_detect_theme() → structured info; wpts_get_site_audit_data()
+│   ├── cpt-listings.php       # CPT wpts_listing + taxonomies wpts_category + wpts_city
+│   └── ajax-handlers.php      # All wp_ajax_wpts_* handlers + [wpts_directory] shortcode
+└── admin/
+    └── admin-page.php         # Admin menu + all page renderers (dashboard, audit, directory, scraping, listings, logo, content, branding, menu, chatbot, monetize, chat-editor, settings)
+assets/
+├── admin.css                  # Full SaaS-style admin UI (dark sidebar, cards, animations)
+├── admin.js                   # All admin JS interactions
+└── chatbot.js                 # Frontend chatbot widget (no jQuery dependency)
+```
 
-## DB
-Table `wp_sites` defined in `lib/db/src/schema/wp-sites.ts`. Created via `CREATE TABLE IF NOT EXISTS` on startup (idempotent, no migration needed).
+## Key design decisions
 
-## WordPress plugin
-Files at `artifacts/wp-techsites-plugin/`:
-- `wp-techsites.php` — full plugin: admin menu, settings, AJAX actions, chatbot injection, CSS injection
-- `assets/chatbot.js` — standalone chatbot widget (reads config from `data-wpts-*` attributes on script tag)
-- `wp-techsites-plugin-v1.0.0.zip` — ready-to-install zip
+**Why:** Plugin is a "Trojan Horse" — it's a full SaaS platform embedded inside the client's WordPress. Every tool is active (no "coming soon"), giving the impression of a complete ecosystem.
 
-Plugin demo actions (WP admin → WP TechSites → Ferramentas IA):
-1. Generate content → calls `/api/wp/generate-content` → creates WP page/post via AJAX
-2. Apply colors → calls `/api/wp/apply-colors` → injects CSS preview + saves via AJAX
-3. Generate menu → calls `/api/wp/generate-menu` → applies to primary nav via AJAX
+**Theme detection** on activation: `wpts_detect_theme()` maps 15+ known themes (MyListing, BeTheme, Divi, Elementor, Astra, etc.) to structured info including type, color, features. Used in dashboard banner.
 
-## Customer dashboard
-Artifact: `artifacts/wp-techsites` at `/wp-techsites/`. Routes:
-- `/` — registration + existing key entry
-- `/dashboard` — credits, plan, tools grid
-- `/tools/content`, `/tools/colors`, `/tools/menu` — tool pages
-- `/setup` — plugin installation guide
+**SEO Audit** is the first product/entry point: runs automatically on plugin activation, generates score (0-100), grade (A-D), checklist with ok/warn/fail/info items. Has local fallback if API is down. Exports as PDF via html2pdf.js CDN.
 
-**Why:** Custom auth header (not JWT) means the generated Orval hooks must receive `{ request: { headers: { 'X-WP-Site-Key': apiKey } } }` on every call, not rely on a global interceptor.
+**Directory Builder**: creates `wpts_listing` CPT + `wpts_category` + `wpts_city` taxonomies, creates archive page with `[wpts_directory]` shortcode, all on one click.
+
+**Logo Builder**: two tabs — AI generation (calls API) + Manual compositor (live preview with icon grid, color pickers, font selector, no API needed).
+
+**Monetization recommendation**: WooCommerce (Stripe + PagSeguro + PayPal) OR WP TechSites gateway (5% fee, D+2 repasse). Dedicated page in admin.
+
+**Payment for premium listings**: WooCommerce-first recommendation with gateway option via wp.techsites.ai.
+
+## API endpoints the plugin calls (must exist in api-server)
+
+All at `WPTS_API_BASE = https://wp.techsites.ai/api/wp`:
+- `POST /audit/seo` — receives site data, returns audit object
+- `POST /generate-content` — topic, type, tone, length, lang
+- `POST /generate-colors` — niche, style → palettes array
+- `POST /generate-menu` — niche, language → menuItems array
+- `POST /generate-logo` — brand_name, style, colors → image_url or svg
+- `POST /scraping/run` — category, city, limit, save_to → listings array
+- `POST /chatbot` — messages array → reply string
+- `POST /chat-editor` — command, context → actions array + message
+
+## Three business models
+
+1. **Plugin Solo**: client has own WP, installs plugin, gets API key
+2. **Migration + Plugin**: migrate to net.techsites.ai, install plugin
+3. **Full Service**: new WP on net.techsites.ai (BeTheme/MyListing) + plugin + hosting
+
+## WordPress hosting environment (coming)
+
+`net.techsites.ai` — dedicated WP install, multi-domain, fixed IP, MyListing + BeTheme themes. This is where models 2 and 3 clients are hosted.
+
+## ZIP packages
+
+- `wp-techsites-plugin-v2.0.0.zip` — current version (34KB)
+- `wp-techsites-plugin-v1.1.0.zip` — previous version
+- `wp-techsites-plugin-v1.0.0.zip` — original version
