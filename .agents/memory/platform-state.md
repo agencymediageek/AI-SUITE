@@ -1,42 +1,62 @@
 ---
-name: Estado da Plataforma
-description: Mapa completo de infraestrutura, projetos e acesso — atualizado após auditoria completa Jul/2026
+name: Estado da plataforma
+description: Status atual dos 3 produtos + infraestrutura — pós-sessão ai.mediageek.io
 ---
 
-## 3 VPS
+## Reunião de investidores: 6 de agosto de 2026
 
-- **VPS 1 Node.js** 179.197.229.207 — SSH via .agents/deploy_key — PM2: mediageek + deploy-webhook
-- **VPS 2 N8N** 187.77.37.75 — SSH root bloqueado — acesso: N8N_BASE_URL + N8N_API_KEY — 50 workflows
-- **VPS 3 Hostgator** redewp.com — SSH bloqueado — acesso: WHM API token — 4 contas cPanel
+### Produtos
 
-## Cloudflare TechSites ✅ ACESSO TOTAL
-- 14 zonas DNS, 10 Pages projects, 17 Workers scripts
-- Pages: directory-template-master (dubai.fond.coffee), global-fond-coffee (global.fond.coffee), gym-techsites-01, template-master-onepage, ts-saas-tech, ts-marketing-agency, ts-portfolio-freelancer, ts-ecom-single-product, ts-fitness-wellness, ts-dentist-medical
-- Workers: techsites-hub-production, techsites-editor-api-production, techsites-proxy-production, pixelforge-hub-production, + 13 outros
-- **8 Pages sem repo GitHub** — deploy manual, sem CI/CD — corrigir ao conectar engine
+| Produto | Domínio | Status | Próximo passo |
+|---------|---------|--------|---------------|
+| AI MediaGeek | ai.mediageek.io | ✅ PRONTO | Rebranding (remover "AI Suite") |
+| APEX Core | apex.techsites.ai | 🔄 IN_PROGRESS | Task #33: planos Stripe |
+| WP TechSites | wp.techsites.ai | ⏳ PENDENTE | Apontar domínio |
 
-## Cloudflare MediaGeek ⚠️ DNS ONLY
-- DNS ✅ (16 registros, mediageek.io → 179.197.229.207)
-- Pages/Workers ❌ (token sem Account scope)
-- Impacto: nenhum agora — MediaGeek roda no VPS, não em Pages
+---
 
-## N8N — 50 Workflows
-- PixelForge: 9 ON (SaaS Fiverr em produção)
-- TechSites/WaaS: 5 ON, 7 OFF (Maestro Fábrica OFF)
-- W-Series Outreach: 7 ON (pipeline B2B completo)
-- SEOContent: 1 ON (audit), 16 OFF (V4.0 Unified é mais recente)
+## AI MediaGeek (ai.mediageek.io) — concluído em 2026-08-01
 
-## WYSIWYG Editor — Em Produção
-Workers ativos servindo clientes: agency, dentist, mokha (café), real-estate, techprospect, trial-dubai, lawyer-accountant. Frontend via Workers, não via VPS.
+### O que foi feito
+- Install.sh do aisuitemg base → porta 3012, DB aimediageek
+- Branding: "AI MediaGeek", cor purple 262 80% 50%, logo SVG
+- Motor: Grok 3 Fast (DEFAULT_MODEL_ID = "grok-3-fast")
+- Idiomas: PT-BR + ES habilitados + 262 traduções (Grok) + AutoTranslator
+- Planos: Starter $9/mo (30k tokens), Pro $29/mo (150k), Business $79/mo (500k)
+- Stripe webhook registrado: we_1Tzbv2K1Gb20xyZUI4fTK7nA
+- default_tokens = 300 para novas contas
+- aiLimits inicializado: live-chat=15, image=20, audio=20, video=30
+- Chatbot RAG: modelo atualizado para gemini-2.0-flash-exp
+- Legal pages: /privacy, /terms, /cookies — 200 OK nativos
 
-## PixelForge
-SaaS Fiverr em produção. Workers: pixelforge-hub-production + dev. N8N: 9 workflows ON. Frontend: localização desconhecida — verificar com usuário.
+### Pendente
+- Rebranding: remover "AI Suite" do frontend
+- Ícone PWA: ainda mostra nome/logo do template original
+- Aprovação para salvar como template white-label v1.0
 
-## Hostgator cPanel (4 contas)
-redewp.com (468M) · pousadasaopedrotimbo.com.br (1017M) · net.mediageek.io (297M) · driverscopilot.app (408M)
+---
 
-## Esteira
-1. MediaGeek reconstrução (inglês + Stripe only)
-2. TechSites engine/build.js + conectar Pages a repos GitHub
-3. SEOContent V4.0 ativar
-4. PixelForge mapear e documentar
+## Infraestrutura VPS (179.197.229.207)
+
+| PM2 | Porta | Domínio | DB |
+|-----|-------|---------|-----|
+| mediageek | 3000 | mediageek.io | mediageek |
+| aisuitemg | 3010 | aisuitemg.mediageek.io | aisuitemg |
+| clonemg | 3011 | clone.mediageek.io | clonemg |
+| aimediageek | 3012 | ai.mediageek.io | aimediageek |
+| apex-api | 8080 | apex.techsites.ai/api | apex |
+| deploy-webhook | 9876 | internal | — |
+
+Próxima porta: 3013+
+
+---
+
+## APEX Core (apex.techsites.ai)
+
+- VPS port 8080, PM2 apex-api
+- Task #33 IN_PROGRESS: planos Stripe e webhook
+- Task #35 PENDING: domínio HTTPS
+- Task #37 PENDING: loop de microfone
+- Task #36 PENDING: voz ElevenLabs
+
+**Why:** APEX é prioridade para a reunião de investidores — task #33 deve ser retomada.

@@ -17,7 +17,8 @@ export async function POST(req: Request) {
         const session: any = await getSession();
         const { prompt, supportEmail, history = [] } = body;
 
-        let targetUserEmail = session?.email || supportEmail || 'admin@example.com';
+        // Only use session email for real users; anonymous/support chats skip token deduction
+        let targetUserEmail = session?.email || 'admin@example.com';
 
         if (!prompt) {
             return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });

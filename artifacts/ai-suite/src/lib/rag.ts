@@ -159,7 +159,7 @@ ${context || "No specific document context found for this query."}
 
 USER QUESTION: ${query}`;
 
-        const modelNames = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp"];
+        const modelNames = ["gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
         let answer = "";
         let lastErr: any = null;
 

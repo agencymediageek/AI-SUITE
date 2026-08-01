@@ -36,7 +36,7 @@ Return ONLY a valid JSON object where keys are the language codes and values are
 {"fr": "translated text", "ar": "translated text"}`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-2.0-flash-exp",
             contents: prompt,
         });
 
