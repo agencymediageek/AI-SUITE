@@ -330,6 +330,41 @@ function wpts_apply_chat_action( $action ) {
         case 'update_tagline':
             update_option( 'blogdescription', sanitize_text_field($action['value']) );
             break;
+        case 'update_site_title':
+            update_option( 'blogname', sanitize_text_field($action['value']) );
+            break;
+        case 'create_post':
+            wp_insert_post([
+                'post_title'   => sanitize_text_field($action['value'] ?? 'Novo Post'),
+                'post_content' => wp_kses_post($action['content'] ?? ''),
+                'post_status'  => 'publish',
+                'post_type'    => 'post',
+            ]);
+            break;
+        case 'create_listing':
+            $listing_data = [
+                'name'        => $action['value'] ?? ($action['title'] ?? 'Listing'),
+                'description' => $action['content'] ?? '',
+                'address'     => $action['address'] ?? '',
+                'phone'       => $action['phone'] ?? '',
+                'website'     => $action['website'] ?? '',
+                'rating'      => $action['rating'] ?? null,
+                'category'    => $action['category'] ?? '',
+                'city'        => $action['city'] ?? '',
+                'source'      => 'chat-editor',
+            ];
+            wpts_insert_listing( $listing_data );
+            break;
+        case 'create_directory_page':
+            $page_id = wp_insert_post([
+                'post_title'   => sanitize_text_field($action['value'] ?? 'Diretório'),
+                'post_content' => '[wpts_directory]',
+                'post_status'  => 'publish',
+                'post_type'    => 'page',
+            ]);
+            update_option( 'wpts_directory_page', $page_id );
+            flush_rewrite_rules();
+            break;
     }
 }
 

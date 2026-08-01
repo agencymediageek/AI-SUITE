@@ -645,38 +645,29 @@ router.post("/wp/scraping/run", requireSiteKey, async (req, res) => {
 
     // ── Push listings directly to WordPress via REST API ──────────────────────
     let wpImported = 0;
+    const wpEndpoints: Record<string, number> = {};
     let wpErrors: string[] = [];
     if (save_to === "wp" && site.wpRestUrl && site.wpUser && site.wpAppPassword) {
       for (const listing of listings) {
         try {
-          // Try our custom endpoint first (handles job_listing CPT + meta)
-          await wpCall(site, "/wp-techsites/v1/listings", "POST", {
-            title:       listing.name,
-            content:     listing.description ? `<p>${listing.description}</p>` : "",
-            address:     listing.address,
-            phone:       listing.phone,
-            website:     listing.website,
-            rating:      listing.rating,
-            review_count:listing.review_count,
-            hours:       listing.hours,
-            lat:         listing.lat,
-            lng:         listing.lng,
-            category:    listing.category,
-            source:      listing.source || "import",
+          const result = await wpCreateListing(site, {
+            title:        listing.name,
+            content:      listing.description ? `<p>${listing.description}</p>` : "",
+            address:      listing.address      || "",
+            phone:        listing.phone        || "",
+            website:      listing.website      || "",
+            rating:       listing.rating       || null,
+            review_count: listing.review_count || 0,
+            hours:        listing.hours        || "",
+            lat:          listing.lat          || null,
+            lng:          listing.lng          || null,
+            category:     listing.category     || category,
+            source:       listing.source       || "brightdata",
           });
           wpImported++;
+          wpEndpoints[result.endpoint] = (wpEndpoints[result.endpoint] || 0) + 1;
         } catch (e: any) {
-          // Fallback: create as regular post
-          try {
-            await wpCall(site, "/wp/v2/posts", "POST", {
-              title:   listing.name,
-              status:  "draft",
-              content: `<p>${listing.description || ""}</p><p>📍 ${listing.address || ""}</p><p>📞 ${listing.phone || ""}</p>`,
-            });
-            wpImported++;
-          } catch (e2: any) {
-            wpErrors.push(listing.name + ": " + e2.message);
-          }
+          wpErrors.push(listing.name + ": " + e.message);
         }
       }
     }
@@ -691,9 +682,10 @@ router.post("/wp/scraping/run", requireSiteKey, async (req, res) => {
       creditsRemaining: site.creditBalance - cost,
       source: bdKey ? "brightdata" : "demo",
       ...(save_to === "wp" ? {
-        wp_imported:  wpImported,
-        wp_errors:    wpErrors.length ? wpErrors.slice(0, 3) : undefined,
-        wp_connected: !!(site.wpRestUrl && site.wpUser),
+        wp_imported:   wpImported,
+        wp_endpoints:  wpEndpoints,
+        wp_errors:     wpErrors.length ? wpErrors.slice(0, 3) : undefined,
+        wp_connected:  !!(site.wpRestUrl && site.wpUser),
       } : {}),
     });
   } catch (err: any) {
@@ -710,7 +702,7 @@ router.post("/wp/chat-editor", requireSiteKey, async (req, res) => {
     const { command, context } = req.body;
     if (!command) { res.status(400).json({ error: "command required" }); return; }
 
-    const prompt = `Você é um assistente que controla um site WordPress via comandos em linguagem natural.
+    const prompt = `Você é um assistente inteligente que controla um site WordPress de diretório de negócios via comandos em linguagem natural.
 Site: "${site.siteName}" (${context || site.siteUrl})
 
 Comando do usuário: "${command}"
@@ -720,25 +712,37 @@ Interprete o comando e retorne JSON com as ações a executar. Formato EXATO (na
   "message": "Mensagem amigável confirmando o que foi feito",
   "actions": [
     {
-      "type": "<update_post_title|update_post_content|update_option|update_tagline|create_post>",
-      "post_id": <number ou null>,
-      "option": "<nome da opção wp se type=update_option>",
-      "value": "<novo valor>"
+      "type": "<tipo>",
+      "value": "<valor principal>",
+      "content": "<conteúdo opcional>",
+      "option": "<opção wp opcional>",
+      "post_id": null,
+      "address": "<endereço se create_listing>",
+      "phone": "<telefone se create_listing>",
+      "website": "<site se create_listing>",
+      "rating": <número se create_listing>,
+      "category": "<categoria se create_listing>",
+      "city": "<cidade se create_listing>"
     }
   ]
 }
 
 Tipos de ação disponíveis:
-- update_tagline: muda a tagline/slogan do site (valor = nova tagline)
+- update_tagline: muda a tagline/slogan do site (value = nova tagline)
+- update_site_title: muda o título do site (value = novo título)
 - update_option: muda uma opção do WordPress (option = nome da opção, value = novo valor)
-- create_post: cria um novo post (value = título, e inclua um campo "content" com o conteúdo)
-- update_post_title: muda o título de um post específico
-- update_post_content: muda o conteúdo de um post específico
+- create_post: cria um novo post/artigo (value = título, content = conteúdo HTML)
+- create_listing: cria um listing no diretório (value = nome do estabelecimento, address, phone, website, rating, category, city, content = descrição)
+- create_directory_page: cria uma página de diretório com shortcode [wpts_directory] (value = título da página)
+- update_post_title: muda o título de um post específico (post_id + value)
+- update_post_content: muda o conteúdo de um post específico (post_id + value)
 
 Exemplos:
 - "muda a tagline para X" → [{"type":"update_tagline","value":"X"}]
-- "cria um post sobre Y" → [{"type":"create_post","value":"Título sobre Y","content":"Conteúdo..."}]
-- "ativa o blog" → [{"type":"update_option","option":"show_on_front","value":"posts"}]
+- "adiciona o restaurante Bom Gosto na Rua XV nº 100" → [{"type":"create_listing","value":"Restaurante Bom Gosto","address":"Rua XV de Novembro, 100, Centro, Curitiba-PR","phone":"(41) 3333-0000","category":"restaurantes","city":"Curitiba","rating":4.5}]
+- "cria um post sobre turismo em Curitiba" → [{"type":"create_post","value":"Turismo em Curitiba: os melhores pontos turísticos","content":"<p>Curitiba é conhecida por...</p>"}]
+- "cria a página do diretório" → [{"type":"create_directory_page","value":"Guia de Curitiba"}]
+- "muda o nome do site para Guia CWB" → [{"type":"update_site_title","value":"Guia CWB"}]
 
 Se o comando não for executável, retorne actions=[] e explique no message.`;
 
@@ -759,6 +763,9 @@ Se o comando não for executável, retorne actions=[] e explique no message.`;
           if (action.type === "update_tagline") {
             await wpCall(site, "/wp/v2/settings", "POST", { description: action.value });
             wpResults.push({ action: action.type, success: true });
+          } else if (action.type === "update_site_title") {
+            await wpCall(site, "/wp/v2/settings", "POST", { title: action.value });
+            wpResults.push({ action: action.type, success: true });
           } else if (action.type === "update_option" && action.option) {
             await wpCall(site, "/wp/v2/settings", "POST", { [action.option]: action.value });
             wpResults.push({ action: action.type, success: true });
@@ -766,12 +773,29 @@ Se o comando não for executável, retorne actions=[] e explique no message.`;
             const post = await wpCall(site, "/wp/v2/posts", "POST", {
               title:   action.value,
               content: action.content || "",
-              status:  "draft",
+              status:  "publish",
             });
             wpResults.push({ action: action.type, success: true, post_id: post.id });
-          } else if (action.type === "update_site_title") {
-            await wpCall(site, "/wp/v2/settings", "POST", { title: action.value });
-            wpResults.push({ action: action.type, success: true });
+          } else if (action.type === "create_listing") {
+            // Smart fallback: plugin endpoint → job_listing CPT → post
+            const listing = await wpCreateListing(site, {
+              title:    action.value,
+              content:  action.content || "",
+              address:  action.address  || "",
+              phone:    action.phone    || "",
+              website:  action.website  || "",
+              rating:   action.rating   || null,
+              category: action.category || "",
+              source:   "chat-editor",
+            });
+            wpResults.push({ action: action.type, success: true, post_id: listing.id });
+          } else if (action.type === "create_directory_page") {
+            const page = await wpCall(site, "/wp/v2/pages", "POST", {
+              title:   action.value || "Guia de Negócios",
+              content: "<!-- wp:shortcode -->[wpts_directory]<!-- /wp:shortcode -->",
+              status:  "publish",
+            });
+            wpResults.push({ action: action.type, success: true, post_id: page.id });
           }
         } catch (e: any) {
           wpResults.push({ action: action.type, success: false, error: e.message });
@@ -787,6 +811,159 @@ Se o comando não for executável, retorne actions=[] e explique no message.`;
   } catch (err: any) {
     req.log?.error(err, "wp/chat-editor error");
     res.status(500).json({ error: "Erro ao processar comando" });
+  }
+});
+
+// ── GET /api/wp/listings ──────────────────────────────────────────────────────
+// Returns current listing count and latest imports from WordPress REST API.
+// Tries custom plugin endpoint first; falls back to job_listing CPT, then posts.
+router.get("/wp/listings", requireSiteKey, async (req, res) => {
+  const site = (req as any).wpSite;
+  try {
+    if (!site.wpRestUrl || !site.wpUser || !site.wpAppPassword) {
+      res.json({ connected: false, total: 0, listings: [], message: "WP REST não conectado" });
+      return;
+    }
+
+    // 1. Try our custom plugin endpoint (v2.1.0+)
+    try {
+      const data = await wpCall(site, "/wp-techsites/v1/listings?per_page=10&page=1", "GET");
+      res.json({ connected: true, total: data.total || 0, listings: data.listings || [], endpoint: "plugin" });
+      return;
+    } catch { /* fallthrough */ }
+
+    // 2. Try job_listing CPT (MyListing theme, if REST enabled)
+    try {
+      const data = await wpCall(site, "/wp/v2/job_listing?per_page=10&status=publish", "GET");
+      if (Array.isArray(data)) {
+        res.json({ connected: true, total: data.length, listings: data.map((p: any) => ({ id: p.id, title: p.title?.rendered || p.title, link: p.link })), endpoint: "job_listing" });
+        return;
+      }
+    } catch { /* fallthrough */ }
+
+    // 3. Fallback: count all posts (any content imported)
+    const posts = await wpCall(site, "/wp/v2/posts?per_page=10&status=publish", "GET");
+    const total = Array.isArray(posts) ? posts.length : 0;
+    res.json({ connected: true, total, listings: Array.isArray(posts) ? posts.map((p: any) => ({ id: p.id, title: p.title?.rendered || p.title, link: p.link })) : [], endpoint: "posts" });
+  } catch (err: any) {
+    res.json({ connected: false, total: 0, listings: [], error: err.message });
+  }
+});
+
+// ── POST /api/wp/demo ─────────────────────────────────────────────────────────
+// Live-build demo: generates listings for a city + category and imports to WP.
+// Designed for investor demos — returns a rich summary with timing.
+router.post("/wp/demo", requireSiteKey, async (req, res) => {
+  const site = (req as any).wpSite;
+  const startedAt = Date.now();
+
+  try {
+    const {
+      category    = "restaurantes",
+      city        = "Curitiba",
+      count       = 5,
+      tagline,
+      site_title,
+    } = req.body;
+
+    const actualCount = Math.min(Number(count) || 5, 15);
+    const steps: { step: string; ms: number; ok: boolean; detail?: string }[] = [];
+    const t = () => Date.now() - startedAt;
+
+    // ── Step 1: Generate listings ──────────────────────────────────────────
+    let listings: any[] = [];
+    const bdKey = process.env["BRIGHTDATA"];
+    if (bdKey) {
+      listings = await scrapeBrightData(bdKey, category, city, actualCount, 0);
+    }
+    if (!listings.length) {
+      listings = await generateDemoListings(category, city, actualCount);
+    }
+    steps.push({ step: `Gerou ${listings.length} listings de ${category} em ${city}`, ms: t(), ok: listings.length > 0 });
+
+    // ── Step 2: Import listings to WordPress (smart fallback) ─────────────
+    let imported = 0;
+    const importErrors: string[] = [];
+    const importEndpoints: Record<string, number> = {};
+    if (site.wpRestUrl && site.wpUser && site.wpAppPassword) {
+      for (const listing of listings) {
+        try {
+          const result = await wpCreateListing(site, {
+            title:        listing.name,
+            content:      listing.description || "",
+            address:      listing.address      || "",
+            phone:        listing.phone        || "",
+            website:      listing.website      || "",
+            rating:       listing.rating       || null,
+            review_count: listing.review_count || 0,
+            hours:        listing.hours        || "",
+            lat:          listing.lat          || null,
+            lng:          listing.lng          || null,
+            category:     listing.category     || category,
+            source:       listing.source       || "demo",
+          });
+          imported++;
+          importEndpoints[result.endpoint] = (importEndpoints[result.endpoint] || 0) + 1;
+        } catch (e: any) {
+          importErrors.push(listing.name + ": " + e.message);
+        }
+      }
+      const endpointSummary = Object.entries(importEndpoints).map(([k, v]) => `${v} via ${k}`).join(", ");
+      steps.push({
+        step: `Importou ${imported}/${listings.length} listings para o WordPress${endpointSummary ? ` (${endpointSummary})` : ""}`,
+        ms: t(), ok: imported > 0, detail: importErrors[0],
+      });
+    } else {
+      steps.push({ step: "WP REST não conectado — listings não importados", ms: t(), ok: false });
+    }
+
+    // ── Step 3: Update tagline ─────────────────────────────────────────────
+    const finalTagline = tagline || `O melhor guia de ${city} — ${category} e muito mais`;
+    if (site.wpRestUrl && site.wpUser) {
+      try {
+        await wpCall(site, "/wp/v2/settings", "POST", { description: finalTagline });
+        steps.push({ step: `Tagline atualizada: "${finalTagline}"`, ms: t(), ok: true });
+      } catch (e: any) {
+        steps.push({ step: "Tagline: " + e.message, ms: t(), ok: false });
+      }
+
+      // ── Step 4: Update site title if provided ────────────────────────────
+      if (site_title) {
+        try {
+          await wpCall(site, "/wp/v2/settings", "POST", { title: site_title });
+          steps.push({ step: `Título do site atualizado: "${site_title}"`, ms: t(), ok: true });
+        } catch (e: any) {
+          steps.push({ step: "Título: " + e.message, ms: t(), ok: false });
+        }
+      }
+    }
+
+    // ── Step 5: Deduct credits ─────────────────────────────────────────────
+    const cost = Math.min(20 + actualCount * 2, 60);
+    await db.update(wpSitesTable).set({ creditBalance: Math.max(0, site.creditBalance - cost) }).where(eq(wpSitesTable.id, site.id));
+    steps.push({ step: `Créditos debitados: ${cost}`, ms: t(), ok: true });
+
+    const totalMs = Date.now() - startedAt;
+    const successSteps = steps.filter(s => s.ok).length;
+
+    res.json({
+      success:      imported > 0,
+      summary:      `✅ ${imported} listings de "${category}" importados para ${site.siteName} em ${(totalMs / 1000).toFixed(1)}s`,
+      category,
+      city,
+      listings_generated: listings.length,
+      listings_imported:  imported,
+      tagline:            finalTagline,
+      site_url:           site.siteUrl,
+      steps,
+      total_ms:           totalMs,
+      steps_ok:           `${successSteps}/${steps.length}`,
+      credits_used:       cost,
+      credits_remaining:  Math.max(0, site.creditBalance - cost),
+    });
+  } catch (err: any) {
+    req.log?.error(err, "wp/demo error");
+    res.status(500).json({ error: "Erro na demo: " + err.message });
   }
 });
 
@@ -846,6 +1023,58 @@ async function wpCall(site: any, path: string, method = "GET", body?: any): Prom
   const data = await res.json() as any;
   if (!res.ok) throw new Error(data?.message || `WP REST error ${res.status} at ${path}`);
   return data;
+}
+
+// ── Smart listing creator: plugin endpoint → job_listing → post fallback ─────
+async function wpCreateListing(site: any, listing: {
+  title: string; content?: string; address?: string; phone?: string; website?: string;
+  rating?: number | null; review_count?: number; hours?: string; lat?: number | null;
+  lng?: number | null; category?: string; source?: string;
+}): Promise<{ id: number; endpoint: string }> {
+  // 1. Try plugin custom endpoint (v2.1.0+)
+  try {
+    const r = await wpCall(site, "/wp-techsites/v1/listings", "POST", listing);
+    return { id: r.id, endpoint: "plugin" };
+  } catch { /* fallthrough */ }
+
+  // 2. Try job_listing CPT via standard WP REST (if plugin v2.1.0 enabled show_in_rest)
+  try {
+    const r = await wpCall(site, "/wp/v2/job_listing", "POST", {
+      title:   listing.title,
+      content: listing.content || `<p>${listing.address || ""}</p>`,
+      status:  "publish",
+      meta:    {
+        _job_location: listing.address || "",
+        _phone:        listing.phone   || "",
+        _job_website:  listing.website || "",
+        _rating:       String(listing.rating   || ""),
+        _review_count: String(listing.review_count || ""),
+        _hours:        listing.hours   || "",
+        _geolocation_lat:  String(listing.lat || ""),
+        _geolocation_long: String(listing.lng || ""),
+      },
+    });
+    return { id: r.id, endpoint: "job_listing" };
+  } catch { /* fallthrough */ }
+
+  // 3. Fallback: regular post with structured content
+  const content = `
+<p>${listing.content || ""}</p>
+<ul>
+  ${listing.address      ? `<li>📍 <strong>Endereço:</strong> ${listing.address}</li>` : ""}
+  ${listing.phone        ? `<li>📞 <strong>Telefone:</strong> ${listing.phone}</li>` : ""}
+  ${listing.website      ? `<li>🌐 <strong>Site:</strong> <a href="${listing.website}">${listing.website}</a></li>` : ""}
+  ${listing.rating       ? `<li>⭐ <strong>Avaliação:</strong> ${listing.rating}/5 (${listing.review_count || 0} avaliações)</li>` : ""}
+  ${listing.hours        ? `<li>🕐 <strong>Horários:</strong> ${listing.hours}</li>` : ""}
+  ${listing.category     ? `<li>🏷️ <strong>Categoria:</strong> ${listing.category}</li>` : ""}
+</ul>`.trim();
+  const r = await wpCall(site, "/wp/v2/posts", "POST", {
+    title:   listing.title,
+    content,
+    status:  "publish",
+    meta:    { _import_source: listing.source || "import" },
+  });
+  return { id: r.id, endpoint: "post" };
 }
 
 // ── Extended AI call (more tokens for audit/scraping) ────────────────────────
@@ -1043,23 +1272,47 @@ function normalizePlace(p: any) {
 // ── Demo listings via Gemini ───────────────────────────────────────────────────
 async function generateDemoListings(category: string, city: string, limit: number): Promise<any[]> {
   const count = Math.min(limit, 12);
-  const prompt = `Gere ${count} estabelecimentos fictícios mas realistas de "${category}" em "${city}", Brasil.
-Retorne JSON array EXATO (nada antes ou depois):
+
+  // Curitiba-specific context for richer, more realistic data
+  const cityContext = city.toLowerCase().includes("curitiba") || city.toLowerCase().includes("cwb")
+    ? `Curitiba, PR. Use bairros reais: Batel, Água Verde, Centro, Bigorrilho, Mercês, Rebouças, Portão, Xaxim, Cajuru, Cabral, Bacacheri, São Francisco. Use DDI (41). Ruas reais: Rua XV de Novembro, Av. Batel, Rua Padre Anchieta, Av. Iguaçu, Rua Mateus Leme, Av. Marechal Floriano, Rua Comendador Araújo, Rua Emiliano Perneta.`
+    : `${city}, Brasil`;
+
+  const categoryContext = {
+    restaurantes: "restaurantes, bares, padarias, cafeterias, churrascarias, sushi, pizza, hamburguerias",
+    hotéis: "hotéis, pousadas, hostels, apart-hotéis",
+    turismo: "pontos turísticos, museus, parques, atrações culturais",
+    serviços: "salões de beleza, clínicas, academias, mecânicas, escritórios",
+    compras: "lojas, shoppings, boutiques, mercados, farmácias",
+  }[category.toLowerCase()] || category;
+
+  const prompt = `Gere ${count} estabelecimentos de "${categoryContext}" em ${cityContext}
+
+Retorne APENAS o JSON array abaixo, sem texto antes ou depois:
 [
   {
-    "name": "Nome do estabelecimento",
-    "address": "Endereço completo realista em ${city}",
-    "phone": "(XX) XXXX-XXXX",
-    "website": "https://www.exemplo.com.br",
-    "rating": 4.2,
-    "review_count": 127,
-    "hours": "Seg-Sex 8h-18h, Sáb 8h-13h",
-    "description": "Breve descrição do estabelecimento",
+    "name": "Nome real e criativo do estabelecimento",
+    "address": "Rua/Av completa, número, Bairro, ${city}-PR",
+    "phone": "(41) 9XXXX-XXXX ou (41) 3XXX-XXXX",
+    "website": "https://www.nomeestabelecimento.com.br",
+    "rating": 4.3,
+    "review_count": 215,
+    "hours": "Seg-Sex 11h-23h, Sáb-Dom 11h-00h",
+    "description": "Descrição envolvente de 1-2 frases sobre o estabelecimento, especialidade e diferenciais",
     "category": "${category}",
-    "source": "demo"
+    "source": "demo",
+    "lat": -25.4284,
+    "lng": -49.2733
   }
 ]
-Use nomes, endereços e telefones realistas para ${city}. Varie os ratings entre 3.5 e 5.0.`;
+
+Regras:
+- Nomes criativos e realistas (não genéricos)
+- Endereços com bairros reais de ${city}
+- Ratings entre 3.8 e 5.0, variados
+- Descrições específicas e atraentes
+- lat/lng aproximadas para ${city} (varie ±0.05)
+- review_count entre 50 e 2000`;
 
   try {
     const raw = await callGeminiLong(prompt);

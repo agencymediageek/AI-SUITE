@@ -3,7 +3,7 @@
  * Plugin Name:  WP TechSites
  * Plugin URI:   https://wp.techsites.ai
  * Description:  O SaaS de IA mais completo para WordPress — directory builder, scraping, logo, SEO, chatbot e muito mais.
- * Version:      2.0.0
+ * Version:      2.1.0
  * Author:       TechSites.ai
  * Author URI:   https://techsites.ai
  * License:      GPL-2.0+
