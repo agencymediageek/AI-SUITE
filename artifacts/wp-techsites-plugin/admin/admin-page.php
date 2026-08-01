@@ -836,6 +836,49 @@ function wpts_page_settings() {
                 <div id="wpts-settings-result"></div>
             </div>
 
+            <!-- WP REST API Connection -->
+            <?php
+            $rest_connected = get_option('wpts_wp_rest_connected', 0);
+            $rest_user      = get_option('wpts_wp_user', '');
+            $rest_url       = get_option('wpts_wp_rest_url', get_site_url().'/wp-json');
+            ?>
+            <div class="wpts-card" style="border:1px solid <?php echo $rest_connected ? '#22c55e33' : '#6366f133'; ?>">
+                <h4><?php echo $rest_connected ? '🟢' : '🔗'; ?> Conectar WordPress REST API</h4>
+                <p class="wpts-help" style="margin-bottom:12px">Permite que o api-server escreva listings, posts e configurações diretamente no WordPress — sem copiar e colar.</p>
+
+                <?php if ($rest_connected) : ?>
+                <div class="wpts-alert wpts-alert-success" style="margin-bottom:12px">
+                    ✅ Conectado como <strong><?php echo esc_html($rest_user); ?></strong> — write-back ativo
+                </div>
+                <?php endif; ?>
+
+                <div class="wpts-field">
+                    <label>Usuário WordPress (login)</label>
+                    <input type="text" id="wpts-wp-user" class="wpts-input"
+                           value="<?php echo esc_attr($rest_user); ?>"
+                           placeholder="admin ou seu nome de usuário">
+                </div>
+                <div class="wpts-field">
+                    <label>Application Password <small style="color:#64748b">(WordPress → Usuários → Seu Perfil → Application Passwords)</small></label>
+                    <input type="password" id="wpts-wp-app-pass" class="wpts-input"
+                           value="" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx">
+                    <p class="wpts-help">A senha de aplicação é gerada pelo próprio WordPress e pode ser revogada a qualquer momento.</p>
+                </div>
+                <div class="wpts-field">
+                    <label>URL da REST API</label>
+                    <input type="text" id="wpts-wp-rest-url" class="wpts-input"
+                           value="<?php echo esc_attr($rest_url); ?>"
+                           placeholder="https://seusite.com/wp-json">
+                </div>
+                <div style="display:flex;gap:8px;margin-top:12px">
+                    <button id="wpts-connect-rest" class="wpts-btn wpts-btn-primary">🔗 Conectar</button>
+                    <?php if ($rest_connected) : ?>
+                    <button id="wpts-disconnect-rest" class="wpts-btn" style="background:#1e293b;color:#94a3b8">Desconectar</button>
+                    <?php endif; ?>
+                </div>
+                <div id="wpts-rest-result" style="margin-top:8px"></div>
+            </div>
+
             <div class="wpts-card">
                 <h4>🔍 Informações do ambiente</h4>
                 <?php $theme = wpts_detect_theme(); ?>

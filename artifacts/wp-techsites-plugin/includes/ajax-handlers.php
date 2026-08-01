@@ -29,6 +29,44 @@ add_action( 'wp_ajax_wpts_save_settings', function () {
     wp_send_json_success( 'Configurações salvas.' );
 });
 
+// ─── Connect WordPress REST API ───────────────────────────────────────────────
+add_action( 'wp_ajax_wpts_connect_rest', function () {
+    wpts_ajax_check();
+    $wp_user     = sanitize_text_field( $_POST['wp_user'] ?? '' );
+    $wp_pass     = $_POST['wp_app_password'] ?? '';       // Application Password — don't sanitize
+    $wp_rest_url = esc_url_raw( $_POST['wp_rest_url'] ?? ( get_site_url() . '/wp-json' ) );
+
+    if ( ! $wp_user || ! $wp_pass ) {
+        wp_send_json_error( 'Usuário e senha de aplicação são obrigatórios.' );
+        return;
+    }
+
+    $result = wpts_call_api( '/connect-rest', [
+        'wp_user'        => $wp_user,
+        'wp_app_password'=> $wp_pass,
+        'wp_rest_url'    => $wp_rest_url,
+    ]);
+
+    if ( ! empty( $result['error'] ) ) {
+        wp_send_json_error( $result['error'] );
+        return;
+    }
+
+    update_option( 'wpts_wp_user',          $wp_user );
+    update_option( 'wpts_wp_rest_url',      $wp_rest_url );
+    update_option( 'wpts_wp_rest_connected', 1 );
+    wp_send_json_success( $result );
+});
+
+// ─── Disconnect REST API ──────────────────────────────────────────────────────
+add_action( 'wp_ajax_wpts_disconnect_rest', function () {
+    wpts_ajax_check();
+    update_option( 'wpts_wp_user', '' );
+    update_option( 'wpts_wp_rest_url', '' );
+    update_option( 'wpts_wp_rest_connected', 0 );
+    wp_send_json_success( 'Desconectado.' );
+});
+
 // ─── SEO Audit ────────────────────────────────────────────────────────────────
 add_action( 'wp_ajax_wpts_run_audit', function () {
     wpts_ajax_check();

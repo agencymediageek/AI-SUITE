@@ -1,65 +1,62 @@
 ---
-name: WP TechSites Plugin
-description: Architecture and decisions for the WP TechSites WordPress plugin (Trojan Horse SaaS strategy)
+name: WP TechSites
+description: Plugin WP + dashboard SaaS; auth, REST write-back, endpoints, business models
 ---
 
-## Plugin v2.0.0 — Multi-file structure
+# WP TechSites
 
-```
-artifacts/wp-techsites-plugin/
-├── wp-techsites.php           # Main file, constants, module loader, chatbot hook
-├── includes/
-│   ├── theme-detector.php     # wpts_detect_theme() → structured info; wpts_get_site_audit_data()
-│   ├── cpt-listings.php       # CPT wpts_listing + taxonomies wpts_category + wpts_city
-│   └── ajax-handlers.php      # All wp_ajax_wpts_* handlers + [wpts_directory] shortcode
-└── admin/
-    └── admin-page.php         # Admin menu + all page renderers (dashboard, audit, directory, scraping, listings, logo, content, branding, menu, chatbot, monetize, chat-editor, settings)
-assets/
-├── admin.css                  # Full SaaS-style admin UI (dark sidebar, cards, animations)
-├── admin.js                   # All admin JS interactions
-└── chatbot.js                 # Frontend chatbot widget (no jQuery dependency)
-```
+## Plugin
+- Version 2.1.0 at `artifacts/wp-techsites-plugin/`
+- ZIP: `wp-techsites-plugin-v2.1.0.zip` (36K, ready to install)
+- `WPTS_API_BASE` hardcoded to `https://wp.techsites.ai/api/wp`
+- Auth: `X-WP-Site-Key` header (not JWT); sites stored in `wp_sites` table
 
-## Key design decisions
+## DB Schema (`lib/db/src/schema/wp-sites.ts`)
+Table `wp_sites` columns: id, api_key, site_url, site_name, owner_email, owner_name,
+credit_balance, is_active, plan, **wp_user**, **wp_app_password**, **wp_rest_url**,
+created_at, last_seen_at
 
-**Why:** Plugin is a "Trojan Horse" — it's a full SaaS platform embedded inside the client's WordPress. Every tool is active (no "coming soon"), giving the impression of a complete ecosystem.
+## API Endpoints (all at `/api/wp/`)
+- `POST /register` — create account, returns apiKey
+- `GET /verify` — confirm key is valid
+- `POST /connect-rest` — save WP REST credentials, validates against WP users/me
+- `POST /chat` — chatbot (single message)
+- `POST /chatbot` — chatbot (messages array)
+- `POST /audit/seo` — SEO audit (Gemini/Grok + local fallback)
+- `POST /generate-content` — AI content generator
+- `POST /apply-colors` — apply color palette
+- `POST /generate-menu` — generate nav menu
+- `POST /generate-logo` — SVG logo via AI
+- `POST /generate-colors` — color palettes
+- `POST /scraping/run` — BrightData → Gemini/Grok fallback; **auto-imports to WP via REST when connected**
+- `POST /chat-editor` — natural language WP editor; **executes actions directly in WP when connected**
+- `GET /tools` — available tools for plan
+- `GET /dashboard` — site stats
 
-**Theme detection** on activation: `wpts_detect_theme()` maps 15+ known themes (MyListing, BeTheme, Divi, Elementor, Astra, etc.) to structured info including type, color, features. Used in dashboard banner.
+## WP REST Write-Back
+- Activated via `POST /connect-rest` with `{wp_user, wp_app_password, wp_rest_url}`
+- `wpCall(site, path, method, body)` helper in wp-techsites.ts
+- scraping/run: creates `job_listing` via `/wp-techsites/v1/listings` (custom endpoint in plugin), falls back to `wp/v2/posts`
+- chat-editor: executes update_tagline, update_option, create_post directly in WP
+- Plugin registers custom REST route: `POST /wp-json/wp-techsites/v1/listings` — handles job_listing CPT + meta fields
 
-**SEO Audit** is the first product/entry point: runs automatically on plugin activation, generates score (0-100), grade (A-D), checklist with ok/warn/fail/info items. Has local fallback if API is down. Exports as PDF via html2pdf.js CDN.
+## MyListing CPT REST
+- Plugin adds filter `register_post_type_args` to enable REST for: job_listing, listing, wpts_listing, wpjm_job
+- Custom endpoint `/wp-json/wp-techsites/v1/listings` (GET + POST) handles listing creation with full meta
 
-**Directory Builder**: creates `wpts_listing` CPT + `wpts_category` + `wpts_city` taxonomies, creates archive page with `[wpts_directory]` shortcode, all on one click.
+## AI Fallback Chain
+- Primary: Gemini 2.0 Flash Exp → 2.0 Flash → 1.5 Flash
+- Fallback: Grok (grok-3-mini) via xAI API
+- Silent quota errors (429) skip to next model
 
-**Logo Builder**: two tabs — AI generation (calls API) + Manual compositor (live preview with icon grid, color pickers, font selector, no API needed).
+## Infrastructure
+- `cwb.net.techsites.ai` — WordPress Multisite subsite, MyListing 2.16, WooCommerce active
+- DNS: `*.net.techsites.ai` DNS-only (grey cloud) — Let's Encrypt cert on cPanel covers SANs
+- `net.techsites.ai` — proxied (Cloudflare Universal SSL covers *.techsites.ai)
+- WP admin username slug: `admin_6k23im5i`, display name: "admin"
+- WP_CWB_APP_PASSWORD secret saved in Replit
 
-**Monetization recommendation**: WooCommerce (Stripe + PagSeguro + PayPal) OR WP TechSites gateway (5% fee, D+2 repasse). Dedicated page in admin.
-
-**Payment for premium listings**: WooCommerce-first recommendation with gateway option via wp.techsites.ai.
-
-## API endpoints the plugin calls (must exist in api-server)
-
-All at `WPTS_API_BASE = https://wp.techsites.ai/api/wp`:
-- `POST /audit/seo` — receives site data, returns audit object
-- `POST /generate-content` — topic, type, tone, length, lang
-- `POST /generate-colors` — niche, style → palettes array
-- `POST /generate-menu` — niche, language → menuItems array
-- `POST /generate-logo` — brand_name, style, colors → image_url or svg
-- `POST /scraping/run` — category, city, limit, save_to → listings array
-- `POST /chatbot` — messages array → reply string
-- `POST /chat-editor` — command, context → actions array + message
-
-## Three business models
-
-1. **Plugin Solo**: client has own WP, installs plugin, gets API key
-2. **Migration + Plugin**: migrate to net.techsites.ai, install plugin
-3. **Full Service**: new WP on net.techsites.ai (BeTheme/MyListing) + plugin + hosting
-
-## WordPress hosting environment (coming)
-
-`net.techsites.ai` — dedicated WP install, multi-domain, fixed IP, MyListing + BeTheme themes. This is where models 2 and 3 clients are hosted.
-
-## ZIP packages
-
-- `wp-techsites-plugin-v2.0.0.zip` — current version (34KB)
-- `wp-techsites-plugin-v1.1.0.zip` — previous version
-- `wp-techsites-plugin-v1.0.0.zip` — original version
+## Business Models
+1. Plugin-only: install + API key
+2. Migration + plugin: move site + install
+3. Full-service: build on net.techsites.ai + plugin + hosting

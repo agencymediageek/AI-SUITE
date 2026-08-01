@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'WPTS_VERSION',    '2.0.0' );
+define( 'WPTS_VERSION',    '2.1.0' );
 define( 'WPTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPTS_API_BASE',   'https://wp.techsites.ai/api/wp' );
@@ -22,6 +22,100 @@ require_once WPTS_PLUGIN_DIR . 'includes/theme-detector.php';
 require_once WPTS_PLUGIN_DIR . 'includes/cpt-listings.php';
 require_once WPTS_PLUGIN_DIR . 'includes/ajax-handlers.php';
 require_once WPTS_PLUGIN_DIR . 'admin/admin-page.php';
+
+// ─── Enable REST API for MyListing / WP Job Manager CPT ──────────────────────
+add_filter( 'register_post_type_args', 'wpts_enable_listing_rest', 10, 2 );
+function wpts_enable_listing_rest( $args, $post_type ) {
+    $rest_types = [ 'job_listing', 'listing', 'wpts_listing', 'wpjm_job' ];
+    if ( in_array( $post_type, $rest_types, true ) ) {
+        $args['show_in_rest'] = true;
+        $args['rest_base']    = $args['rest_base'] ?? $post_type;
+    }
+    return $args;
+}
+
+// ─── Custom REST endpoint for listing creation (fallback for any CPT) ─────────
+add_action( 'rest_api_init', 'wpts_register_rest_routes' );
+function wpts_register_rest_routes() {
+    register_rest_route( 'wp-techsites/v1', '/listings', [
+        'methods'             => 'POST',
+        'callback'            => 'wpts_rest_create_listing',
+        'permission_callback' => function( $req ) {
+            return current_user_can( 'publish_posts' );
+        },
+    ]);
+    register_rest_route( 'wp-techsites/v1', '/listings', [
+        'methods'             => 'GET',
+        'callback'            => 'wpts_rest_get_listings',
+        'permission_callback' => '__return_true',
+    ]);
+}
+
+function wpts_rest_create_listing( WP_REST_Request $req ) {
+    $params = $req->get_json_params();
+    $cpt    = post_type_exists( 'job_listing' ) ? 'job_listing' : 'wpts_listing';
+
+    $post_id = wp_insert_post([
+        'post_title'   => sanitize_text_field( $params['title'] ?? 'Listing' ),
+        'post_content' => wp_kses_post( $params['content'] ?? '' ),
+        'post_status'  => 'publish',
+        'post_type'    => $cpt,
+    ]);
+
+    if ( is_wp_error( $post_id ) ) {
+        return new WP_Error( 'insert_failed', $post_id->get_error_message(), [ 'status' => 500 ] );
+    }
+
+    // Save meta fields
+    $meta_map = [
+        'address'      => '_job_location',
+        'phone'        => '_phone',
+        'website'      => '_job_website',
+        'rating'       => '_rating',
+        'review_count' => '_review_count',
+        'hours'        => '_hours',
+        'lat'          => '_geolocation_lat',
+        'lng'          => '_geolocation_long',
+        'category'     => '_listing_category',
+        'source'       => '_import_source',
+    ];
+    foreach ( $meta_map as $key => $meta_key ) {
+        if ( isset( $params[ $key ] ) ) {
+            update_post_meta( $post_id, $meta_key, sanitize_text_field( (string) $params[ $key ] ) );
+        }
+    }
+
+    return rest_ensure_response([
+        'id'     => $post_id,
+        'title'  => get_the_title( $post_id ),
+        'link'   => get_permalink( $post_id ),
+        'type'   => $cpt,
+        'status' => 'publish',
+    ]);
+}
+
+function wpts_rest_get_listings( WP_REST_Request $req ) {
+    $cpt  = post_type_exists( 'job_listing' ) ? 'job_listing' : 'wpts_listing';
+    $args = [
+        'post_type'      => $cpt,
+        'post_status'    => 'publish',
+        'posts_per_page' => (int) ( $req->get_param('per_page') ?? 20 ),
+        'paged'          => (int) ( $req->get_param('page') ?? 1 ),
+    ];
+    $query = new WP_Query( $args );
+    $items = [];
+    foreach ( $query->posts as $post ) {
+        $items[] = [
+            'id'      => $post->ID,
+            'title'   => $post->post_title,
+            'link'    => get_permalink( $post->ID ),
+            'address' => get_post_meta( $post->ID, '_job_location', true ),
+            'phone'   => get_post_meta( $post->ID, '_phone', true ),
+            'rating'  => get_post_meta( $post->ID, '_rating', true ),
+        ];
+    }
+    return rest_ensure_response([ 'listings' => $items, 'total' => $query->found_posts ]);
+}
 
 // ─── Activation ───────────────────────────────────────────────────────────────
 register_activation_hook( __FILE__, 'wpts_activate' );

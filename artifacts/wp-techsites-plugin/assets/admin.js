@@ -395,6 +395,42 @@
         }).always(function () { $btn.prop('disabled', false).text('💾 Salvar'); });
     });
 
+    // ── Connect WordPress REST API ────────────────────────────────────
+    $(document).on('click', '#wpts-connect-rest', function () {
+        var $btn  = $(this).prop('disabled', true).text('Conectando...');
+        var $res  = $('#wpts-rest-result');
+        var user  = $('#wpts-wp-user').val().trim();
+        var pass  = $('#wpts-wp-app-pass').val().trim();
+        var url   = $('#wpts-wp-rest-url').val().trim();
+        if (!user || !pass) {
+            showResult('#wpts-rest-result', errHtml('Preencha o usuário e a senha de aplicação.'));
+            $btn.prop('disabled', false).text('🔗 Conectar');
+            return;
+        }
+        wpAjax('wpts_connect_rest', { wp_user: user, wp_app_password: pass, wp_rest_url: url }).done(function (r) {
+            if (r.success) {
+                showResult('#wpts-rest-result', okHtml('✅ ' + (r.data.message || 'Conectado!')));
+                $('#wpts-wp-app-pass').val('');
+                setTimeout(function () { location.reload(); }, 1500);
+            } else {
+                showResult('#wpts-rest-result', errHtml(r.data || 'Erro ao conectar.'));
+            }
+        }).fail(function () {
+            showResult('#wpts-rest-result', errHtml('Erro de conexão.'));
+        }).always(function () { $btn.prop('disabled', false).text('🔗 Conectar'); });
+    });
+
+    $(document).on('click', '#wpts-disconnect-rest', function () {
+        if (!confirm('Desconectar o WordPress REST API?')) return;
+        wpAjax('wpts_disconnect_rest', {}).done(function () { location.reload(); });
+    });
+
+    // ── Chat Editor: show WP write-back results ───────────────────────
+    // (enhances existing chat response to show wpResults detail)
+    $(document).on('click', '#wpts-send-chat', function () {
+        // Handled below, this hook adds wpResults display on top of existing handler
+    });
+
     // ── Chat Editor ───────────────────────────────────────────────────
     function appendChatMsg(text, who) {
         var $box  = $('#wpts-chat-history');

@@ -15,23 +15,30 @@ import { sql } from "drizzle-orm";
 
 const router = Router();
 
-// ── Ensure table exists (idempotent) ─────────────────────────────────────────
+// ── Ensure table exists + migrate new columns (idempotent) ───────────────────
 async function ensureWpSitesTable() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS wp_sites (
-      id            SERIAL PRIMARY KEY,
-      api_key       TEXT UNIQUE NOT NULL,
-      site_url      TEXT NOT NULL,
-      site_name     TEXT NOT NULL DEFAULT '',
-      owner_email   TEXT NOT NULL,
-      owner_name    TEXT NOT NULL DEFAULT '',
+      id             SERIAL PRIMARY KEY,
+      api_key        TEXT UNIQUE NOT NULL,
+      site_url       TEXT NOT NULL,
+      site_name      TEXT NOT NULL DEFAULT '',
+      owner_email    TEXT NOT NULL,
+      owner_name     TEXT NOT NULL DEFAULT '',
       credit_balance INTEGER NOT NULL DEFAULT 100,
-      is_active     BOOLEAN NOT NULL DEFAULT true,
-      plan          TEXT NOT NULL DEFAULT 'trial',
-      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      last_seen_at  TIMESTAMPTZ
+      is_active      BOOLEAN NOT NULL DEFAULT true,
+      plan           TEXT NOT NULL DEFAULT 'trial',
+      wp_user        TEXT NOT NULL DEFAULT '',
+      wp_app_password TEXT NOT NULL DEFAULT '',
+      wp_rest_url    TEXT NOT NULL DEFAULT '',
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      last_seen_at   TIMESTAMPTZ
     )
   `);
+  // Migrate existing rows — add columns if table was created before this version
+  await db.execute(sql`ALTER TABLE wp_sites ADD COLUMN IF NOT EXISTS wp_user TEXT NOT NULL DEFAULT ''`);
+  await db.execute(sql`ALTER TABLE wp_sites ADD COLUMN IF NOT EXISTS wp_app_password TEXT NOT NULL DEFAULT ''`);
+  await db.execute(sql`ALTER TABLE wp_sites ADD COLUMN IF NOT EXISTS wp_rest_url TEXT NOT NULL DEFAULT ''`);
 }
 ensureWpSitesTable().catch(console.error);
 
@@ -160,6 +167,56 @@ router.post("/wp/register", async (req, res) => {
   } catch (err: any) {
     req.log?.error(err, "wp/register error");
     res.status(500).json({ error: "Erro ao registrar site" });
+  }
+});
+
+// ── POST /api/wp/connect-rest ─────────────────────────────────────────────────
+// Saves WP REST API credentials so the api-server can write back to WordPress.
+router.post("/wp/connect-rest", requireSiteKey, async (req, res) => {
+  try {
+    const site = (req as any).wpSite;
+    const { wp_user, wp_app_password, wp_rest_url } = req.body;
+
+    if (!wp_user || !wp_app_password || !wp_rest_url) {
+      res.status(400).json({ error: "wp_user, wp_app_password e wp_rest_url são obrigatórios" });
+      return;
+    }
+
+    const baseUrl = wp_rest_url.replace(/\/$/, "");
+    const auth = Buffer.from(`${wp_user}:${wp_app_password}`).toString("base64");
+
+    // Validate credentials against WP
+    const testRes = await fetch(`${baseUrl}/wp/v2/users/me`, {
+      headers: { "Authorization": `Basic ${auth}`, "Content-Type": "application/json" },
+    });
+    const testData = await testRes.json() as any;
+
+    if (!testData.id) {
+      res.status(401).json({
+        error: "Credenciais inválidas: " + (testData.message || "verifique o usuário e a senha de aplicação"),
+      });
+      return;
+    }
+
+    // Persist to DB
+    await db.execute(sql`
+      UPDATE wp_sites SET
+        wp_user         = ${wp_user},
+        wp_app_password = ${wp_app_password},
+        wp_rest_url     = ${baseUrl}
+      WHERE id = ${site.id}
+    `);
+
+    res.json({
+      connected: true,
+      wp_user: testData.name,
+      wp_roles: testData.roles,
+      wp_rest_url: baseUrl,
+      message: `✅ WordPress conectado como "${testData.name}" — write-back ativo`,
+    });
+  } catch (err: any) {
+    req.log?.error(err, "wp/connect-rest error");
+    res.status(500).json({ error: "Erro ao conectar: " + err.message });
   }
 });
 
@@ -586,6 +643,44 @@ router.post("/wp/scraping/run", requireSiteKey, async (req, res) => {
     const cost = Math.min(20 + Math.floor(actualLimit / 10), 50);
     await db.update(wpSitesTable).set({ creditBalance: site.creditBalance - cost }).where(eq(wpSitesTable.id, site.id));
 
+    // ── Push listings directly to WordPress via REST API ──────────────────────
+    let wpImported = 0;
+    let wpErrors: string[] = [];
+    if (save_to === "wp" && site.wpRestUrl && site.wpUser && site.wpAppPassword) {
+      for (const listing of listings) {
+        try {
+          // Try our custom endpoint first (handles job_listing CPT + meta)
+          await wpCall(site, "/wp-techsites/v1/listings", "POST", {
+            title:       listing.name,
+            content:     listing.description ? `<p>${listing.description}</p>` : "",
+            address:     listing.address,
+            phone:       listing.phone,
+            website:     listing.website,
+            rating:      listing.rating,
+            review_count:listing.review_count,
+            hours:       listing.hours,
+            lat:         listing.lat,
+            lng:         listing.lng,
+            category:    listing.category,
+            source:      listing.source || "import",
+          });
+          wpImported++;
+        } catch (e: any) {
+          // Fallback: create as regular post
+          try {
+            await wpCall(site, "/wp/v2/posts", "POST", {
+              title:   listing.name,
+              status:  "draft",
+              content: `<p>${listing.description || ""}</p><p>📍 ${listing.address || ""}</p><p>📞 ${listing.phone || ""}</p>`,
+            });
+            wpImported++;
+          } catch (e2: any) {
+            wpErrors.push(listing.name + ": " + e2.message);
+          }
+        }
+      }
+    }
+
     res.json({
       listings,
       total: listings.length,
@@ -595,6 +690,11 @@ router.post("/wp/scraping/run", requireSiteKey, async (req, res) => {
       creditsUsed: cost,
       creditsRemaining: site.creditBalance - cost,
       source: bdKey ? "brightdata" : "demo",
+      ...(save_to === "wp" ? {
+        wp_imported:  wpImported,
+        wp_errors:    wpErrors.length ? wpErrors.slice(0, 3) : undefined,
+        wp_connected: !!(site.wpRestUrl && site.wpUser),
+      } : {}),
     });
   } catch (err: any) {
     req.log?.error(err, "wp/scraping/run error");
@@ -651,7 +751,39 @@ Se o comando não for executável, retorne actions=[] e explique no message.`;
       result = { message: "Não consegui interpretar o comando. Tente ser mais específico.", actions: [] };
     }
 
-    res.json({ ...result, creditsUsed: 3 });
+    // ── Execute actions directly in WordPress if REST is connected ─────────────
+    let wpResults: { action: string; success: boolean; post_id?: number; error?: string }[] = [];
+    if (site.wpRestUrl && site.wpUser && site.wpAppPassword && result.actions?.length) {
+      for (const action of result.actions) {
+        try {
+          if (action.type === "update_tagline") {
+            await wpCall(site, "/wp/v2/settings", "POST", { description: action.value });
+            wpResults.push({ action: action.type, success: true });
+          } else if (action.type === "update_option" && action.option) {
+            await wpCall(site, "/wp/v2/settings", "POST", { [action.option]: action.value });
+            wpResults.push({ action: action.type, success: true });
+          } else if (action.type === "create_post") {
+            const post = await wpCall(site, "/wp/v2/posts", "POST", {
+              title:   action.value,
+              content: action.content || "",
+              status:  "draft",
+            });
+            wpResults.push({ action: action.type, success: true, post_id: post.id });
+          } else if (action.type === "update_site_title") {
+            await wpCall(site, "/wp/v2/settings", "POST", { title: action.value });
+            wpResults.push({ action: action.type, success: true });
+          }
+        } catch (e: any) {
+          wpResults.push({ action: action.type, success: false, error: e.message });
+        }
+      }
+      if (wpResults.length) {
+        const done = wpResults.filter(r => r.success).length;
+        result.message = `${result.message || ""} — ${done}/${wpResults.length} ação(ões) aplicada(s) no WordPress.`.trim();
+      }
+    }
+
+    res.json({ ...result, wpResults, creditsUsed: 3 });
   } catch (err: any) {
     req.log?.error(err, "wp/chat-editor error");
     res.status(500).json({ error: "Erro ao processar comando" });
@@ -697,6 +829,23 @@ function getAvailableTools(plan: string) {
     { id: "listing-builder",  name: "Criador de Directory",  icon: "🗂️", credits: 20, available: plan === "pro" },
   ];
   return all;
+}
+
+// ── WP REST API helper ────────────────────────────────────────────────────────
+async function wpCall(site: any, path: string, method = "GET", body?: any): Promise<any> {
+  if (!site.wpRestUrl || !site.wpUser || !site.wpAppPassword) {
+    throw new Error("WP REST não configurado. Configure em Configurações → Conectar WordPress.");
+  }
+  const url = `${site.wpRestUrl}${path}`;
+  const auth = Buffer.from(`${site.wpUser}:${site.wpAppPassword}`).toString("base64");
+  const res = await fetch(url, {
+    method,
+    headers: { "Authorization": `Basic ${auth}`, "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json() as any;
+  if (!res.ok) throw new Error(data?.message || `WP REST error ${res.status} at ${path}`);
+  return data;
 }
 
 // ── Extended AI call (more tokens for audit/scraping) ────────────────────────
