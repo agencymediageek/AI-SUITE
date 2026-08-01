@@ -32,7 +32,7 @@ interface CheckoutModalProps {
 const API_BASE = import.meta.env.BASE_URL?.replace(/\/$/, '') + '/api';
 
 async function createStripeSession(planId: string): Promise<string> {
-  const token = localStorage.getItem('apex_token');
+  const token = localStorage.getItem('apex_meeting_token');
   const res = await fetch(`${API_BASE}/payments/stripe/create-session`, {
     method: 'POST',
     headers: {
@@ -50,7 +50,7 @@ async function createStripeSession(planId: string): Promise<string> {
 }
 
 async function createMpPreference(planId: string): Promise<string> {
-  const token = localStorage.getItem('apex_token');
+  const token = localStorage.getItem('apex_meeting_token');
   const res = await fetch(`${API_BASE}/payments/mp/create-preference`, {
     method: 'POST',
     headers: {

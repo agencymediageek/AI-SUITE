@@ -392,11 +392,32 @@ router.post("/payments/stripe/create-session", requireAuth, async (req, res) => 
     }
 
     const user = (req as any).user;
-    const appBaseUrl = process.env["APP_BASE_URL"] || "https://mediageek.io";
+    const appBaseUrl = process.env["APP_BASE_URL"] || "https://apex.techsites.ai";
     const priceInCents = Math.round(parseFloat(String(plan.price)) * 100);
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+    // Single-meeting uses one-time payment; monthly/yearly plans use subscription
+    const isOneTime = plan.interval === "one-time" || plan.interval === "single-meeting";
+    const mode: "payment" | "subscription" = isOneTime ? "payment" : "subscription";
+
+    // Get or create Stripe customer (needed for subscription management)
+    let stripeCustomerId: string | undefined = user.stripeCustomerId ?? undefined;
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.name,
+        metadata: { user_id: String(user.id) },
+      });
+      stripeCustomerId = customer.id;
+      await db
+        .update(usersTable)
+        .set({ stripeCustomerId: customer.id })
+        .where(eq(usersTable.id, user.id));
+      req.log.info({ userId: user.id, customerId: customer.id }, "Stripe customer created");
+    }
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+      mode,
+      customer: stripeCustomerId,
       payment_method_types: ["card"],
       line_items: [
         {
@@ -404,14 +425,16 @@ router.post("/payments/stripe/create-session", requireAuth, async (req, res) => 
           price_data: {
             currency: "usd",
             unit_amount: priceInCents,
+            ...(mode === "subscription" ? { recurring: { interval: "month" } } : {}),
             product_data: {
-              name: `APEX CORE MEETING — ${plan.name} Plan`,
-              description: `${plan.interval === 'one-time' ? 'Single session access' : 'Monthly access'} to ${plan.name} plan`,
+              name: `APEX CORE MEETING — ${plan.name}`,
+              description: isOneTime
+                ? `Single session access · ${plan.tokenAllowance.toLocaleString()} tokens`
+                : `Monthly subscription · ${plan.tokenAllowance.toLocaleString()} tokens/month`,
             },
           },
         },
       ],
-      customer_email: user.email,
       metadata: {
         user_id: String(user.id),
         plan_id: plan.id,
@@ -419,12 +442,51 @@ router.post("/payments/stripe/create-session", requireAuth, async (req, res) => 
       },
       success_url: `${appBaseUrl}/payment/success?gateway=stripe&plan=${plan.id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appBaseUrl}/payment/cancel`,
-    });
+    };
 
+    // Embed user/plan metadata into subscription so webhook can retrieve it on renewal
+    if (mode === "subscription") {
+      sessionParams.subscription_data = {
+        metadata: {
+          user_id: String(user.id),
+          plan_id: plan.id,
+          plan_name: plan.name,
+        },
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    req.log.info({ userId: user.id, planId, mode, sessionId: session.id }, "Stripe session created");
     res.json({ sessionUrl: session.url, sessionId: session.id });
   } catch (err: any) {
     req.log.error(err, "Stripe create-session error");
     res.status(500).json({ error: err.message || "Could not create Stripe session" });
+  }
+});
+
+// ─── Stripe: Cancel Subscription ─────────────────────────────────────────────
+
+router.post("/payments/stripe/cancel", requireAuth, async (req, res) => {
+  try {
+    const stripe = getStripe();
+    const user = (req as any).user;
+
+    if (!user.stripeSubscriptionId) {
+      res.status(400).json({ error: "No active Stripe subscription found" });
+      return;
+    }
+
+    // Cancel at period end — user keeps access until billing period ends
+    await stripe.subscriptions.update(user.stripeSubscriptionId, {
+      cancel_at_period_end: true,
+    });
+
+    req.log.info({ userId: user.id, subId: user.stripeSubscriptionId }, "Stripe subscription scheduled for cancellation");
+    res.json({ success: true, message: "Subscription will cancel at end of billing period" });
+  } catch (err: any) {
+    req.log.error(err, "Stripe cancel error");
+    res.status(500).json({ error: err.message || "Could not cancel subscription" });
   }
 });
 
@@ -454,24 +516,89 @@ router.post("/payments/stripe/webhook", async (req, res) => {
     return;
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const userId = parseInt(session.metadata?.user_id || "0", 10);
-    const planId = session.metadata?.plan_id || "";
+  req.log.info({ eventType: event.type, eventId: event.id }, "Stripe webhook received");
 
-    if (!userId || !planId) {
-      req.log.warn({ metadata: session.metadata }, "Missing user_id or plan_id in Stripe session metadata");
-      res.status(200).json({ received: true });
-      return;
+  try {
+    if (event.type === "checkout.session.completed") {
+      // ── Initial checkout (one-time or first subscription payment) ──────────
+      const session = event.data.object as Stripe.Checkout.Session;
+      const userId = parseInt(session.metadata?.user_id || "0", 10);
+      const planId = session.metadata?.plan_id || "";
+
+      if (!userId || !planId) {
+        req.log.warn({ metadata: session.metadata }, "Missing user_id or plan_id in session metadata");
+        res.status(200).json({ received: true });
+        return;
+      }
+
+      if (session.payment_status !== "paid") {
+        req.log.info({ sessionId: session.id, status: session.payment_status }, "Session not paid — skipping");
+        res.status(200).json({ received: true });
+        return;
+      }
+
+      // Activate plan and persist subscription ID (for recurring plans)
+      await activatePlan(userId, planId, "stripe", req.log);
+
+      if (session.subscription) {
+        await db
+          .update(usersTable)
+          .set({ stripeSubscriptionId: session.subscription as string })
+          .where(eq(usersTable.id, userId));
+      }
+
+    } else if (event.type === "invoice.payment_succeeded") {
+      // ── Monthly renewal ──────────────────────────────────────────────────────
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscriptionId = invoice.subscription as string | undefined;
+
+      // Skip initial invoice (already handled by checkout.session.completed)
+      if (!subscriptionId || (invoice as any).billing_reason === "subscription_create") {
+        res.status(200).json({ received: true });
+        return;
+      }
+
+      const stripe = getStripe();
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const userId = parseInt(subscription.metadata?.user_id || "0", 10);
+      const planId = subscription.metadata?.plan_id || "";
+
+      if (!userId || !planId) {
+        req.log.warn({ subscriptionId }, "Missing metadata on subscription for renewal");
+        res.status(200).json({ received: true });
+        return;
+      }
+
+      await activatePlan(userId, planId, "stripe", req.log);
+      req.log.info({ userId, planId, subscriptionId }, "Subscription renewed — tokens credited");
+
+    } else if (event.type === "customer.subscription.deleted") {
+      // ── Subscription cancelled/expired ────────────────────────────────────
+      const subscription = event.data.object as Stripe.Subscription;
+      const userId = parseInt(subscription.metadata?.user_id || "0", 10);
+
+      if (userId) {
+        await db
+          .update(usersTable)
+          .set({
+            planId: null,
+            planName: null,
+            planExpiresAt: null,
+            paymentGateway: null,
+            stripeSubscriptionId: null,
+          })
+          .where(eq(usersTable.id, userId));
+        req.log.info({ userId, subscriptionId: subscription.id }, "Subscription cancelled — plan cleared");
+      }
+
+    } else if (event.type === "invoice.payment_failed") {
+      // ── Payment failed — log for monitoring, no action on plan yet ────────
+      const invoice = event.data.object as Stripe.Invoice;
+      req.log.warn({ invoiceId: invoice.id, customerId: invoice.customer }, "Stripe invoice payment failed");
     }
-
-    if (session.payment_status !== "paid") {
-      req.log.info({ sessionId: session.id, status: session.payment_status }, "Stripe session not paid — skipping");
-      res.status(200).json({ received: true });
-      return;
-    }
-
-    await activatePlan(userId, planId, "stripe", req.log);
+  } catch (err: any) {
+    req.log.error(err, "Error processing Stripe webhook event");
+    // Still return 200 to prevent Stripe retries for non-recoverable errors
   }
 
   res.status(200).json({ received: true });

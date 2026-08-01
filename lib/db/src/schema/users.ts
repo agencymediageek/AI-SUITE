@@ -15,6 +15,8 @@ export const usersTable = pgTable("users", {
   planName: text("plan_name"),
   planExpiresAt: timestamp("plan_expires_at"),
   paymentGateway: text("payment_gateway"), // "mp" | "stripe"
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

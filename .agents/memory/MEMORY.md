@@ -11,3 +11,4 @@
 - [useToast infinite loop](use-toast-fix.md) — dependência [state] no useEffect de use-toast.ts causa Maximum update depth exceeded; corrigir para []
 - [WP TechSites](wp-techsites.md) — plugin WP + dashboard SaaS; auth por X-WP-Site-Key (não JWT); tabela wp_sites criada on-startup sem migration
 - [VPS instances](vps-instances.md) — todos os PM2/Nginx/DB na VPS 179.197.229.207; próxima porta livre: 3013+
+- [APEX subscriptions](apex-subscriptions.md) — Stripe subscription mode, planos, webhook events, DB schema, token key fix
