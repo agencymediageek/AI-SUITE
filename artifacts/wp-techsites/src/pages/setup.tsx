@@ -85,7 +85,7 @@ export default function SetupPage() {
                     asChild
                   >
                     <a
-                      href="https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.2.0.zip"
+                      href="https://raw.githubusercontent.com/agencymediageek/AI-SUITE/main/releases/wp-techsites-plugin-v2.2.0.zip"
                       download="wp-techsites-plugin-v2.2.0.zip"
                     >
                       <Download className="w-4 h-4 mr-2" />

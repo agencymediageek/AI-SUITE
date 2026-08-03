@@ -45,9 +45,22 @@ Todos funcionam em dev (localhost:8080). Em produção após redeploy:
 - Página criada: "Boa Chancha - Carnes e Produtos Selecionados"
 
 ### Sites de teste para a equipe
-- BeTheme: criar WordPress em `be.net.techsites.ai` via cPanel (129.121.33.184)
-  - Wildcard `*.net.techsites.ai` já aponta para o cPanel, só criar subsite
-- MyListing: `cwb.net.techsites.ai` já pronto
+- BeTheme: `be.net.techsites.ai` → criado, design premium ✅
+- MyListing: `cwb.site` (era cwb.net.techsites.ai, domínio principal agora é cwb.site)
+  - cwb.site IP: 129.121.33.184 (orange cloud), SSL Full ✅
+  - cwb.site REST API: wp_rest_url atualizado para https://cwb.site/wp-json ✅
+  - cwb.site wp-admin: acessível ✅
+
+### cwb.site config Cloudflare
+- Zone: 2bca145bf1e1def474280eb0604e9058 (MEDIAGEEK account)
+- DNS: A cwb.site → 129.121.33.184 (proxied), CNAME www → cwb.site (proxied)
+- SSL: Full (não Strict — aceita cert hostname do cPanel)
+- Page rules: NENHUM (redirect rules deletados, causavam SSL DCV failure)
+- Always Use HTTPS: on
+
+### Plugin download
+- GitHub raw (público, imediato): https://raw.githubusercontent.com/agencymediageek/AI-SUITE/main/releases/wp-techsites-plugin-v2.2.0.zip
+- Após deploy Replit: https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.2.0.zip
 
 ### Blocker crítico HOJE
 Redeploy do Replit é necessário para `wp.techsites.ai` funcionar end-to-end:
