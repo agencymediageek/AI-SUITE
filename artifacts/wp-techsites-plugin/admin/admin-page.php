@@ -18,19 +18,22 @@ function wpts_register_admin_menu() {
 // ─── Tools Definition ─────────────────────────────────────────────────────────
 function wpts_get_tools() {
     return [
-        [ 'id' => 'dashboard',  'icon' => '🏠', 'label' => 'Dashboard',        'badge' => '' ],
-        [ 'id' => 'audit',      'icon' => '🔍', 'label' => 'SEO Audit',         'badge' => 'NOVO' ],
-        [ 'id' => 'directory',  'icon' => '📁', 'label' => 'Directory Builder', 'badge' => '' ],
-        [ 'id' => 'scraping',   'icon' => '🌐', 'label' => 'Scraping',          'badge' => '' ],
-        [ 'id' => 'listings',   'icon' => '📌', 'label' => 'Listings',          'badge' => '' ],
-        [ 'id' => 'logo',       'icon' => '🎯', 'label' => 'Logo Builder',      'badge' => '' ],
-        [ 'id' => 'content',    'icon' => '✍️', 'label' => 'Conteúdo IA',       'badge' => '' ],
-        [ 'id' => 'branding',   'icon' => '🎨', 'label' => 'Identidade Visual', 'badge' => '' ],
-        [ 'id' => 'menu',       'icon' => '📋', 'label' => 'Menu Builder',      'badge' => '' ],
-        [ 'id' => 'chatbot',    'icon' => '💬', 'label' => 'Chatbot IA',        'badge' => '' ],
-        [ 'id' => 'monetize',   'icon' => '💰', 'label' => 'Monetização',       'badge' => '' ],
-        [ 'id' => 'chat-editor','icon' => '🤖', 'label' => 'Editor via Chat',   'badge' => '' ],
-        [ 'id' => 'settings',   'icon' => '⚙️', 'label' => 'Configurações',     'badge' => '' ],
+        [ 'id' => 'dashboard',    'icon' => '🏠', 'label' => 'Dashboard',           'badge' => '' ],
+        [ 'id' => 'audit',        'icon' => '🔍', 'label' => 'SEO Audit',            'badge' => '' ],
+        [ 'id' => 'directory',    'icon' => '📁', 'label' => 'Directory Builder',    'badge' => '' ],
+        [ 'id' => 'scraping',     'icon' => '🌐', 'label' => 'Scraping',             'badge' => '' ],
+        [ 'id' => 'populate',     'icon' => '⚡', 'label' => 'Popular Diretório',    'badge' => 'NOVO' ],
+        [ 'id' => 'listings',     'icon' => '📌', 'label' => 'Listings',             'badge' => '' ],
+        [ 'id' => 'page-from-url','icon' => '🔗', 'label' => 'Página de Empresa',   'badge' => 'NOVO' ],
+        [ 'id' => 'article',      'icon' => '📰', 'label' => 'Artigo com Imagens',  'badge' => 'NOVO' ],
+        [ 'id' => 'logo',         'icon' => '🎯', 'label' => 'Logo Builder',        'badge' => '' ],
+        [ 'id' => 'content',      'icon' => '✍️', 'label' => 'Conteúdo IA',         'badge' => '' ],
+        [ 'id' => 'branding',     'icon' => '🎨', 'label' => 'Identidade Visual',   'badge' => '' ],
+        [ 'id' => 'menu',         'icon' => '📋', 'label' => 'Menu Builder',        'badge' => '' ],
+        [ 'id' => 'chatbot',      'icon' => '💬', 'label' => 'Chatbot IA',          'badge' => '' ],
+        [ 'id' => 'monetize',     'icon' => '💰', 'label' => 'Monetização',         'badge' => '' ],
+        [ 'id' => 'chat-editor',  'icon' => '🤖', 'label' => 'Editor via Chat',     'badge' => '' ],
+        [ 'id' => 'settings',     'icon' => '⚙️', 'label' => 'Configurações',       'badge' => '' ],
     ];
 }
 
@@ -108,19 +111,22 @@ function wpts_render_admin_page() {
             <div class="wpts-content">
                 <?php
                 switch ( $active ) {
-                    case 'audit':      wpts_page_audit();      break;
-                    case 'directory':  wpts_page_directory();  break;
-                    case 'scraping':   wpts_page_scraping();   break;
-                    case 'listings':   wpts_page_listings();   break;
-                    case 'logo':       wpts_page_logo();       break;
-                    case 'content':    wpts_page_content();    break;
-                    case 'branding':   wpts_page_branding();   break;
-                    case 'menu':       wpts_page_menu();       break;
-                    case 'chatbot':    wpts_page_chatbot();    break;
-                    case 'monetize':   wpts_page_monetize();   break;
-                    case 'chat-editor':wpts_page_chat_editor();break;
-                    case 'settings':   wpts_page_settings();   break;
-                    default:           wpts_page_dashboard();  break;
+                    case 'audit':         wpts_page_audit();         break;
+                    case 'directory':     wpts_page_directory();     break;
+                    case 'scraping':      wpts_page_scraping();      break;
+                    case 'populate':      wpts_page_populate();      break;
+                    case 'listings':      wpts_page_listings();      break;
+                    case 'page-from-url': wpts_page_page_from_url(); break;
+                    case 'article':       wpts_page_article();       break;
+                    case 'logo':          wpts_page_logo();          break;
+                    case 'content':       wpts_page_content();       break;
+                    case 'branding':      wpts_page_branding();      break;
+                    case 'menu':          wpts_page_menu();          break;
+                    case 'chatbot':       wpts_page_chatbot();       break;
+                    case 'monetize':      wpts_page_monetize();      break;
+                    case 'chat-editor':   wpts_page_chat_editor();   break;
+                    case 'settings':      wpts_page_settings();      break;
+                    default:              wpts_page_dashboard();     break;
                 }
                 ?>
             </div>
@@ -464,6 +470,275 @@ function wpts_page_listings() { ?>
         <p>Nenhum listing ainda. Use o <a href="<?php echo admin_url('admin.php?page=wp-techsites&tab=scraping'); ?>">Scraping</a> para importar negócios automaticamente.</p>
     </div>
     <?php endif;
+}
+
+// ─── POPULAR DIRETÓRIO ────────────────────────────────────────────────────────
+function wpts_page_populate() { ?>
+    <div class="wpts-two-col">
+        <div>
+            <div class="wpts-card">
+                <h3>⚡ Popular Diretório em Massa</h3>
+                <p class="wpts-help">Importe listings reais de múltiplas categorias de uma só vez com BrightData + IA.</p>
+
+                <div class="wpts-field">
+                    <label>Cidade</label>
+                    <input type="text" id="wpts-pop-city" class="wpts-input" value="Curitiba" placeholder="Ex: São Paulo">
+                </div>
+                <div class="wpts-field">
+                    <label>Categorias (separadas por vírgula)</label>
+                    <input type="text" id="wpts-pop-categories" class="wpts-input" value="restaurantes, hotéis, turismo, serviços, saúde" placeholder="restaurantes, hotéis, ...">
+                </div>
+                <div class="wpts-field">
+                    <label>Listings por categoria</label>
+                    <input type="number" id="wpts-pop-count" class="wpts-input" value="10" min="1" max="30" style="width:120px">
+                </div>
+
+                <button id="wpts-run-populate" class="wpts-btn wpts-btn-primary" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);width:100%">
+                    ⚡ Iniciar Importação em Massa
+                </button>
+                <div id="wpts-pop-progress" style="display:none" class="wpts-loading">
+                    ⏳ Importando listings via BrightData + IA… pode levar 30-90s por categoria.
+                </div>
+                <div id="wpts-pop-result"></div>
+            </div>
+        </div>
+        <div>
+            <div class="wpts-card" style="background:#f0fdf4;border-color:#86efac">
+                <h4>✅ Como funciona</h4>
+                <ol class="wpts-steps">
+                    <li>Selecione as categorias e a cidade</li>
+                    <li>BrightData busca dados reais do Google Maps</li>
+                    <li>IA enriquece os dados (descrição, SEO)</li>
+                    <li>Listings criados automaticamente no WP</li>
+                    <li>Resultado: diretório completo em minutos</li>
+                </ol>
+            </div>
+            <div class="wpts-card" style="background:#fef9c3;border-color:#fde047">
+                <h4>⚡ Custo estimado</h4>
+                <p style="font-size:13px;color:#713f12">20 créditos por categoria. 5 categorias = 100 créditos.<br>Você tem <strong><?php echo number_format(get_option('wpts_credits',0)); ?> créditos</strong> disponíveis.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('wpts-run-populate').addEventListener('click', function() {
+        const city = document.getElementById('wpts-pop-city').value.trim();
+        const rawCats = document.getElementById('wpts-pop-categories').value;
+        const cats = rawCats.split(',').map(c => c.trim()).filter(c => c);
+        const count = parseInt(document.getElementById('wpts-pop-count').value) || 10;
+        const btn = this;
+        const prog = document.getElementById('wpts-pop-progress');
+        const res = document.getElementById('wpts-pop-result');
+
+        btn.disabled = true;
+        prog.style.display = 'block';
+        prog.textContent = `⏳ Importando ${cats.length} categorias em ${city}… aguarde ${cats.length * 30}s`;
+        res.innerHTML = '';
+
+        jQuery.post(ajaxurl, {
+            action: 'wpts_populate_directory',
+            nonce: wptsAdmin.nonce,
+            city, categories: JSON.stringify(cats), count_per_category: count
+        }, function(r) {
+            btn.disabled = false; prog.style.display = 'none';
+            if (r.success) {
+                let html = `<div class="wpts-alert wpts-alert-success"><strong>${r.data.summary}</strong><ul style="margin-top:8px">`;
+                (r.data.breakdown || []).forEach(b => { html += `<li>${b.category}: ${b.imported} importados (${b.source})</li>`; });
+                html += `</ul></div>`;
+                res.innerHTML = html;
+            } else {
+                res.innerHTML = `<div class="wpts-alert wpts-alert-error">❌ ${r.data?.error || 'Erro desconhecido'}</div>`;
+            }
+        });
+    });
+    </script>
+    <?php
+}
+
+// ─── PÁGINA DE EMPRESA ────────────────────────────────────────────────────────
+function wpts_page_page_from_url() { ?>
+    <div class="wpts-two-col">
+        <div>
+            <div class="wpts-card">
+                <h3>🔗 Criar Página de Empresa a partir de URL</h3>
+                <p class="wpts-help">Cole a URL de qualquer negócio. A IA extrai as informações e cria uma página profissional automaticamente.</p>
+
+                <div class="wpts-field">
+                    <label>URL do site da empresa</label>
+                    <input type="url" id="wpts-pfu-url" class="wpts-input" placeholder="https://www.empresa.com.br">
+                </div>
+                <div class="wpts-field">
+                    <label>Tipo de página</label>
+                    <select id="wpts-pfu-type" class="wpts-input">
+                        <option value="empresa">Empresa / Negócio</option>
+                        <option value="restaurante">Restaurante / Bar</option>
+                        <option value="clinica">Clínica / Saúde</option>
+                        <option value="servico">Serviço Profissional</option>
+                        <option value="loja">Loja / Comércio</option>
+                    </select>
+                </div>
+                <div class="wpts-field" style="display:flex;gap:8px;align-items:center">
+                    <input type="checkbox" id="wpts-pfu-publish" checked>
+                    <label for="wpts-pfu-publish" style="margin:0">Publicar imediatamente</label>
+                </div>
+
+                <button id="wpts-run-pfu" class="wpts-btn wpts-btn-primary" style="width:100%">🔗 Criar Página da Empresa (5 créditos)</button>
+                <div id="wpts-pfu-progress" style="display:none" class="wpts-loading">⏳ Analisando o site e gerando conteúdo…</div>
+                <div id="wpts-pfu-result"></div>
+            </div>
+        </div>
+        <div>
+            <div class="wpts-card" style="background:#eff6ff;border-color:#93c5fd">
+                <h4>🔗 O que a IA extrai:</h4>
+                <ul style="font-size:13px;line-height:2">
+                    <li>✅ Nome e descrição do negócio</li>
+                    <li>✅ Telefone, email, endereço</li>
+                    <li>✅ Serviços e produtos oferecidos</li>
+                    <li>✅ Conteúdo SEO (400+ palavras)</li>
+                    <li>✅ Meta description otimizada</li>
+                    <li>✅ Slug amigável para URLs</li>
+                </ul>
+            </div>
+            <div id="wpts-pfu-preview" style="display:none" class="wpts-card" style="background:#f0fdf4;border-color:#86efac">
+                <h4>✅ Página criada!</h4>
+                <div id="wpts-pfu-preview-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('wpts-run-pfu').addEventListener('click', function() {
+        const url = document.getElementById('wpts-pfu-url').value.trim();
+        if (!url) { alert('Informe a URL da empresa'); return; }
+        const type = document.getElementById('wpts-pfu-type').value;
+        const publish = document.getElementById('wpts-pfu-publish').checked ? 1 : 0;
+        const btn = this; const prog = document.getElementById('wpts-pfu-progress'); const res = document.getElementById('wpts-pfu-result');
+        btn.disabled = true; prog.style.display = 'block'; res.innerHTML = '';
+
+        jQuery.post(ajaxurl, {
+            action: 'wpts_page_from_url', nonce: wptsAdmin.nonce,
+            url, page_type: type, publish
+        }, function(r) {
+            btn.disabled = false; prog.style.display = 'none';
+            if (r.success) {
+                const d = r.data;
+                const previewEl = document.getElementById('wpts-pfu-preview');
+                const previewContent = document.getElementById('wpts-pfu-preview-content');
+                previewEl.style.display = 'block';
+                previewContent.innerHTML = `<p><strong>${d.title}</strong></p><p style="font-size:12px;color:#666">${d.meta_description}</p>
+                    ${d.wp_page_url ? `<a href="${d.wp_page_url}" target="_blank" class="wpts-btn wpts-btn-primary" style="margin-top:8px">Ver página →</a>` : ''}`;
+                res.innerHTML = `<div class="wpts-alert wpts-alert-success">✅ Página criada: <strong>${d.title}</strong></div>`;
+            } else {
+                res.innerHTML = `<div class="wpts-alert wpts-alert-error">❌ ${r.data?.error || 'Erro ao criar página'}</div>`;
+            }
+        });
+    });
+    </script>
+    <?php
+}
+
+// ─── ARTIGO COM IMAGENS ───────────────────────────────────────────────────────
+function wpts_page_article() { ?>
+    <div class="wpts-two-col">
+        <div>
+            <div class="wpts-card">
+                <h3>📰 Gerar Artigo SEO com Imagens</h3>
+                <p class="wpts-help">Crie artigos de blog profissionais com imagens reais, otimizados para SEO, prontos para publicar.</p>
+
+                <div class="wpts-field">
+                    <label>Tópico do artigo</label>
+                    <input type="text" id="wpts-art-topic" class="wpts-input" placeholder="Ex: Melhores restaurantes do Batel em Curitiba">
+                </div>
+                <div class="wpts-field">
+                    <label>Cidade (opcional)</label>
+                    <input type="text" id="wpts-art-city" class="wpts-input" placeholder="Ex: Curitiba">
+                </div>
+                <div class="wpts-field">
+                    <label>Categoria</label>
+                    <input type="text" id="wpts-art-cat" class="wpts-input" placeholder="Ex: restaurantes, turismo, saúde">
+                </div>
+                <div class="wpts-field">
+                    <label>Tom do artigo</label>
+                    <select id="wpts-art-tone" class="wpts-input">
+                        <option value="professional">Profissional</option>
+                        <option value="friendly">Amigável / Informal</option>
+                        <option value="journalistic">Jornalístico</option>
+                        <option value="expert">Especialista</option>
+                    </select>
+                </div>
+                <div class="wpts-field">
+                    <label>Tamanho aproximado</label>
+                    <select id="wpts-art-words" class="wpts-input">
+                        <option value="400">Curto (~400 palavras)</option>
+                        <option value="600" selected>Médio (~600 palavras)</option>
+                        <option value="900">Longo (~900 palavras)</option>
+                    </select>
+                </div>
+                <div class="wpts-field" style="display:flex;gap:8px;align-items:center">
+                    <input type="checkbox" id="wpts-art-publish" checked>
+                    <label for="wpts-art-publish" style="margin:0">Publicar imediatamente</label>
+                </div>
+
+                <button id="wpts-run-article" class="wpts-btn wpts-btn-primary" style="width:100%">📰 Gerar Artigo com Imagens (8 créditos)</button>
+                <div id="wpts-art-progress" style="display:none" class="wpts-loading">✍️ Gerando artigo SEO com imagens…</div>
+                <div id="wpts-art-result"></div>
+            </div>
+        </div>
+        <div>
+            <div class="wpts-card" style="background:#fdf4ff;border-color:#e879f9">
+                <h4>📰 O que você recebe:</h4>
+                <ul style="font-size:13px;line-height:2">
+                    <li>✅ Título SEO com palavra-chave</li>
+                    <li>✅ Meta description otimizada</li>
+                    <li>✅ Imagem hero em destaque</li>
+                    <li>✅ Conteúdo H2/H3 estruturado</li>
+                    <li>✅ Imagem de apoio no meio do artigo</li>
+                    <li>✅ Tags e slug otimizados</li>
+                    <li>✅ CTA ao final do artigo</li>
+                </ul>
+            </div>
+            <div id="wpts-art-preview" style="display:none" class="wpts-card">
+                <div id="wpts-art-preview-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('wpts-run-article').addEventListener('click', function() {
+        const topic = document.getElementById('wpts-art-topic').value.trim();
+        if (!topic) { alert('Informe o tópico do artigo'); return; }
+        const city = document.getElementById('wpts-art-city').value.trim();
+        const cat = document.getElementById('wpts-art-cat').value.trim();
+        const tone = document.getElementById('wpts-art-tone').value;
+        const words = parseInt(document.getElementById('wpts-art-words').value);
+        const publish = document.getElementById('wpts-art-publish').checked ? 1 : 0;
+        const btn = this; const prog = document.getElementById('wpts-art-progress'); const res = document.getElementById('wpts-art-result');
+        btn.disabled = true; prog.style.display = 'block'; res.innerHTML = '';
+
+        jQuery.post(ajaxurl, {
+            action: 'wpts_article_with_images', nonce: wptsAdmin.nonce,
+            topic, city, category: cat, tone, word_count: words, publish
+        }, function(r) {
+            btn.disabled = false; prog.style.display = 'none';
+            if (r.success) {
+                const d = r.data;
+                const prev = document.getElementById('wpts-art-preview');
+                const prevContent = document.getElementById('wpts-art-preview-content');
+                prev.style.display = 'block';
+                prevContent.innerHTML = `
+                    <img src="${d.hero_image}" style="width:100%;border-radius:8px;margin-bottom:8px" alt="${d.title}">
+                    <strong>${d.title}</strong><br>
+                    <span style="font-size:12px;color:#666">🔑 ${d.focus_keyword} · ⏱ ${d.reading_time} min leitura</span><br>
+                    <span style="font-size:11px;color:#999">Tags: ${(d.tags||[]).join(', ')}</span>
+                    ${d.wp_post_url ? `<br><a href="${d.wp_post_url}" target="_blank" class="wpts-btn wpts-btn-primary" style="margin-top:8px;display:inline-block">Ver artigo →</a>` : ''}`;
+                res.innerHTML = `<div class="wpts-alert wpts-alert-success">✅ Artigo publicado: <strong>${d.title}</strong></div>`;
+            } else {
+                res.innerHTML = `<div class="wpts-alert wpts-alert-error">❌ ${r.data?.error || 'Erro ao gerar artigo'}</div>`;
+            }
+        });
+    });
+    </script>
+    <?php
 }
 
 // ─── LOGO BUILDER ─────────────────────────────────────────────────────────────

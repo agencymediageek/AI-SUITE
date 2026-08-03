@@ -967,6 +967,405 @@ router.post("/wp/demo", requireSiteKey, async (req, res) => {
   }
 });
 
+// ── POST /api/wp/page-from-url ────────────────────────────────────────────────
+// Scrapes a business website URL, extracts info with AI, creates a WP page.
+router.post("/wp/page-from-url", requireSiteKey, async (req, res) => {
+  const site = (req as any).wpSite;
+  try {
+    const { url, page_type = "empresa", publish = true } = req.body;
+    if (!url) { res.status(400).json({ error: "url é obrigatório" }); return; }
+
+    if (site.creditBalance < 5) {
+      res.status(402).json({ error: "Créditos insuficientes (5 créditos)" });
+      return;
+    }
+
+    // 1. Fetch the URL content
+    let pageText = "";
+    try {
+      const fetchRes = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; WPTechSites/2.1)" },
+        signal: AbortSignal.timeout(10000),
+      });
+      const html = await fetchRes.text();
+      // Strip HTML tags, keep meaningful text
+      pageText = html
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s{3,}/g, "\n")
+        .trim()
+        .slice(0, 3000);
+    } catch (e: any) {
+      pageText = `URL: ${url}`;
+    }
+
+    // 2. AI extracts business info and writes the page
+    const prompt = `Você é um especialista em criação de páginas WordPress.
+
+Analise o conteúdo deste site: ${url}
+
+Conteúdo extraído:
+${pageText}
+
+Crie uma página WordPress profissional para este negócio. Tipo: ${page_type}.
+Retorne JSON EXATO (nada antes ou depois):
+{
+  "title": "Nome da Empresa / Título da Página",
+  "slug": "nome-empresa",
+  "meta_description": "Descrição SEO da empresa (150 chars)",
+  "content_html": "Conteúdo HTML completo da página com h2, h3, p, ul — profissional, em português. Mínimo 400 palavras. Use dados reais extraídos do site.",
+  "excerpt": "Resumo em 1 frase",
+  "business_info": {
+    "name": "Nome da empresa",
+    "phone": "telefone se encontrado ou null",
+    "email": "email se encontrado ou null",
+    "address": "endereço se encontrado ou null",
+    "category": "categoria do negócio",
+    "summary": "descrição em 2 frases"
+  }
+}`;
+
+    const raw = await callGeminiLong(prompt);
+    let pageData: any;
+    try {
+      const match = raw.match(/\{[\s\S]*\}/);
+      pageData = match ? JSON.parse(match[0]) : null;
+    } catch { pageData = null; }
+
+    if (!pageData) {
+      res.status(500).json({ error: "Não foi possível extrair dados do site" });
+      return;
+    }
+
+    // 3. Create the page in WordPress
+    let wpPage: any = null;
+    if (site.wpRestUrl && site.wpUser && site.wpAppPassword) {
+      wpPage = await wpCall(site, "/wp/v2/pages", "POST", {
+        title:   pageData.title,
+        slug:    pageData.slug,
+        content: pageData.content_html,
+        excerpt: pageData.excerpt || "",
+        status:  publish ? "publish" : "draft",
+        meta:    { _meta_description: pageData.meta_description || "" },
+      });
+    }
+
+    // Deduct credits
+    await db.update(wpSitesTable).set({ creditBalance: Math.max(0, site.creditBalance - 5) }).where(eq(wpSitesTable.id, site.id));
+
+    res.json({
+      success: true,
+      title:         pageData.title,
+      slug:          pageData.slug,
+      meta_description: pageData.meta_description,
+      business_info: pageData.business_info,
+      wp_page_id:    wpPage?.id || null,
+      wp_page_url:   wpPage?.link || null,
+      source_url:    url,
+      credits_used:  5,
+      credits_remaining: Math.max(0, site.creditBalance - 5),
+    });
+  } catch (err: any) {
+    req.log?.error(err, "wp/page-from-url error");
+    res.status(500).json({ error: "Erro: " + err.message });
+  }
+});
+
+// ── POST /api/wp/populate-directory ──────────────────────────────────────────
+// Batch-populates the WordPress directory with real BrightData listings across
+// multiple categories. The core "wow" endpoint for the investor demo.
+router.post("/wp/populate-directory", requireSiteKey, async (req, res) => {
+  const site = (req as any).wpSite;
+  const startedAt = Date.now();
+  try {
+    const {
+      city               = "Curitiba",
+      categories         = ["restaurantes", "hotéis", "turismo", "serviços", "saúde"],
+      count_per_category = 10,
+      save_to            = "wp",
+      min_rating         = 0,
+    } = req.body;
+
+    const cats: string[] = Array.isArray(categories) ? categories.slice(0, 10) : [categories];
+    const countPer = Math.min(Number(count_per_category) || 10, 30);
+    const totalMax = cats.length * countPer;
+    const creditCost = Math.min(20 * cats.length, 200);
+
+    if (site.creditBalance < creditCost) {
+      res.status(402).json({ error: `Créditos insuficientes (${creditCost} necessários)` });
+      return;
+    }
+
+    const bdKey = process.env["BRIGHTDATA"];
+    const summary: { category: string; generated: number; imported: number; source: string; ms: number }[] = [];
+    let totalImported = 0;
+
+    for (const category of cats) {
+      const catStart = Date.now();
+      let listings: any[] = [];
+
+      if (bdKey) {
+        listings = await scrapeBrightData(bdKey, category, city, countPer, Number(min_rating));
+      }
+      if (!listings.length) {
+        listings = await generateDemoListings(category, city, countPer);
+      }
+      const source = listings[0]?.source === "brightdata" ? "brightdata" : "demo";
+
+      let catImported = 0;
+      if (save_to === "wp" && site.wpRestUrl && site.wpUser && site.wpAppPassword) {
+        for (const listing of listings) {
+          try {
+            await wpCreateListing(site, {
+              title:        listing.name,
+              content:      listing.description || "",
+              address:      listing.address      || "",
+              phone:        listing.phone        || "",
+              website:      listing.website      || "",
+              rating:       listing.rating       || null,
+              review_count: listing.review_count || 0,
+              hours:        listing.hours        || "",
+              lat:          listing.lat          || null,
+              lng:          listing.lng          || null,
+              category:     listing.category     || category,
+              source,
+            });
+            catImported++;
+            totalImported++;
+          } catch { /* skip failed */ }
+        }
+      }
+
+      summary.push({ category, generated: listings.length, imported: catImported, source, ms: Date.now() - catStart });
+    }
+
+    await db.update(wpSitesTable)
+      .set({ creditBalance: Math.max(0, site.creditBalance - creditCost) })
+      .where(eq(wpSitesTable.id, site.id));
+
+    const totalMs = Date.now() - startedAt;
+    const brightDataCount = summary.filter(s => s.source === "brightdata").reduce((a, s) => a + s.generated, 0);
+
+    res.json({
+      success:          totalImported > 0 || save_to !== "wp",
+      summary:          `✅ ${totalImported} listings importados em ${cats.length} categorias para ${site.siteName} em ${(totalMs / 1000).toFixed(1)}s`,
+      city,
+      categories:       cats,
+      total_generated:  summary.reduce((a, s) => a + s.generated, 0),
+      total_imported:   totalImported,
+      brightdata_count: brightDataCount,
+      breakdown:        summary,
+      total_ms:         totalMs,
+      credits_used:     creditCost,
+      credits_remaining: Math.max(0, site.creditBalance - creditCost),
+    });
+  } catch (err: any) {
+    req.log?.error(err, "wp/populate-directory error");
+    res.status(500).json({ error: "Erro: " + err.message });
+  }
+});
+
+// ── POST /api/wp/article-with-images ─────────────────────────────────────────
+// Generates an SEO article with embedded images (Unsplash) and publishes to WP.
+router.post("/wp/article-with-images", requireSiteKey, async (req, res) => {
+  const site = (req as any).wpSite;
+  try {
+    const {
+      topic,
+      city        = "",
+      category    = "",
+      tone        = "professional",
+      word_count  = 600,
+      publish     = true,
+      image_style = "photography",
+    } = req.body;
+
+    if (!topic) { res.status(400).json({ error: "topic é obrigatório" }); return; }
+    if (site.creditBalance < 8) { res.status(402).json({ error: "Créditos insuficientes (8 créditos)" }); return; }
+
+    // Build image keywords for Unsplash
+    const imgKeywords = [city, category, topic.split(" ").slice(0, 3).join(",")]
+      .filter(Boolean).join(",").replace(/\s+/g, "%20");
+    const imgBase = `https://images.unsplash.com/photo-`;
+
+    // Curitiba-specific Unsplash photo IDs (high quality, free)
+    const curitibaPhotos: Record<string, string> = {
+      restaurantes: "1555396273-367ea4eb4db5?w=1200&q=80", // restaurant food
+      hotéis:       "1566073771259-5b77d2301b37?w=1200&q=80", // hotel lobby
+      turismo:      "1572025442646-b6e17f6f97c5?w=1200&q=80", // city tourism
+      serviços:     "1521791136064-7986c2920216?w=1200&q=80", // business services
+      saúde:        "1576091160399-112ba8d25d1d?w=1200&q=80", // health clinic
+      compras:      "1441986300917-64674bd600d8?w=1200&q=80", // shopping
+      default:      "1486325212027-8081e485255e?w=1200&q=80", // city default
+    };
+    const heroPhotoId = curitibaPhotos[category.toLowerCase()] || curitibaPhotos.default;
+    const heroImg = `${imgBase}${heroPhotoId}`;
+    const bodyImg  = `${imgBase}1486325212027-8081e485255e?w=800&q=80`;
+
+    const prompt = `Você é um especialista em SEO e marketing de conteúdo digital.
+
+Crie um artigo SEO profissional com aproximadamente ${word_count} palavras sobre:
+Tópico: "${topic}"
+${city ? `Cidade: ${city}` : ""}
+${category ? `Categoria: ${category}` : ""}
+Tom: ${tone}
+Idioma: Português (pt-BR)
+
+Requisitos:
+- Título H1 impactante e com palavra-chave principal
+- Meta description de 150 caracteres
+- Subtítulos H2 estratégicos (3 a 5)
+- Parágrafos ricos com informações úteis e locais
+- Uma lista ul ou ol com dicas/destaques
+- CTA (call-to-action) ao final
+- Conteúdo 100% original, não genérico
+
+Retorne JSON EXATO:
+{
+  "title": "Título do Artigo",
+  "slug": "titulo-do-artigo-slug",
+  "meta_description": "Meta description SEO (max 155 chars)",
+  "focus_keyword": "palavra chave principal",
+  "content_html": "Conteúdo HTML completo com h2, h3, p, ul, strong — sem incluir o H1 (será o título do post)",
+  "tags": ["tag1", "tag2", "tag3"],
+  "reading_time": 4
+}`;
+
+    const raw = await callGeminiLong(prompt);
+    let article: any;
+    try {
+      const match = raw.match(/\{[\s\S]*\}/);
+      article = match ? JSON.parse(match[0]) : null;
+    } catch { article = null; }
+
+    if (!article) { res.status(500).json({ error: "Erro ao gerar artigo" }); return; }
+
+    // Inject hero image at top + mid-article image
+    const contentWithImages = `
+<figure class="wp-block-image size-large wpts-hero-image">
+  <img src="${heroImg}" alt="${topic}" class="wp-image-hero" loading="eager" />
+</figure>
+
+${article.content_html}
+
+<figure class="wp-block-image size-medium wpts-mid-image" style="margin:2em 0">
+  <img src="${bodyImg}" alt="${category || topic} em ${city || "destaque"}" class="wp-image-body" loading="lazy" />
+</figure>`.trim();
+
+    // Publish to WordPress
+    let wpPost: any = null;
+    if (site.wpRestUrl && site.wpUser && site.wpAppPassword) {
+      // Create tags
+      const tagIds: number[] = [];
+      for (const tag of (article.tags || []).slice(0, 5)) {
+        try {
+          const tagRes = await wpCall(site, "/wp/v2/tags", "POST", { name: tag });
+          if (tagRes.id) tagIds.push(tagRes.id);
+        } catch { /* tag may already exist */ }
+      }
+
+      wpPost = await wpCall(site, "/wp/v2/posts", "POST", {
+        title:   article.title,
+        slug:    article.slug,
+        content: contentWithImages,
+        excerpt: article.meta_description,
+        status:  publish ? "publish" : "draft",
+        tags:    tagIds,
+      });
+    }
+
+    await db.update(wpSitesTable).set({ creditBalance: Math.max(0, site.creditBalance - 8) }).where(eq(wpSitesTable.id, site.id));
+
+    res.json({
+      success:           true,
+      title:             article.title,
+      slug:              article.slug,
+      meta_description:  article.meta_description,
+      focus_keyword:     article.focus_keyword,
+      reading_time:      article.reading_time,
+      tags:              article.tags,
+      hero_image:        heroImg,
+      wp_post_id:        wpPost?.id    || null,
+      wp_post_url:       wpPost?.link  || null,
+      credits_used:      8,
+      credits_remaining: Math.max(0, site.creditBalance - 8),
+    });
+  } catch (err: any) {
+    req.log?.error(err, "wp/article-with-images error");
+    res.status(500).json({ error: "Erro: " + err.message });
+  }
+});
+
+// ── POST /api/wp/onboarding ───────────────────────────────────────────────────
+// Called by the plugin on first activation or API key save.
+// Runs SEO audit, detects theme, stores site metadata.
+router.post("/wp/onboarding", requireSiteKey, async (req, res) => {
+  const site = (req as any).wpSite;
+  try {
+    const {
+      site_name, site_url, tagline, theme, permalink, ssl,
+      wp_version, php_version, language, plugins = [], pages_count = 0, posts_count = 0,
+    } = req.body;
+
+    // Update site name/url in DB if provided
+    if (site_name || site_url) {
+      await db.update(wpSitesTable).set({
+        siteName: site_name || site.siteName,
+        siteUrl:  site_url  || site.siteUrl,
+      }).where(eq(wpSitesTable.id, site.id));
+    }
+
+    // Quick local SEO audit
+    const audit = buildLocalAudit({
+      site_name:    site_name || site.siteName,
+      ssl:          ssl ?? true,
+      tagline:      tagline   || "",
+      permalink:    permalink || "/%postname%/",
+      posts_count:  posts_count,
+      pages_count:  pages_count,
+      plugins:      plugins,
+      theme:        theme     || { label: "WordPress", type: "generic", icon: "🔷" },
+      language:     language  || "pt_BR",
+      wp_version:   wp_version || "",
+    });
+
+    // Detect theme compatibility
+    const themeCompatibility = (() => {
+      const label = (theme?.label || "").toLowerCase();
+      if (label.includes("mylisting") || label.includes("my listing")) return { type: "directory", features: ["job_listing CPT", "reviews", "maps", "custom fields"], score: 10 };
+      if (label.includes("betheme") || label.includes("be theme")) return { type: "multipurpose", features: ["visual builder", "one-click demos", "mega menu"], score: 9 };
+      if (label.includes("astra") || label.includes("generatepress")) return { type: "lightweight", features: ["fast load", "FSE compatible"], score: 8 };
+      return { type: "generic", features: ["standard WP"], score: 6 };
+    })();
+
+    // Welcome message via AI
+    const welcomeMsg = await callGemini(
+      `Gere uma mensagem de boas-vindas personalizada e motivadora (máx 2 frases, em português) para o site "${site_name || site.siteName}" que acabou de instalar o WP TechSites. Tema detectado: ${theme?.label || "WordPress"}. Pontuação SEO inicial: ${audit.score}/100.`
+    ).catch(() => `Bem-vindo ao WP TechSites! Seu site ${site_name} está pronto para decolar.`);
+
+    res.json({
+      success:              true,
+      message:              welcomeMsg,
+      site:                 { name: site_name, url: site_url, theme, wp_version, ssl, language },
+      seo_audit:            audit,
+      theme_compatibility:  themeCompatibility,
+      onboarding_complete:  true,
+      next_steps: [
+        audit.score < 60 ? "🔴 Corrija os problemas de SEO detectados" : "✅ SEO básico em ordem",
+        "📁 Configure o Directory Builder e importe os primeiros listings",
+        "🎨 Personalize a identidade visual do site",
+        "💬 Ative o Chatbot para atendimento 24/7",
+        "🔗 Conecte a WordPress REST API para automação completa",
+      ],
+      credits_remaining: site.creditBalance,
+    });
+  } catch (err: any) {
+    req.log?.error(err, "wp/onboarding error");
+    res.status(500).json({ error: "Erro no onboarding: " + err.message });
+  }
+});
+
 // ── GET /api/wp/tools ─────────────────────────────────────────────────────────
 router.get("/wp/tools", requireSiteKey, async (req, res) => {
   const site = (req as any).wpSite;

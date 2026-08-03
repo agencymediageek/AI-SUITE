@@ -3,7 +3,7 @@
  * Plugin Name:  WP TechSites
  * Plugin URI:   https://wp.techsites.ai
  * Description:  O SaaS de IA mais completo para WordPress — directory builder, scraping, logo, SEO, chatbot e muito mais.
- * Version:      2.1.0
+ * Version:      2.2.0
  * Author:       TechSites.ai
  * Author URI:   https://techsites.ai
  * License:      GPL-2.0+
@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'WPTS_VERSION',    '2.1.0' );
+define( 'WPTS_VERSION',    '2.2.0' );
 define( 'WPTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPTS_API_BASE',   'https://wp.techsites.ai/api/wp' );
@@ -126,6 +126,47 @@ function wpts_activate() {
     if ( ! get_option( 'wpts_plan' )    ) update_option( 'wpts_plan', 'trial' );
     if ( ! get_option( 'wpts_audit_done' ) ) {
         update_option( 'wpts_audit_pending', 1 );
+    }
+    // Trigger onboarding on next admin load (API key may not be set yet)
+    update_option( 'wpts_onboarding_pending', 1 );
+}
+
+// Run onboarding once after API key is saved (fires on admin_init)
+add_action( 'admin_init', 'wpts_maybe_run_onboarding' );
+function wpts_maybe_run_onboarding() {
+    if ( ! get_option( 'wpts_onboarding_pending' ) ) return;
+    $key = get_option( 'wpts_api_key', '' );
+    if ( ! $key ) return; // wait until key is saved
+    delete_option( 'wpts_onboarding_pending' );
+
+    $theme = wpts_detect_theme();
+    $response = wp_remote_post( WPTS_API_BASE . '/onboarding', [
+        'timeout' => 15,
+        'headers' => [ 'Content-Type' => 'application/json', 'X-WP-Site-Key' => $key ],
+        'body'    => wp_json_encode([
+            'site_name'    => get_bloginfo( 'name' ),
+            'site_url'     => get_site_url(),
+            'tagline'      => get_bloginfo( 'description' ),
+            'theme'        => $theme,
+            'permalink'    => get_option( 'permalink_structure' ),
+            'ssl'          => is_ssl(),
+            'wp_version'   => get_bloginfo( 'version' ),
+            'language'     => get_bloginfo( 'language' ),
+            'pages_count'  => wp_count_posts( 'page' )->publish,
+            'posts_count'  => wp_count_posts( 'post' )->publish,
+            'plugins'      => array_keys( get_plugins() ),
+        ]),
+    ]);
+
+    if ( ! is_wp_error( $response ) ) {
+        $data = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( ! empty( $data['seo_audit']['score'] ) ) {
+            update_option( 'wpts_seo_score', $data['seo_audit']['score'] );
+        }
+        if ( ! empty( $data['credits_remaining'] ) ) {
+            update_option( 'wpts_credits', $data['credits_remaining'] );
+        }
+        update_option( 'wpts_onboarding_done', 1 );
     }
 }
 

@@ -38,6 +38,19 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static plugin ZIPs for download
+import { join } from "path";
+import { fileURLToPath } from "url";
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+app.use("/api/plugins", express.static(join(__dirname, "../public/plugins"), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith(".zip")) {
+      res.setHeader("Content-Type", "application/zip");
+      res.setHeader("Content-Disposition", `attachment; filename="${filePath.split("/").pop()}"`);
+    }
+  }
+}));
+
 app.use("/api", router);
 
 export default app;

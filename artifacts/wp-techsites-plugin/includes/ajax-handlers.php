@@ -368,6 +368,78 @@ function wpts_apply_chat_action( $action ) {
     }
 }
 
+// ─── Popular Diretório em Massa ───────────────────────────────────────────────
+add_action( 'wp_ajax_wpts_populate_directory', function () {
+    wpts_ajax_check();
+    $city       = sanitize_text_field( $_POST['city']       ?? 'Curitiba' );
+    $cats_json  = sanitize_text_field( $_POST['categories'] ?? '["restaurantes"]' );
+    $categories = json_decode( $cats_json, true ) ?: ['restaurantes'];
+    $count      = max(1, min(30, intval( $_POST['count_per_category'] ?? 10 )));
+
+    $result = wpts_call_api( '/populate-directory', [
+        'city'               => $city,
+        'categories'         => $categories,
+        'count_per_category' => $count,
+        'save_to'            => 'wp',
+    ]);
+
+    if ( ! empty( $result['error'] ) ) {
+        wp_send_json_error( $result );
+        return;
+    }
+    // Update local credits cache
+    if ( isset( $result['credits_remaining'] ) ) {
+        update_option( 'wpts_credits', $result['credits_remaining'] );
+    }
+    wp_send_json_success( $result );
+});
+
+// ─── Página de Empresa a partir de URL ───────────────────────────────────────
+add_action( 'wp_ajax_wpts_page_from_url', function () {
+    wpts_ajax_check();
+    $url       = esc_url_raw( $_POST['url']       ?? '' );
+    $page_type = sanitize_text_field( $_POST['page_type'] ?? 'empresa' );
+    $publish   = ! empty( $_POST['publish'] );
+
+    if ( ! $url ) { wp_send_json_error( 'URL é obrigatória.' ); return; }
+
+    $result = wpts_call_api( '/page-from-url', [
+        'url'       => $url,
+        'page_type' => $page_type,
+        'publish'   => $publish,
+    ]);
+
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result ); return; }
+    if ( isset( $result['credits_remaining'] ) ) update_option( 'wpts_credits', $result['credits_remaining'] );
+    wp_send_json_success( $result );
+});
+
+// ─── Artigo SEO com Imagens ───────────────────────────────────────────────────
+add_action( 'wp_ajax_wpts_article_with_images', function () {
+    wpts_ajax_check();
+    $topic      = sanitize_text_field( $_POST['topic']      ?? '' );
+    $city       = sanitize_text_field( $_POST['city']       ?? '' );
+    $category   = sanitize_text_field( $_POST['category']   ?? '' );
+    $tone       = sanitize_text_field( $_POST['tone']       ?? 'professional' );
+    $word_count = max(200, min(1200, intval( $_POST['word_count'] ?? 600 )));
+    $publish    = ! empty( $_POST['publish'] );
+
+    if ( ! $topic ) { wp_send_json_error( 'Tópico é obrigatório.' ); return; }
+
+    $result = wpts_call_api( '/article-with-images', [
+        'topic'      => $topic,
+        'city'       => $city,
+        'category'   => $category,
+        'tone'       => $tone,
+        'word_count' => $word_count,
+        'publish'    => $publish,
+    ]);
+
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result ); return; }
+    if ( isset( $result['credits_remaining'] ) ) update_option( 'wpts_credits', $result['credits_remaining'] );
+    wp_send_json_success( $result );
+});
+
 // ─── Shortcode: [wpts_directory] ─────────────────────────────────────────────
 add_shortcode( 'wpts_directory', function ( $atts ) {
     $atts = shortcode_atts([ 'city' => '', 'category' => '', 'limit' => 20 ], $atts );
