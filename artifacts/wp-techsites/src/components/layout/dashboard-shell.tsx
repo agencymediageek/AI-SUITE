@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { LayoutDashboard, Wand2, Palette, Menu as MenuIcon, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Wand2, Palette, Menu as MenuIcon, Settings, LogOut, Store, Link2, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { clearApiKey } from '@/lib/api-headers';
 import { cn } from '@/lib/utils';
@@ -9,11 +9,14 @@ interface DashboardShellProps {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Content Generator', href: '/tools/content', icon: Wand2 },
-  { name: 'Brand Colors', href: '/tools/colors', icon: Palette },
-  { name: 'Menu Builder', href: '/tools/menu', icon: MenuIcon },
-  { name: 'Setup Guide', href: '/setup', icon: Settings },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, group: 'main' },
+  { name: 'Content Generator', href: '/tools/content', icon: Wand2, group: 'tools' },
+  { name: 'Brand Colors', href: '/tools/colors', icon: Palette, group: 'tools' },
+  { name: 'Menu Builder', href: '/tools/menu', icon: MenuIcon, group: 'tools' },
+  { name: 'Popular Diretório', href: '/tools/populate', icon: Store, group: 'directory' },
+  { name: 'Página de Empresa', href: '/tools/page-from-url', icon: Link2, group: 'directory' },
+  { name: 'Artigo com Imagens', href: '/tools/article', icon: Newspaper, group: 'directory' },
+  { name: 'Setup Guide', href: '/setup', icon: Settings, group: 'main' },
 ];
 
 export function DashboardShell({ children }: DashboardShellProps) {
@@ -59,24 +62,41 @@ export function DashboardShell({ children }: DashboardShellProps) {
           {/* Sidebar navigation */}
           <nav className="lg:w-56 flex-shrink-0">
             <div className="sticky top-24 space-y-1">
-              {navigation.map((item) => {
+              {navigation.filter(i => i.group === 'main').map((item) => {
                 const isActive = location === item.href || location.startsWith(item.href + '/');
                 const Icon = item.icon;
-                
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    )}
-                    data-testid={`nav-link-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {item.name}
+                  <Link key={item.href} href={item.href}
+                    className={cn('flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                      isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}
+                    data-testid={`nav-link-${item.name.toLowerCase().replace(/\s+/g, '-')}`}>
+                    <Icon className="w-4 h-4" />{item.name}
+                  </Link>
+                );
+              })}
+              <p className="px-3 pt-3 pb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ferramentas IA</p>
+              {navigation.filter(i => i.group === 'tools').map((item) => {
+                const isActive = location === item.href || location.startsWith(item.href + '/');
+                const Icon = item.icon;
+                return (
+                  <Link key={item.href} href={item.href}
+                    className={cn('flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                      isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}
+                    data-testid={`nav-link-${item.name.toLowerCase().replace(/\s+/g, '-')}`}>
+                    <Icon className="w-4 h-4" />{item.name}
+                  </Link>
+                );
+              })}
+              <p className="px-3 pt-3 pb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Directory</p>
+              {navigation.filter(i => i.group === 'directory').map((item) => {
+                const isActive = location === item.href || location.startsWith(item.href + '/');
+                const Icon = item.icon;
+                return (
+                  <Link key={item.href} href={item.href}
+                    className={cn('flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                      isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}
+                    data-testid={`nav-link-${item.name.toLowerCase().replace(/\s+/g, '-')}`}>
+                    <Icon className="w-4 h-4" />{item.name}
                   </Link>
                 );
               })}

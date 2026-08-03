@@ -6,9 +6,13 @@ import NotFound from '@/pages/not-found';
 import RegistrationPage from '@/pages/registration';
 import DashboardPage from '@/pages/dashboard';
 import SetupPage from '@/pages/setup';
+import AdminPage from '@/pages/admin';
 import ContentGeneratorPage from '@/pages/tools/content';
 import BrandColorsPage from '@/pages/tools/colors';
 import MenuBuilderPage from '@/pages/tools/menu';
+import PopulateDirectoryPage from '@/pages/tools/populate';
+import PageFromUrlPage from '@/pages/tools/page-from-url';
+import ArticleWithImagesPage from '@/pages/tools/article';
 import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
 import { getApiKey } from '@/lib/api-headers';
 
@@ -91,7 +95,30 @@ function Router() {
           <MenuBuilderPage />
         </AuthGuard>
       </Route>
-      
+
+      <Route path="/tools/populate">
+        <AuthGuard>
+          <PopulateDirectoryPage />
+        </AuthGuard>
+      </Route>
+
+      <Route path="/tools/page-from-url">
+        <AuthGuard>
+          <PageFromUrlPage />
+        </AuthGuard>
+      </Route>
+
+      <Route path="/tools/article">
+        <AuthGuard>
+          <ArticleWithImagesPage />
+        </AuthGuard>
+      </Route>
+
+      {/* Admin panel — no AuthGuard, uses its own admin token */}
+      <Route path="/admin">
+        <AdminPage />
+      </Route>
+
       <Route component={NotFound} />
     </Switch>
   );

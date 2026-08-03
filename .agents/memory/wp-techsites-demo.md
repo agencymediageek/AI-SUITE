@@ -62,6 +62,26 @@ Todos funcionam em dev (localhost:8080). Em produção após redeploy:
 - GitHub raw (público, imediato): https://raw.githubusercontent.com/agencymediageek/AI-SUITE/main/releases/wp-techsites-plugin-v2.2.0.zip
 - Após deploy Replit: https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.2.0.zip
 
+### Sites WP Multisite (net.techsites.ai, user: nettechsites)
+- blog_id 1: net.techsites.ai (main)
+- blog_id 4: cwb1.net.techsites.ai
+- blog_id 5: cwb.site (primary domain for cwb directory)
+- blog_id 6: be.net.techsites.ai (BeTheme)
+- blog_id 7: teste.net.techsites.ai (demo sandbox) → api_key: 944dcdd0-3808-4313-977f-7b2964267a1c
+
+### techsites.ai DNS
+- A techsites.ai → 129.121.33.184 (proxied) — agora aponta para cPanel, antes era CNAME para Pages
+- A www.techsites.ai → 129.121.33.184 (proxied)
+- *.net.techsites.ai → 129.121.33.184 (proxied)
+- SSL zone techsites.ai: Full + Always HTTPS
+
+### wp.techsites.ai SaaS MVP
+- Painel usuário: /wp-techsites/ (registro, dashboard, 3 ferramentas IA originais + 3 novas Directory)
+- Painel admin: /wp-techsites/admin (token: techsites-admin-2026, sem auth externa)
+- Admin endpoint: GET/PATCH /api/wp/admin/sites (X-Admin-Token header)
+- Novas ferramentas: /tools/populate, /tools/page-from-url, /tools/article
+- lib/api-headers.ts: getApiBaseUrl() returns '/api/' para fetch direto
+
 ### Blocker crítico HOJE
 Redeploy do Replit é necessário para `wp.techsites.ai` funcionar end-to-end:
 - Dev (localhost:8080): tudo funciona ✅

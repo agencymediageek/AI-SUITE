@@ -1,4 +1,12 @@
 /**
+ * Returns the base URL for direct API fetch calls.
+ * Resolves to /api/ which the Replit proxy routes to the api-server artifact.
+ */
+export function getApiBaseUrl(): string {
+  return '/api/';
+}
+
+/**
  * Get API headers including the WP Site API key from localStorage
  */
 export function getWpApiHeaders(): Record<string, string> {

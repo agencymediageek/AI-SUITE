@@ -1367,6 +1367,60 @@ router.post("/wp/onboarding", requireSiteKey, async (req, res) => {
 });
 
 // ── GET /api/wp/tools ─────────────────────────────────────────────────────────
+// ── GET /api/wp/admin/sites ───────────────────────────────────────────────────
+// Admin panel: list all registered wp_sites. Protected by WP_ADMIN_TOKEN header.
+router.get("/wp/admin/sites", async (req: any, res: any) => {
+  const token = req.headers["x-admin-token"] as string | undefined;
+  const expected = process.env["WP_ADMIN_TOKEN"] || "techsites-admin-2026";
+  if (!token || token !== expected) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const sites = await db.select().from(wpSitesTable).orderBy(sql`created_at DESC`);
+    return res.json(sites.map((s: any) => ({
+      id: s.id,
+      apiKey: s.apiKey,
+      siteName: s.siteName,
+      siteUrl: s.siteUrl,
+      ownerEmail: s.ownerEmail,
+      ownerName: s.ownerName,
+      plan: s.plan,
+      credits: s.creditBalance,
+      isActive: s.isActive,
+      wpConnected: !!(s.wpRestUrl),
+      createdAt: s.createdAt,
+      lastSeenAt: s.lastSeenAt,
+    })));
+  } catch (err) {
+    req.log.error(err);
+    return res.status(500).json({ error: "Failed to list sites" });
+  }
+});
+
+// ── PATCH /api/wp/admin/sites/:id ─────────────────────────────────────────────
+// Admin: update credits or plan for a site.
+router.patch("/wp/admin/sites/:id", async (req: any, res: any) => {
+  const token = req.headers["x-admin-token"] as string | undefined;
+  const expected = process.env["WP_ADMIN_TOKEN"] || "techsites-admin-2026";
+  if (!token || token !== expected) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const id = Number(req.params["id"]);
+    const { credits, plan, isActive } = req.body;
+    const updates: Record<string, any> = {};
+    if (credits !== undefined) updates.creditBalance = Number(credits);
+    if (plan !== undefined) updates.plan = plan;
+    if (isActive !== undefined) updates.isActive = Boolean(isActive);
+    if (!Object.keys(updates).length) return res.status(400).json({ error: "Nothing to update" });
+    await db.update(wpSitesTable).set(updates).where(eq(wpSitesTable.id, id));
+    return res.json({ ok: true });
+  } catch (err) {
+    req.log.error(err);
+    return res.status(500).json({ error: "Failed to update site" });
+  }
+});
+
 router.get("/wp/tools", requireSiteKey, async (req, res) => {
   const site = (req as any).wpSite;
   res.json({ tools: getAvailableTools(site.plan), credits: site.creditBalance });
