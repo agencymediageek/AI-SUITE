@@ -13,3 +13,4 @@
 - [VPS instances](vps-instances.md) — todos os PM2/Nginx/DB na VPS 179.197.229.207; próxima porta livre: 3013+
 - [APEX subscriptions](apex-subscriptions.md) — Stripe subscription mode, planos, webhook events, DB schema, token key fix
 - [WP TechSites investor demo](wp-techsites-demo.md) — /wp/demo endpoint, wpCreateListing fallback, BrightData confirmed working for Curitiba, plugin v2.1.0 ZIP pronto
+- [N8N OpenAI credentials](n8n-openai-creds.md) — 3 credential IDs cover 19 workflows; OPENAI_MEDIAGEEK_API_KEY in Replit Secrets; Maestro workflow updated Aug 2026
