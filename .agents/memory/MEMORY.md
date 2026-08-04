@@ -16,3 +16,4 @@
 - [N8N OpenAI credentials](n8n-openai-creds.md) — 3 credential IDs cover 19 workflows; OPENAI_MEDIAGEEK_API_KEY in Replit Secrets; Maestro workflow updated Aug 2026
 - [APEX streaming ask](apex-streaming.md) — /meetings/:id/ask supports SSE when Accept: text/event-stream; fallback to JSON; mic loop fix via isListeningRef pattern
 - [ElevenLabs TTS](elevenlabs-tts.md) — POST /api/tts with ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID; speakBrowser fallback when 503; currentAudioRef tracks playback for stopSpeaking
+- [Users table migration](users-migration.md) — stripe_customer_id, stripe_subscription_id, payment_gateway added to schema but DB may lack them; app.ts runs idempotent ALTER TABLE ADD COLUMN IF NOT EXISTS on startup

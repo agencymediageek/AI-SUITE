@@ -38,6 +38,17 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true }));
 
+// ── Idempotent DB migrations (add columns that may be missing in older DBs) ──
+import { db as _db } from "@workspace/db";
+import { sql as _sql } from "drizzle-orm";
+(async () => {
+  try {
+    await _db.execute(_sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_gateway TEXT`);
+    await _db.execute(_sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`);
+    await _db.execute(_sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`);
+  } catch { /* table may not exist yet on first boot — harmless */ }
+})();
+
 // Serve static plugin ZIPs for download
 import { join } from "path";
 import { fileURLToPath } from "url";
