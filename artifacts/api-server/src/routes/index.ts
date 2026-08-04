@@ -11,6 +11,7 @@ import paymentsRouter from "./payments.js";
 import meetingsRouter from "./meetings.js";
 import whitelabelRouter from "./whitelabel.js";
 import wpTechSitesRouter from "./wp-techsites.js";
+import ttsRouter from "./tts.js";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(paymentsRouter);
 router.use(meetingsRouter);
 router.use(whitelabelRouter);
 router.use(wpTechSitesRouter);
+router.use(ttsRouter);
 
 export default router;

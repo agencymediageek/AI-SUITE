@@ -79,19 +79,24 @@ export default function SetupPage() {
                   <CardDescription className="mb-4">
                     Get the latest version of the WP TechSites plugin for WordPress.
                   </CardDescription>
-                  <Button
-                    variant="outline"
-                    data-testid="button-download-plugin"
-                    asChild
-                  >
-                    <a
-                      href="https://raw.githubusercontent.com/agencymediageek/AI-SUITE/main/releases/wp-techsites-plugin-v2.2.0.zip"
-                      download="wp-techsites-plugin-v2.2.0.zip"
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="default"
+                      data-testid="button-download-plugin"
+                      asChild
                     >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download v2.2.0 (wp-techsites.zip)
-                    </a>
-                  </Button>
+                      <a
+                        href="/api/plugins/wp-techsites-plugin-v2.3.0.zip"
+                        download="wp-techsites-plugin-v2.3.0.zip"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download v2.3.0 — Latest (wp-techsites.zip)
+                      </a>
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      v2.3.0 inclui: chatbot IA, auditoria SEO, scraping BrightData, editor AI e gerador de logo.
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -107,7 +112,7 @@ export default function SetupPage() {
                     <ol className="list-decimal list-inside space-y-2 mt-3 text-sm">
                       <li>Log in to your WordPress admin panel</li>
                       <li>Navigate to <strong>Plugins → Add New → Upload Plugin</strong></li>
-                      <li>Choose the downloaded <strong>wp-techsites-plugin-v2.2.0.zip</strong> file</li>
+                      <li>Choose the downloaded <strong>wp-techsites-plugin-v2.3.0.zip</strong> file</li>
                       <li>Click <strong>Install Now</strong> and wait for the upload to complete</li>
                       <li>Click <strong>Activate Plugin</strong></li>
                     </ol>

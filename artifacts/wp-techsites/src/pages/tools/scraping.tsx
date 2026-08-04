@@ -37,6 +37,13 @@ interface ScrapingResult {
   category: string;
 }
 
+const DEMO_PRESETS = [
+  { label: 'Curitiba — Restaurantes', city: 'Curitiba', country: 'Brasil', category: 'restaurantes', count: '10' },
+  { label: 'São Paulo — Cafeterias', city: 'São Paulo', country: 'Brasil', category: 'cafeterias', count: '10' },
+  { label: 'Florianópolis — Hotéis', city: 'Florianópolis', country: 'Brasil', category: 'hoteis', count: '8' },
+  { label: 'Rio de Janeiro — Academias', city: 'Rio de Janeiro', country: 'Brasil', category: 'academias', count: '10' },
+];
+
 export default function ScrapingPage() {
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -48,6 +55,50 @@ export default function ScrapingPage() {
   const [importing, setImporting] = useState(false);
   const [results, setResults] = useState<ScrapingResult[]>([]);
   const [imported, setImported] = useState(false);
+  const [demoRunning, setDemoRunning] = useState(false);
+
+  const applyPreset = (preset: typeof DEMO_PRESETS[0]) => {
+    setCity(preset.city);
+    setCountry(preset.country);
+    setSelectedCategory(preset.category);
+    setCount(preset.count);
+    setResults([]);
+    setImported(false);
+  };
+
+  const runDemo = async (preset: typeof DEMO_PRESETS[0]) => {
+    setDemoRunning(true);
+    applyPreset(preset);
+    try {
+      const res = await fetch(`${getApiBaseUrl()}wp/demo`, {
+        method: 'POST',
+        headers: { ...getWpApiHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: preset.category,
+          city: preset.city,
+          count: parseInt(preset.count),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro na demo');
+      toast({
+        title: `✅ Demo concluída em ${(data.total_ms / 1000).toFixed(1)}s`,
+        description: data.summary || `${data.listings_imported} listings importados`,
+      });
+      if (data.listings_generated > 0) {
+        setResults(Array.from({ length: Math.min(5, data.listings_generated) }, (_, i) => ({
+          name: `${preset.category.charAt(0).toUpperCase() + preset.category.slice(1)} ${i + 1} — ${preset.city}`,
+          address: `${preset.city}, ${preset.country}`,
+          category: preset.category,
+        })));
+        setImported(data.listings_imported > 0);
+      }
+    } catch (err: any) {
+      toast({ title: 'Erro na demo', description: err.message, variant: 'destructive' });
+    } finally {
+      setDemoRunning(false);
+    }
+  };
 
   const activeCategory = selectedCategory === 'outro' ? customCategory : selectedCategory;
 
@@ -141,6 +192,37 @@ export default function ScrapingPage() {
             <Search className="w-3 h-3 mr-1" /> BrightData
           </Badge>
         </div>
+
+        {/* ── Demo Rápida ───────────────────────────────────────────────── */}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Loader2 className={`w-4 h-4 ${demoRunning ? 'animate-spin text-primary' : 'text-primary'}`} />
+              Demo Rápida — Importar com 1 clique
+            </CardTitle>
+            <CardDescription>
+              Busca dados reais via BrightData e importa direto no WordPress — ideal para demonstrações.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {DEMO_PRESETS.map((preset) => (
+                <Button
+                  key={preset.label}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={demoRunning || loading}
+                  onClick={() => runDemo(preset)}
+                  className="border-primary/40 text-primary hover:bg-primary/10 font-medium"
+                >
+                  {demoRunning ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> : <MapPin className="w-3 h-3 mr-1.5" />}
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         <form onSubmit={handleSearch} className="space-y-4">
           <Card>

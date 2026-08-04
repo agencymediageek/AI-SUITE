@@ -151,6 +151,8 @@ function LiveMeetingContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Ref mirrors isListening state for use inside callbacks without stale closures
   const isListeningRef = useRef(false);
+  // Tracks current ElevenLabs Audio element so stopSpeaking can cancel it
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => { isListeningRef.current = isListening; }, [isListening]);
 
   const speechLang = meeting?.language === 'pt' ? 'pt-BR' : meeting?.language === 'es' ? 'es-ES' : 'en-US';
@@ -299,7 +301,8 @@ function LiveMeetingContent() {
     }
   };
 
-  const speakResponse = useCallback((text: string) => {
+  // ── Browser TTS fallback (mic-loop-safe) ─────────────────────────────────
+  const speakBrowser = useCallback((text: string) => {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -316,14 +319,10 @@ function LiveMeetingContent() {
     }
     utterance.onstart = () => {
       setIsSpeaking(true);
-      // Stop recognition while TTS plays to prevent mic-loop feedback (#37)
-      if (isListeningRef.current) {
-        try { recognitionRef.current?.stop(); } catch {}
-      }
+      if (isListeningRef.current) { try { recognitionRef.current?.stop(); } catch {} }
     };
     const resumeAfterSpeech = () => {
       setIsSpeaking(false);
-      // Resume recognition after TTS finishes (brief delay lets the speaker settle)
       if (isListeningRef.current) {
         setTimeout(() => { try { recognitionRef.current?.start(); } catch {} }, 350);
       }
@@ -334,7 +333,61 @@ function LiveMeetingContent() {
     window.speechSynthesis.speak(utterance);
   }, [speechLang]);
 
+  // ── ElevenLabs TTS (primary) with browser fallback ────────────────────────
+  const speakResponse = useCallback(async (text: string) => {
+    if (!text.trim()) return;
+    const token = localStorage.getItem(TOKEN_KEY);
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ text: text.slice(0, 4000), language: speechLang }),
+      });
+
+      // 503 = key not configured; fall back to browser TTS silently
+      if (res.status === 503 || !res.ok) throw new Error('fallback');
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      currentAudioRef.current = audio;
+
+      setIsSpeaking(true);
+      if (isListeningRef.current) { try { recognitionRef.current?.stop(); } catch {} }
+
+      audio.onended = () => {
+        currentAudioRef.current = null;
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+        if (isListeningRef.current) {
+          setTimeout(() => { try { recognitionRef.current?.start(); } catch {} }, 350);
+        }
+      };
+      audio.onerror = () => {
+        currentAudioRef.current = null;
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+        if (isListeningRef.current) {
+          setTimeout(() => { try { recognitionRef.current?.start(); } catch {} }, 350);
+        }
+        speakBrowser(text); // retry with browser TTS
+      };
+      await audio.play();
+    } catch {
+      // ElevenLabs unavailable or not configured — use browser TTS
+      speakBrowser(text);
+    }
+  }, [speechLang, speakBrowser]);
+
   const stopSpeaking = () => {
+    // Stop ElevenLabs audio if playing
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   };
