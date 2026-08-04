@@ -7,12 +7,22 @@ import RegistrationPage from '@/pages/registration';
 import DashboardPage from '@/pages/dashboard';
 import SetupPage from '@/pages/setup';
 import AdminPage from '@/pages/admin';
+// Existing tools
 import ContentGeneratorPage from '@/pages/tools/content';
 import BrandColorsPage from '@/pages/tools/colors';
 import MenuBuilderPage from '@/pages/tools/menu';
 import PopulateDirectoryPage from '@/pages/tools/populate';
 import PageFromUrlPage from '@/pages/tools/page-from-url';
 import ArticleWithImagesPage from '@/pages/tools/article';
+// New tools
+import ScrapingPage from '@/pages/tools/scraping';
+import WysiwygPage from '@/pages/tools/wysiwyg';
+import PageBuilderPage from '@/pages/tools/page-builder';
+import SeoArticlesPage from '@/pages/tools/seo-articles';
+import ChatbotPage from '@/pages/tools/chatbot';
+import SeoAuditPage from '@/pages/tools/seo-audit';
+import LogoAiPage from '@/pages/tools/logo-ai';
+import SettingsPage from '@/pages/tools/settings';
 import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
 import { getApiKey } from '@/lib/api-headers';
 
@@ -25,6 +35,7 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Redirects unauthenticated users to `/`. */
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
   const [isChecking, setIsChecking] = useState(true);
@@ -51,92 +62,95 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function Router() {
-  const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
-  
+/** On root `/`: redirect to dashboard if already authenticated, else show registration. */
+function RootRedirect() {
+  const [, setLocation] = useLocation();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const apiKey = getApiKey();
+    if (apiKey) {
+      setLocation('/dashboard');
+    } else {
+      setReady(true);
+    }
+  }, [setLocation]);
+
+  if (!ready) return null;
+  return <RegistrationPage />;
+}
+
+function AppRouter() {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
   return (
-    <Switch>
-      <Route path="/">
-        {() => {
-          const apiKey = getApiKey();
-          if (apiKey) {
-            return <DashboardPage />;
-          }
-          return <RegistrationPage />;
-        }}
-      </Route>
-      
-      <Route path="/dashboard">
-        <AuthGuard>
-          <DashboardPage />
-        </AuthGuard>
-      </Route>
-      
-      <Route path="/setup">
-        <AuthGuard>
-          <SetupPage />
-        </AuthGuard>
-      </Route>
-      
-      <Route path="/tools/content">
-        <AuthGuard>
-          <ContentGeneratorPage />
-        </AuthGuard>
-      </Route>
-      
-      <Route path="/tools/colors">
-        <AuthGuard>
-          <BrandColorsPage />
-        </AuthGuard>
-      </Route>
-      
-      <Route path="/tools/menu">
-        <AuthGuard>
-          <MenuBuilderPage />
-        </AuthGuard>
-      </Route>
-
-      <Route path="/tools/populate">
-        <AuthGuard>
-          <PopulateDirectoryPage />
-        </AuthGuard>
-      </Route>
-
-      <Route path="/tools/page-from-url">
-        <AuthGuard>
-          <PageFromUrlPage />
-        </AuthGuard>
-      </Route>
-
-      <Route path="/tools/article">
-        <AuthGuard>
-          <ArticleWithImagesPage />
-        </AuthGuard>
-      </Route>
-
-      {/* Admin panel — no AuthGuard, uses its own admin token */}
-      <Route path="/admin">
-        <AdminPage />
-      </Route>
-
-      <Route component={NotFound} />
-    </Switch>
+    <WouterRouter base={base}>
+      <Switch>
+        <Route path="/" component={RootRedirect} />
+        <Route path="/dashboard">
+          <AuthGuard><DashboardPage /></AuthGuard>
+        </Route>
+        <Route path="/setup">
+          <AuthGuard><SetupPage /></AuthGuard>
+        </Route>
+        <Route path="/admin" component={AdminPage} />
+        {/* Existing tools */}
+        <Route path="/tools/content">
+          <AuthGuard><ContentGeneratorPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/colors">
+          <AuthGuard><BrandColorsPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/menu">
+          <AuthGuard><MenuBuilderPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/populate">
+          <AuthGuard><PopulateDirectoryPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/page-from-url">
+          <AuthGuard><PageFromUrlPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/article">
+          <AuthGuard><ArticleWithImagesPage /></AuthGuard>
+        </Route>
+        {/* New tools */}
+        <Route path="/tools/scraping">
+          <AuthGuard><ScrapingPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/wysiwyg">
+          <AuthGuard><WysiwygPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/page-builder">
+          <AuthGuard><PageBuilderPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/seo-articles">
+          <AuthGuard><SeoArticlesPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/chatbot">
+          <AuthGuard><ChatbotPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/seo-audit">
+          <AuthGuard><SeoAuditPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/logo-ai">
+          <AuthGuard><LogoAiPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/settings">
+          <AuthGuard><SettingsPage /></AuthGuard>
+        </Route>
+        <Route component={NotFound} />
+      </Switch>
+    </WouterRouter>
   );
 }
 
-function App() {
-  const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
-  
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={basePath}>
-          <Router />
-        </WouterRouter>
+        <AppRouter />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;
