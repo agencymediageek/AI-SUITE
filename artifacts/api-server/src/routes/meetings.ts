@@ -419,4 +419,185 @@ Be authoritative, intelligent, and precise. Respond in ${meeting.language === "p
   }
 });
 
+// ─── Analyze external URL ─────────────────────────────────────────────────────
+router.post("/meetings/:meetingId/analyze-url", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).user;
+    const meetingId = parseInt(req.params.meetingId);
+    if (isNaN(meetingId)) { res.status(400).json({ error: "Invalid meeting ID" }); return; }
+
+    const [meeting] = await db.select().from(meetingsTable)
+      .where(and(eq(meetingsTable.id, meetingId), eq(meetingsTable.userId, user.id)));
+    if (!meeting) { res.status(404).json({ error: "Meeting not found" }); return; }
+
+    const { url: rawUrl } = req.body;
+    if (!rawUrl) { res.status(400).json({ error: "URL is required" }); return; }
+
+    // SSRF protection: validate protocol, resolve DNS to block private targets,
+    // and follow redirects manually so each hop is re-validated.
+    const { assertPublicUrl, safeFetch } = await import("../lib/url-safety.js");
+    let parsed: URL;
+    try {
+      parsed = await assertPublicUrl(rawUrl);
+    } catch (validationErr: any) {
+      res.status(400).json({ error: validationErr.message });
+      return;
+    }
+
+    // Use safeFetch: redirect: "manual" + re-validation on every Location hop
+    const fetchRes = await safeFetch(parsed, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; APEX-CORE/2.0; +https://apex.techsites.ai)",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!fetchRes.ok) {
+      res.status(502).json({ error: `URL returned HTTP ${fetchRes.status}` });
+      return;
+    }
+
+    const html = await fetchRes.text();
+
+    // Extract title
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const title = titleMatch?.[1]?.trim() ?? "";
+
+    // Strip HTML: remove scripts/styles/tags, decode entities, collapse whitespace
+    const clean = html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#\d+;/g, " ")
+      .replace(/\s{2,}/g, " ")
+      .trim()
+      .slice(0, 20000);
+
+    res.json({ text: clean, title, url: parsed.href });
+  } catch (err: any) {
+    req.log.error(err);
+    if (err.name === "TimeoutError") {
+      res.status(504).json({ error: "URL request timed out" });
+    } else {
+      res.status(500).json({ error: err.message || "Failed to analyze URL" });
+    }
+  }
+});
+
+// ─── Index document (PDF / DOCX / TXT / CSV) ──────────────────────────────────
+router.post("/meetings/:meetingId/index-document", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).user;
+    const meetingId = parseInt(req.params.meetingId);
+    if (isNaN(meetingId)) { res.status(400).json({ error: "Invalid meeting ID" }); return; }
+
+    const [meeting] = await db.select().from(meetingsTable)
+      .where(and(eq(meetingsTable.id, meetingId), eq(meetingsTable.userId, user.id)));
+    if (!meeting) { res.status(404).json({ error: "Meeting not found" }); return; }
+
+    const { filename, content, mimeType } = req.body;
+    if (!content) { res.status(400).json({ error: "Content is required" }); return; }
+
+    const { parseDocumentBuffer } = await import("../lib/doc-parser.js");
+    const text = await parseDocumentBuffer(content, mimeType || "", filename || "");
+
+    res.json({ text, filename, characterCount: text.length });
+  } catch (err: any) {
+    req.log.error(err);
+    res.status(500).json({ error: err.message || "Failed to index document" });
+  }
+});
+
+// ─── Generate presentation slides from indexed document ───────────────────────
+router.post("/meetings/:meetingId/generate-slides", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).user;
+    const meetingId = parseInt(req.params.meetingId);
+    if (isNaN(meetingId)) { res.status(400).json({ error: "Invalid meeting ID" }); return; }
+
+    const [meeting] = await db.select().from(meetingsTable)
+      .where(and(eq(meetingsTable.id, meetingId), eq(meetingsTable.userId, user.id)));
+    if (!meeting) { res.status(404).json({ error: "Meeting not found" }); return; }
+
+    const { documentText, language, filename } = req.body;
+    if (!documentText) { res.status(400).json({ error: "documentText is required" }); return; }
+
+    const GROK_API_KEY = process.env["GROK"];
+    if (!GROK_API_KEY) { res.status(500).json({ error: "AI service not configured" }); return; }
+
+    const lang = language === "pt" ? "Portuguese (Brazil)" : language === "es" ? "Spanish" : "English";
+    const excerpt = documentText.slice(0, 12000);
+
+    const systemPrompt = `You are a presentation designer. Create a professional slide deck from the provided document.
+Return ONLY valid JSON — an array of slide objects. No markdown, no commentary.
+Each slide: { "title": "string", "bullets": ["string", ...], "notes": "string (optional speaker note)" }
+Rules:
+- 5 to 12 slides depending on content length
+- First slide: title/overview; last slide: conclusion/next steps
+- Each bullet: concise, max 15 words
+- 3 to 5 bullets per slide
+- Respond in ${lang}`;
+
+    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${GROK_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "grok-3-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Document: "${filename || "document"}"\n\n${excerpt}` },
+        ],
+        max_tokens: 4096,
+        response_format: { type: "json_object" },
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      req.log.error({ errText }, "Grok slides error");
+      res.status(502).json({ error: "AI service error" });
+      return;
+    }
+
+    const data = await response.json() as any;
+    const raw = data.choices?.[0]?.message?.content ?? "[]";
+
+    let slides: any[];
+    try {
+      const parsed = JSON.parse(raw);
+      // Handle both array and { slides: [...] } shapes
+      slides = Array.isArray(parsed) ? parsed : (parsed.slides ?? parsed.data ?? []);
+    } catch {
+      // Fallback: extract JSON array from raw string
+      const match = raw.match(/\[[\s\S]*\]/);
+      slides = match ? JSON.parse(match[0]) : [];
+    }
+
+    // Validate shape
+    slides = slides
+      .filter((s: any) => s && typeof s.title === "string")
+      .map((s: any) => ({
+        title: String(s.title),
+        bullets: Array.isArray(s.bullets) ? s.bullets.map(String) : [],
+        notes: s.notes ? String(s.notes) : undefined,
+      }));
+
+    if (slides.length === 0) {
+      res.status(422).json({ error: "AI did not return valid slides" });
+      return;
+    }
+
+    res.json({ slides });
+  } catch (err: any) {
+    req.log.error(err);
+    res.status(500).json({ error: err.message || "Failed to generate slides" });
+  }
+});
+
 export default router;
