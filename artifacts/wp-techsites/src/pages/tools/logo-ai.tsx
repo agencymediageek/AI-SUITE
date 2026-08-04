@@ -65,15 +65,17 @@ export default function LogoAiPage() {
     setLoading(true);
     setResult(null);
     try {
+      // Map frontend fields → backend expected names
+      const desc = [industry, slogan].filter(Boolean).join(' — ') || 'geral';
+      const paletteColors = selectedPalette?.colors?.join(', ') ?? palette;
       const res = await fetch(`${getApiBaseUrl()}wp/generate-logo`, {
         method: 'POST',
         headers: { ...getWpApiHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          business_name: businessName,
-          industry: industry || 'geral',
+          brand_name: businessName,
           style,
-          palette,
-          slogan,
+          colors: paletteColors,
+          desc,
         }),
       });
       const data = await res.json();

@@ -40,7 +40,9 @@ router.patch("/user/profile", requireAuth, async (req, res) => {
     if (name) updates.name = name;
     if (email) updates.email = email;
     const [updated] = await db.update(usersTable).set(updates).where(eq(usersTable.id, user.id)).returning();
-    res.json({ id: updated.id, email: updated.email, name: updated.name, role: updated.role, tokenBalance: updated.tokenBalance, planId: updated.planId, planName: updated.planName, planExpiresAt: updated.planExpiresAt?.toISOString() ?? null, paymentGateway: updated.paymentGateway ?? null, createdAt: updated.createdAt.toISOString(), totalGenerations: 0, favoriteToolIds: [] });
+    // Fetch real favorites so the client doesn't lose them after a profile save
+    const favorites = await db.select({ toolId: favoritesTable.toolId }).from(favoritesTable).where(eq(favoritesTable.userId, updated.id));
+    res.json({ id: updated.id, email: updated.email, name: updated.name, role: updated.role, tokenBalance: updated.tokenBalance, planId: updated.planId, planName: updated.planName, planExpiresAt: updated.planExpiresAt?.toISOString() ?? null, paymentGateway: updated.paymentGateway ?? null, createdAt: updated.createdAt.toISOString(), totalGenerations: 0, favoriteToolIds: favorites.map(f => f.toolId) });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to update profile" });

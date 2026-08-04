@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, generationsTable, meetingsTable, meetingSessionsTable, plansTable } from "@workspace/db";
-import { eq, ilike, desc, sql } from "drizzle-orm";
+import { eq, ilike, desc, sql, gte, and } from "drizzle-orm";
 import { requireAdmin } from "../lib/auth.js";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -20,83 +20,86 @@ function generateDayRange(start: Date, end: Date): string[] {
 
 const router = Router();
 
-// ─── Metrics ─────────────────────────────────────────────────────────────────
+// ─── Metrics (SQL-aggregated, no full-table scans) ───────────────────────────
 router.get("/admin/metrics", requireAdmin, async (req, res) => {
   try {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const todayStr = now.toISOString().slice(0, 10);
+    const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
 
-    const [users, meetings, sessions, plans] = await Promise.all([
-      db.select().from(usersTable),
-      db.select().from(meetingsTable),
-      db.select().from(meetingSessionsTable),
-      db.select().from(plansTable),
+    const [
+      [{ totalUsers }],
+      [{ meetingsToday }],
+      [{ activeSessions }],
+      mrrRows,
+      newUsersRaw,
+      meetingsRaw,
+      usersByPlanRaw,
+      topUsersRaw,
+    ] = await Promise.all([
+      // Scalar counts — no full-table load
+      db.select({ totalUsers: sql<number>`count(*)::int` }).from(usersTable),
+      db.select({ meetingsToday: sql<number>`count(*)::int` }).from(meetingsTable).where(gte(meetingsTable.createdAt, startOfToday)),
+      db.select({ activeSessions: sql<number>`count(*)::int` }).from(meetingSessionsTable).where(eq(meetingSessionsTable.status, 'active')),
+
+      // MRR: SUM plan prices for users who have a non-null planId
+      db.select({ mrr: sql<number>`COALESCE(SUM(p.price), 0)::numeric` })
+        .from(usersTable)
+        .innerJoin(plansTable, eq(usersTable.planId, plansTable.id)),
+
+      // New users per day (last 30 days) — SQL GROUP BY date
+      db.select({
+        date: sql<string>`DATE(${usersTable.createdAt})::text`,
+        count: sql<number>`count(*)::int`,
+      }).from(usersTable).where(gte(usersTable.createdAt, thirtyDaysAgo))
+        .groupBy(sql`DATE(${usersTable.createdAt})`),
+
+      // Meetings per day (last 30 days) — SQL GROUP BY date
+      db.select({
+        date: sql<string>`DATE(${meetingsTable.createdAt})::text`,
+        count: sql<number>`count(*)::int`,
+      }).from(meetingsTable).where(gte(meetingsTable.createdAt, thirtyDaysAgo))
+        .groupBy(sql`DATE(${meetingsTable.createdAt})`),
+
+      // Users by plan — SQL GROUP BY
+      db.select({
+        planName: sql<string>`COALESCE(${usersTable.planName}, 'Free')`,
+        count: sql<number>`count(*)::int`,
+      }).from(usersTable).groupBy(sql`COALESCE(${usersTable.planName}, 'Free')`),
+
+      // Top 10 users by meeting count — SQL aggregation
+      db.select({
+        id: usersTable.id,
+        name: usersTable.name,
+        email: usersTable.email,
+        planName: usersTable.planName,
+        meetingCount: sql<number>`count(${meetingsTable.id})::int`,
+      }).from(usersTable)
+        .leftJoin(meetingsTable, eq(meetingsTable.userId, usersTable.id))
+        .groupBy(usersTable.id, usersTable.name, usersTable.email, usersTable.planName)
+        .orderBy(desc(sql`count(${meetingsTable.id})`))
+        .limit(10),
     ]);
 
-    // KPI counts
-    const totalUsers = users.length;
-    const meetingsToday = meetings.filter(m => m.createdAt.toISOString().slice(0, 10) === todayStr).length;
-    const activeSessions = sessions.filter(s => s.status === 'active').length;
+    const estimatedMRR = Number(mrrRows[0]?.mrr ?? 0);
 
-    // Estimated MRR: sum plan prices for users who have an active plan
-    const planPriceMap = new Map<string, number>(plans.map(p => [p.id, p.price]));
-    const estimatedMRR = users.reduce((sum, u) => {
-      if (u.planId) return sum + (planPriceMap.get(u.planId) ?? 0);
-      return sum;
-    }, 0);
+    // Fill zero-count days for the 30-day ranges
+    const usersByDayMap = new Map(newUsersRaw.map(r => [r.date, r.count]));
+    const meetingsByDayMap = new Map(meetingsRaw.map(r => [r.date, r.count]));
+    const dayRange = generateDayRange(thirtyDaysAgo, now);
+    const newUsersPerDay = dayRange.map(date => ({ date, count: usersByDayMap.get(date) ?? 0 }));
+    const meetingsPerDay = dayRange.map(date => ({ date, count: meetingsByDayMap.get(date) ?? 0 }));
 
-    // New users per day (last 30 days) — fill zeros for missing days
-    const usersByDay = new Map<string, number>();
-    for (const u of users) {
-      if (u.createdAt >= thirtyDaysAgo) {
-        const day = u.createdAt.toISOString().slice(0, 10);
-        usersByDay.set(day, (usersByDay.get(day) ?? 0) + 1);
-      }
-    }
-    const newUsersPerDay = generateDayRange(thirtyDaysAgo, now).map(date => ({
-      date,
-      count: usersByDay.get(date) ?? 0,
-    }));
-
-    // Meetings per day (last 30 days)
-    const meetingsByDay = new Map<string, number>();
-    for (const m of meetings) {
-      if (m.createdAt >= thirtyDaysAgo) {
-        const day = m.createdAt.toISOString().slice(0, 10);
-        meetingsByDay.set(day, (meetingsByDay.get(day) ?? 0) + 1);
-      }
-    }
-    const meetingsPerDay = generateDayRange(thirtyDaysAgo, now).map(date => ({
-      date,
-      count: meetingsByDay.get(date) ?? 0,
-    }));
-
-    // Users by plan (pie chart)
-    const planCounts = new Map<string, number>();
-    for (const u of users) {
-      const plan = u.planName ?? 'Free';
-      planCounts.set(plan, (planCounts.get(plan) ?? 0) + 1);
-    }
-    const usersByPlan = Array.from(planCounts.entries()).map(([planName, count]) => ({ planName, count }));
-
-    // Top 10 most active users by meeting count
-    const meetingCountByUser = new Map<number, number>();
-    for (const m of meetings) {
-      meetingCountByUser.set(m.userId, (meetingCountByUser.get(m.userId) ?? 0) + 1);
-    }
-    const topUsers = users
-      .map(u => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        planName: u.planName ?? null,
-        meetingCount: meetingCountByUser.get(u.id) ?? 0,
-      }))
-      .sort((a, b) => b.meetingCount - a.meetingCount)
-      .slice(0, 10);
-
-    res.json({ totalUsers, meetingsToday, estimatedMRR, activeSessions, usersByPlan, meetingsPerDay, newUsersPerDay, topUsers });
+    res.json({
+      totalUsers,
+      meetingsToday,
+      estimatedMRR,
+      activeSessions,
+      usersByPlan: usersByPlanRaw,
+      meetingsPerDay,
+      newUsersPerDay,
+      topUsers: topUsersRaw,
+    });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to get metrics" });
@@ -105,15 +108,14 @@ router.get("/admin/metrics", requireAdmin, async (req, res) => {
 
 router.get("/admin/metrics/realtime", requireAdmin, async (req, res) => {
   try {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const [sessions, meetings] = await Promise.all([
-      db.select({ status: meetingSessionsTable.status }).from(meetingSessionsTable),
-      db.select({ createdAt: meetingsTable.createdAt }).from(meetingsTable),
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+    const [[{ activeSessions }], [{ meetingsToday }]] = await Promise.all([
+      db.select({ activeSessions: sql<number>`count(*)::int` })
+        .from(meetingSessionsTable).where(eq(meetingSessionsTable.status, 'active')),
+      db.select({ meetingsToday: sql<number>`count(*)::int` })
+        .from(meetingsTable).where(gte(meetingsTable.createdAt, startOfToday)),
     ]);
-    res.json({
-      activeSessions: sessions.filter(s => s.status === 'active').length,
-      meetingsToday: meetings.filter(m => m.createdAt.toISOString().slice(0, 10) === todayStr).length,
-    });
+    res.json({ activeSessions, meetingsToday });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to get realtime metrics" });
@@ -122,29 +124,77 @@ router.get("/admin/metrics/realtime", requireAdmin, async (req, res) => {
 
 router.get("/admin/stats", requireAdmin, async (req, res) => {
   try {
-    const users = await db.select().from(usersTable);
-    const generations = await db.select().from(generationsTable);
-    const today = new Date().toISOString().slice(0, 10);
-    const activeToday = generations.filter((g) => g.createdAt.toISOString().slice(0, 10) === today).length;
-    const totalTokensUsed = generations.reduce((s, g) => s + g.tokensUsed, 0);
-
-    const planCounts = new Map<string, number>();
-    for (const u of users) {
-      const plan = u.planName || "Free";
-      planCounts.set(plan, (planCounts.get(plan) ?? 0) + 1);
-    }
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+    const [[{ totalUsers }], [{ totalGenerations, totalTokensUsed, activeToday }], usersByPlanRaw] = await Promise.all([
+      db.select({ totalUsers: sql<number>`count(*)::int` }).from(usersTable),
+      db.select({
+        totalGenerations: sql<number>`count(*)::int`,
+        totalTokensUsed: sql<number>`COALESCE(SUM(${generationsTable.tokensUsed}), 0)::int`,
+        activeToday: sql<number>`count(*) FILTER (WHERE ${generationsTable.createdAt} >= ${startOfToday})::int`,
+      }).from(generationsTable),
+      db.select({
+        planName: sql<string>`COALESCE(${usersTable.planName}, 'Free')`,
+        count: sql<number>`count(*)::int`,
+      }).from(usersTable).groupBy(sql`COALESCE(${usersTable.planName}, 'Free')`),
+    ]);
 
     res.json({
-      totalUsers: users.length,
-      totalGenerations: generations.length,
+      totalUsers,
+      totalGenerations,
       totalTokensUsed,
       activeToday,
-      revenueTotal: 0, // Would come from WooCommerce
-      usersByPlan: Array.from(planCounts.entries()).map(([planName, count]) => ({ planName, count })),
+      revenueTotal: 0,
+      usersByPlan: usersByPlanRaw,
     });
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to get admin stats" });
+  }
+});
+
+// ─── Metrics CSV export ───────────────────────────────────────────────────────
+router.get("/admin/metrics/export.csv", requireAdmin, async (req, res) => {
+  try {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
+
+    const [[{ totalUsers }], [{ meetingsToday }], [{ activeSessions }], meetingsRaw, newUsersRaw] = await Promise.all([
+      db.select({ totalUsers: sql<number>`count(*)::int` }).from(usersTable),
+      db.select({ meetingsToday: sql<number>`count(*)::int` }).from(meetingsTable).where(gte(meetingsTable.createdAt, startOfToday)),
+      db.select({ activeSessions: sql<number>`count(*)::int` }).from(meetingSessionsTable).where(eq(meetingSessionsTable.status, 'active')),
+      db.select({
+        date: sql<string>`DATE(${meetingsTable.createdAt})::text`,
+        meetings: sql<number>`count(*)::int`,
+      }).from(meetingsTable).where(gte(meetingsTable.createdAt, thirtyDaysAgo))
+        .groupBy(sql`DATE(${meetingsTable.createdAt})`).orderBy(sql`DATE(${meetingsTable.createdAt})`),
+      db.select({
+        date: sql<string>`DATE(${usersTable.createdAt})::text`,
+        newUsers: sql<number>`count(*)::int`,
+      }).from(usersTable).where(gte(usersTable.createdAt, thirtyDaysAgo))
+        .groupBy(sql`DATE(${usersTable.createdAt})`).orderBy(sql`DATE(${usersTable.createdAt})`),
+    ]);
+
+    const meetingMap = new Map(meetingsRaw.map(r => [r.date, r.meetings]));
+    const userMap = new Map(newUsersRaw.map(r => [r.date, r.newUsers]));
+    const days = generateDayRange(thirtyDaysAgo, now);
+
+    const csvLines = [
+      `# APEX Platform KPI Report — ${now.toISOString().slice(0, 10)}`,
+      `# Total Users,${totalUsers}`,
+      `# Meetings Today,${meetingsToday}`,
+      `# Active Sessions,${activeSessions}`,
+      ``,
+      `Date,Meetings,New Users`,
+      ...days.map(d => `${d},${meetingMap.get(d) ?? 0},${userMap.get(d) ?? 0}`),
+    ];
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="apex-metrics-${now.toISOString().slice(0, 10)}.csv"`);
+    res.send(csvLines.join('\n'));
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to export metrics" });
   }
 });
 

@@ -40,6 +40,7 @@ import {
   Play,
   Globe,
   CheckCircle2,
+  Download,
 } from 'lucide-react';
 
 const TOKEN_KEY = 'apex_meeting_token';
@@ -48,6 +49,7 @@ interface TranscriptEntry {
   type: 'user' | 'ai';
   message: string;
   timestamp: Date;
+  streaming?: boolean;
 }
 
 interface ExecutionEntry {
@@ -147,6 +149,9 @@ function LiveMeetingContent() {
   const transcriptScrollRef = useRef<HTMLDivElement>(null);
   const execScrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Ref mirrors isListening state for use inside callbacks without stale closures
+  const isListeningRef = useRef(false);
+  useEffect(() => { isListeningRef.current = isListening; }, [isListening]);
 
   const speechLang = meeting?.language === 'pt' ? 'pt-BR' : meeting?.language === 'es' ? 'es-ES' : 'en-US';
 
@@ -309,9 +314,22 @@ function LiveMeetingContent() {
     if (!utterance.voice) {
       window.speechSynthesis.addEventListener('voiceschanged', assignVoice, { once: true });
     }
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      // Stop recognition while TTS plays to prevent mic-loop feedback (#37)
+      if (isListeningRef.current) {
+        try { recognitionRef.current?.stop(); } catch {}
+      }
+    };
+    const resumeAfterSpeech = () => {
+      setIsSpeaking(false);
+      // Resume recognition after TTS finishes (brief delay lets the speaker settle)
+      if (isListeningRef.current) {
+        setTimeout(() => { try { recognitionRef.current?.start(); } catch {} }, 350);
+      }
+    };
+    utterance.onend = resumeAfterSpeech;
+    utterance.onerror = resumeAfterSpeech;
     speechSynthesisRef.current = utterance;
     window.speechSynthesis.speak(utterance);
   }, [speechLang]);
@@ -321,7 +339,7 @@ function LiveMeetingContent() {
     setIsSpeaking(false);
   };
 
-  // ── Main APEX handler (with context injection) ────────────────────────────
+  // ── Main APEX handler — SSE streaming with fallback ──────────────────────
   const handleVoiceCommand = async (text: string) => {
     if (!text.trim()) return;
     if (isListening) recognitionRef.current?.stop();
@@ -342,28 +360,132 @@ function LiveMeetingContent() {
     setIsProcessing(true);
 
     try {
-      const response = await askApex.mutateAsync({
-        meetingId,
-        data: { message: contextualMessage, sessionId: sessionId || undefined }
+      const token = localStorage.getItem(TOKEN_KEY);
+      const res = await fetch(`/api/meetings/${meetingId}/ask`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ message: contextualMessage, sessionId: sessionId || undefined }),
       });
 
-      setTranscript(prev => [...prev, { type: 'ai', message: response.message, timestamp: new Date() }]);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      if (response.action && response.actionResult) {
-        setExecutionLog(prev => [...prev, {
-          action: response.action ?? '',
-          result: response.actionResult ?? '',
-          timestamp: new Date()
-        }]);
+      // Detect whether server responded with SSE or plain JSON
+      const contentType = res.headers.get('content-type') ?? '';
+      if (!contentType.includes('event-stream')) {
+        // Fallback: plain JSON (e.g. proxied, no SSE support)
+        const data = await res.json();
+        const msg = data.message ?? data.reply ?? "I'm processing your request.";
+        setTranscript(prev => [...prev, { type: 'ai', message: msg, timestamp: new Date() }]);
+        speakResponse(msg);
+        return;
       }
-      speakResponse(response.message);
+
+      // ── SSE streaming ──────────────────────────────────────────────────────
+      // Add placeholder entry that will be updated token-by-token
+      setTranscript(prev => [...prev, { type: 'ai', message: '', timestamp: new Date(), streaming: true }]);
+
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+
+      try {
+        outer: while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const raw = decoder.decode(value, { stream: true });
+          for (const line of raw.split('\n')) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data:')) continue;
+            const payload = trimmed.slice(5).trim();
+            try {
+              const chunk = JSON.parse(payload);
+              if (chunk.error) throw new Error(chunk.error);
+              if (chunk.done) break outer;
+              if (chunk.delta) {
+                fullText += chunk.delta;
+                setTranscript(prev => {
+                  const updated = [...prev];
+                  const last = updated[updated.length - 1];
+                  if (last?.streaming) last.message = fullText;
+                  return updated;
+                });
+              }
+            } catch (parseErr) {
+              if ((parseErr as Error).message?.includes('HTTP') || (parseErr as Error).message?.includes('error')) throw parseErr;
+              // skip parse errors for individual chunks
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      // Mark stream complete (remove streaming flag)
+      setTranscript(prev => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last?.streaming) { last.streaming = false; last.message = fullText || last.message; }
+        return updated;
+      });
+
+      if (fullText) speakResponse(fullText);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : t('live.command.failed');
       toast({ title: t('common.error'), description: errorMessage, variant: 'destructive' });
+      // Remove empty streaming entry if present
+      setTranscript(prev => {
+        const updated = [...prev];
+        if (updated[updated.length - 1]?.streaming) updated.pop();
+        return updated;
+      });
     } finally {
       setIsProcessing(false);
-      if (isListening) { try { recognitionRef.current?.start(); } catch {} }
+      if (isListeningRef.current) { try { recognitionRef.current?.start(); } catch {} }
     }
+  };
+
+  // ── PDF / print slides ─────────────────────────────────────────────────────
+  const printSlides = () => {
+    const lang = meeting?.language ?? 'pt';
+    const html = `<!DOCTYPE html>
+<html lang="${lang === 'pt' ? 'pt-BR' : lang}">
+<head>
+  <meta charset="UTF-8">
+  <title>${meeting?.title ?? 'APEX Slides'}</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;background:#000;color:#fff}
+    .slide{width:100vw;height:100vh;display:flex;flex-direction:column;justify-content:center;
+           padding:40px 60px;page-break-after:always;background:#000}
+    .slide-meta{font-size:10px;color:#00ff41;font-family:monospace;margin-bottom:20px;letter-spacing:2px}
+    h1{font-size:36px;font-weight:900;color:#00ff41;margin-bottom:28px;line-height:1.2}
+    ul{list-style:none}
+    li{font-size:18px;color:#d1d5db;margin-bottom:14px;display:flex;align-items:flex-start;gap:12px}
+    li::before{content:'>';color:#00ff41;font-family:monospace;flex-shrink:0;margin-top:3px}
+    .notes{margin-top:24px;font-size:11px;color:#6b7280;border-top:1px solid #1f2937;padding-top:12px;font-style:italic}
+    @media print{
+      body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .slide{page-break-after:always}
+    }
+  </style>
+</head>
+<body>
+${slides.map((s, i) => `
+  <div class="slide">
+    <div class="slide-meta">APEX CORE · ${i + 1}/${slides.length}${meeting?.company ? ' · ' + meeting.company : ''}</div>
+    <h1>${s.title}</h1>
+    <ul>${s.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
+    ${s.notes ? `<div class="notes">${s.notes}</div>` : ''}
+  </div>`).join('')}
+  <script>window.onload=()=>{window.print()}<\/script>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(html); win.document.close(); }
   };
 
   const handleManualSubmit = () => {
@@ -706,6 +828,18 @@ function LiveMeetingContent() {
                 Apresentar
               </Button>
             )}
+            {slides.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={printSlides}
+                className="border-green-400/40 text-green-400 hover:bg-green-400/10 font-mono text-xs"
+                title="Baixar slides como PDF"
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                PDF
+              </Button>
+            )}
 
             <Button
               variant="destructive"
@@ -1004,7 +1138,12 @@ function LiveMeetingContent() {
             {transcript.map((entry, i) => (
               <div key={i} className={`${entry.type === 'user' ? 'text-right' : 'text-left'}`}>
                 <div className={`inline-block max-w-[80%] rounded p-3 ${entry.type === 'user' ? 'bg-primary/20 text-primary' : 'bg-cyan-400/10 text-cyan-400'}`}>
-                  <p className="text-sm">{entry.message}</p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {entry.message}
+                    {entry.streaming && (
+                      <span className="inline-block w-[2px] h-[1em] bg-current ml-0.5 animate-pulse" />
+                    )}
+                  </p>
                   <p className="text-[10px] text-muted-foreground mt-1">{entry.timestamp.toLocaleTimeString()}</p>
                 </div>
               </div>

@@ -62,21 +62,22 @@ export default function ChatbotPage() {
     setLoading(true);
 
     try {
+      // Build messages array: last 6 history turns + new user message
+      const apiMessages = [
+        ...messages.slice(-6).map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        { role: 'user' as const, content: text },
+      ];
       const res = await fetch(`${getApiBaseUrl()}wp/chatbot`, {
         method: 'POST',
         headers: { ...getWpApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          mode,
-          history: messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
-        }),
+        body: JSON.stringify({ messages: apiMessages, mode }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro na resposta');
 
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: data.response || data.message || data.reply || 'Mensagem recebida!',
+        content: data.reply || data.response || data.message || 'Mensagem recebida!',
         ts: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       }]);
     } catch (err: any) {

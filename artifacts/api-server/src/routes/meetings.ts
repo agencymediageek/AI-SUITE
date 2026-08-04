@@ -382,6 +382,79 @@ Be authoritative, intelligent, and precise. Respond in ${meeting.language === "p
       messages.push({ role: "user", content: message });
     }
 
+    const wantsStream = req.headers.accept?.includes("text/event-stream");
+
+    if (wantsStream) {
+      // ── SSE streaming path ──────────────────────────────────────────────────
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no"); // disable nginx buffering
+      res.flushHeaders();
+
+      const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${GROK_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "grok-3-mini", messages, stream: true, max_tokens: 1024 }),
+      });
+
+      if (!grokRes.ok) {
+        res.write(`data: ${JSON.stringify({ error: "AI service error" })}\n\n`);
+        res.end();
+        return;
+      }
+
+      let fullText = "";
+      let tokensUsed = 0;
+      const reader = grokRes.body!.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const raw = decoder.decode(value, { stream: true });
+          for (const line of raw.split("\n")) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith("data:")) continue;
+            const payload = trimmed.slice(5).trim();
+            if (payload === "[DONE]") continue;
+            try {
+              const chunk = JSON.parse(payload);
+              const delta = chunk.choices?.[0]?.delta?.content ?? "";
+              if (delta) {
+                fullText += delta;
+                res.write(`data: ${JSON.stringify({ delta })}\n\n`);
+              }
+              if (chunk.usage?.total_tokens) tokensUsed = chunk.usage.total_tokens;
+            } catch { /* skip malformed chunk */ }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      res.write(`data: ${JSON.stringify({ done: true, tokensUsed })}\n\n`);
+      res.end();
+
+      // Persist transcript asynchronously after streaming ends
+      if (sessionId && fullText) {
+        db.select().from(meetingSessionsTable)
+          .where(and(eq(meetingSessionsTable.id, sessionId), eq(meetingSessionsTable.meetingId, meetingId)))
+          .then(([session]) => {
+            if (session) {
+              const entry = `\n[User]: ${message}\n[${meeting.aiName}]: ${fullText}`;
+              db.update(meetingSessionsTable)
+                .set({ transcript: (session.transcript ?? "") + entry })
+                .where(eq(meetingSessionsTable.id, sessionId))
+                .catch(() => {});
+            }
+          }).catch(() => {});
+      }
+      return;
+    }
+
+    // ── Non-streaming path (fallback) ──────────────────────────────────────────
     const response = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: { "Authorization": `Bearer ${GROK_API_KEY}`, "Content-Type": "application/json" },
@@ -479,7 +552,24 @@ router.post("/meetings/:meetingId/analyze-url", requireAuth, async (req, res) =>
       .trim()
       .slice(0, 20000);
 
-    res.json({ text: clean, title, url: parsed.href });
+    // SPA fallback: if extracted text is too sparse (JS-rendered site), try Jina Reader
+    let finalText = clean;
+    if (clean.replace(/\s/g, '').length < 300) {
+      try {
+        const jinaRes = await fetch(`https://r.jina.ai/${parsed.href}`, {
+          headers: { 'User-Agent': 'APEX-CORE/2.0; +https://apex.techsites.ai', 'Accept': 'text/plain, text/markdown' },
+          signal: AbortSignal.timeout(20000),
+        });
+        if (jinaRes.ok) {
+          const jinaText = (await jinaRes.text()).slice(0, 20000);
+          if (jinaText.replace(/\s/g, '').length > clean.replace(/\s/g, '').length) {
+            finalText = jinaText;
+          }
+        }
+      } catch { /* Jina unavailable — serve original sparse content */ }
+    }
+
+    res.json({ text: finalText, title, url: parsed.href });
   } catch (err: any) {
     req.log.error(err);
     if (err.name === "TimeoutError") {

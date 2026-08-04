@@ -45,10 +45,15 @@ export default function SeoAuditPage() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await fetch(`${getApiBaseUrl()}wp/audit-seo`, {
+      const res = await fetch(`${getApiBaseUrl()}wp/audit/seo`, {
         method: 'POST',
         headers: { ...getWpApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_audit: true }),
+        body: JSON.stringify({
+          full_audit: true,
+          site_url: window.location.origin,
+          site_name: document.title || 'Meu Site',
+          ssl: window.location.protocol === 'https:',
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro na auditoria');

@@ -14,3 +14,4 @@
 - [APEX subscriptions](apex-subscriptions.md) — Stripe subscription mode, planos, webhook events, DB schema, token key fix
 - [WP TechSites investor demo](wp-techsites-demo.md) — /wp/demo endpoint, wpCreateListing fallback, BrightData confirmed working for Curitiba, plugin v2.1.0 ZIP pronto
 - [N8N OpenAI credentials](n8n-openai-creds.md) — 3 credential IDs cover 19 workflows; OPENAI_MEDIAGEEK_API_KEY in Replit Secrets; Maestro workflow updated Aug 2026
+- [APEX streaming ask](apex-streaming.md) — /meetings/:id/ask supports SSE when Accept: text/event-stream; fallback to JSON; mic loop fix via isListeningRef pattern
