@@ -26,6 +26,26 @@ jobs:
             echo "⚠️  Webhook returned HTTP $response (non-blocking)"
           fi
 
+  deploy-apex:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger APEX deploy on VPS
+        continue-on-error: true
+        run: |
+          echo "Triggering APEX deploy on VPS..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST https://apex.techsites.ai/webhook/deploy-apex \
+            -H "Content-Type: application/json" \
+            -d "{\"secret\":\"${{ secrets.DEPLOY_WEBHOOK_SECRET }}\"}" \
+            --max-time 20)
+          if [ "$response" = "200" ]; then
+            echo "✅ APEX deploy triggered (HTTP $response)"
+            echo "VPS will run: git pull + build api-server + build apex-meeting + pm2 restart apex-api"
+            echo "Monitor: pm2 logs apex-api"
+          else
+            echo "⚠️  Webhook returned HTTP $response (non-blocking)"
+          fi
+
   deploy-wptechsites:
     runs-on: ubuntu-latest
     steps:
