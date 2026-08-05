@@ -2,7 +2,7 @@ import { Link, useLocation } from 'wouter';
 import {
   LayoutDashboard, Wand2, Palette, Menu as MenuIcon, Settings, LogOut,
   Store, Link2, Newspaper, Search, Edit3, Layout, FileText,
-  MessageSquare, ShieldCheck, Sparkles, ChevronDown, ChevronRight, Coins
+  MessageSquare, ShieldCheck, Sparkles, ChevronDown, ChevronRight, Coins, CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +69,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'Sistema',
     items: [
+      { name: 'Planos & Créditos', href: '/planos', icon: CreditCard },
       { name: 'Configurações', href: '/tools/settings', icon: Settings },
     ],
   },

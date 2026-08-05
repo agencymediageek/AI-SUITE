@@ -97,9 +97,9 @@ export default function SettingsPage() {
             </div>
 
             <Button variant="outline" className="w-full" asChild>
-              <a href="https://wp.techsites.ai/#pricing" target="_blank" rel="noopener noreferrer">
+              <a href="/planos">
                 <Zap className="w-4 h-4 mr-2 text-primary" />
-                Fazer Upgrade de Plano
+                Ver Planos & Fazer Upgrade
                 <ExternalLink className="w-3.5 h-3.5 ml-2 text-muted-foreground" />
               </a>
             </Button>
@@ -194,8 +194,8 @@ export default function SettingsPage() {
             </p>
             <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
               {[
-                ['Versão do Plugin', 'v2.3.0'],
-                ['Dashboard', 'v1.0.0'],
+                ['Versão do Plugin', 'v2.4.1'],
+                ['Dashboard', 'v2.4.1'],
                 ['Status', '✅ Conectado'],
                 ['API Server', '✅ Online'],
                 ['Suporte', 'suporte@techsites.ai'],
