@@ -82,7 +82,10 @@ function RootRedirect() {
 }
 
 function AppRouter() {
-  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  // When accessed via a custom domain (e.g. wp.techsites.ai), the pathname does NOT
+  // include the Replit sub-path prefix (/wp-techsites). Wouter needs base='' in that case.
+  const configuredBase = import.meta.env.BASE_URL.replace(/\/$/, ''); // e.g. "/wp-techsites"
+  const base = window.location.pathname.startsWith(configuredBase) ? configuredBase : '';
 
   return (
     <WouterRouter base={base}>
