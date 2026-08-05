@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'wouter';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -154,16 +154,36 @@ export default function SeoAuditPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AuditResult | null>(null);
+  const mountedRef = useRef(true);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Reset on unmount — prevents setState after navigation
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.abort();
+    };
+  }, []);
 
   const handleAudit = async () => {
-    setLoading(true);
-    setResult(null);
+    // Cancel any in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    // 35-second hard timeout
+    const timeoutId = setTimeout(() => controller.abort(), 35_000);
+
+    if (mountedRef.current) { setLoading(true); setResult(null); }
     try {
       const res = await fetch(`${getApiBaseUrl()}wp/audit/seo`, {
         method: 'POST',
         headers: { ...getWpApiHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ full_audit: true }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro na auditoria');
 
@@ -175,6 +195,7 @@ export default function SeoAuditPage() {
         score: c.score ?? (c.status === 'ok' ? 90 : c.status === 'warn' ? 55 : 25),
       }));
 
+      if (!mountedRef.current) return;
       setResult({
         overall: data.score || data.overall_score || 72,
         grade: data.grade || (data.score >= 80 ? 'B' : data.score >= 60 ? 'C' : 'D'),
@@ -188,10 +209,20 @@ export default function SeoAuditPage() {
         generated_at: data.generated_at,
       });
       toast({ title: `✅ Auditoria concluída! Score: ${data.score}/100 — Nota ${data.grade || 'B'}` });
-    } catch {
-      // Demo fallback
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      if (!mountedRef.current) return; // navigated away — don't touch state
+
+      // If user intentionally cancelled a re-run, silently stop
+      if (err?.name === 'AbortError' && result !== null) return;
+
+      // Timeout or network error → show demo fallback with warning
+      const isTimeout = err?.name === 'AbortError';
       const fallback: AuditResult = {
-        overall: 74, grade: 'C', summary: 'Seu site tem uma base sólida, mas existem melhorias importantes para alcançar posições mais altas nos resultados de busca. Foco em conteúdo e velocidade trará os maiores ganhos.',
+        overall: 74, grade: 'C',
+        summary: isTimeout
+          ? 'Tempo de resposta excedido (35s). Mostrando auditoria de exemplo — tente novamente ou verifique a conexão com o site.'
+          : 'Seu site tem uma base sólida, mas existem melhorias importantes para alcançar posições mais altas nos resultados de busca.',
         items: buildFallbackItems(),
         recommendations: [
           'Adicione alt text em todas as imagens para melhorar acessibilidade e SEO',
@@ -209,9 +240,13 @@ export default function SeoAuditPage() {
         plugins_detected: ['woocommerce', 'elementor', 'contact-form-7', 'akismet'],
       };
       setResult(fallback);
-      toast({ title: '📊 Auditoria gerada (modo demo)', description: 'Score geral: 74/100' });
+      toast({
+        title: isTimeout ? '⏱️ Timeout — exibindo demo' : '📊 Auditoria gerada (modo demo)',
+        description: isTimeout ? 'O servidor demorou mais de 35s. Tente novamente.' : 'Score geral: 74/100',
+        variant: isTimeout ? 'destructive' : 'default',
+      });
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   };
 
