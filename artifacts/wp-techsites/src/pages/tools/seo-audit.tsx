@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { getApiBaseUrl, getWpApiHeaders } from '@/lib/api-headers';
+import { ToolInfoCard } from '@/components/ui/tool-info-card';
 import {
   Loader2, ShieldCheck, CheckCircle2, AlertTriangle, XCircle,
   TrendingUp, Search, Zap, FileText, MessageSquare, Image,
@@ -290,6 +291,15 @@ export default function SeoAuditPage() {
             <ShieldCheck className="w-3 h-3 mr-1" /> SEO Audit
           </Badge>
         </div>
+
+        <ToolInfoCard
+          steps={[
+            { icon: '🔗', text: 'Digite a URL do seu site WordPress' },
+            { icon: '🔍', text: 'A IA analisa 12+ fatores: velocidade, meta tags, títulos H1/H2, links internos, mobile-friendly e muito mais' },
+            { icon: '📊', text: 'Receba um relatório com pontuação de A a F e recomendações priorizadas por impacto' },
+          ]}
+          result={{ label: '📄 Exibido na tela', color: 'blue', detail: '— Imprima como PDF com Ctrl+P / Cmd+P' }}
+        />
 
         {/* CTA state */}
         {!result ? (

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { getApiBaseUrl, getWpApiHeaders } from '@/lib/api-headers';
+import { ToolInfoCard } from '@/components/ui/tool-info-card';
 import { Loader2, Sparkles, Download, CheckCircle2, RefreshCw, Palette } from 'lucide-react';
 
 const LOGO_STYLES = [
@@ -126,6 +127,15 @@ export default function LogoAiPage() {
             <Sparkles className="w-3 h-3 mr-1" /> AI Design
           </Badge>
         </div>
+
+        <ToolInfoCard
+          steps={[
+            { icon: '✍️', text: 'Descreva sua marca: nome, segmento, estilo visual e cores preferidas' },
+            { icon: '🤖', text: 'A IA gera um logotipo vetorial (SVG) exclusivo para o seu negócio' },
+            { icon: '🎨', text: 'Baixe em PNG de alta qualidade ou aplique direto como logo do site WordPress' },
+          ]}
+          result={{ label: '⬇ Download PNG', color: 'green', detail: '— Opcional: aplicar via CSS no tema ativo do WordPress' }}
+        />
 
         <div className="grid lg:grid-cols-5 gap-5">
           {/* Form */}

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { getApiBaseUrl, getWpApiHeaders } from '@/lib/api-headers';
+import { ToolInfoCard } from '@/components/ui/tool-info-card';
 import { Loader2, MessageSquare, Send, Bot, User, Trash2, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -116,6 +117,15 @@ export default function ChatbotPage() {
             </Button>
           </div>
         </div>
+
+        <ToolInfoCard
+          steps={[
+            { icon: '⚙️', text: 'Configure nome, cor e personalidade do chatbot (formal, descontraído, técnico…)' },
+            { icon: '🧠', text: 'A IA responde perguntas dos visitantes com base no conteúdo e contexto do site' },
+            { icon: '💬', text: 'Widget ativado automaticamente no frontend — aparece em todas as páginas' },
+          ]}
+          result={{ label: '🤖 Ativo no site', color: 'blue', detail: '— Widget de chat injetado via shortcode no WordPress' }}
+        />
 
         {showConfig && (
           <Card>

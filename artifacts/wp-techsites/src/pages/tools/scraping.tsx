@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { getApiBaseUrl, getWpApiHeaders } from '@/lib/api-headers';
+import { ToolInfoCard } from '@/components/ui/tool-info-card';
 import {
   Loader2, Search, MapPin, CheckCircle2, Download, Store,
   Coffee, Scissors, Wrench, Camera, ShoppingCart, Heart, Dumbbell,
@@ -192,6 +193,15 @@ export default function ScrapingPage() {
             <Search className="w-3 h-3 mr-1" /> BrightData
           </Badge>
         </div>
+
+        <ToolInfoCard
+          steps={[
+            { icon: '🌐', text: 'Use a Demo Rápida (1 clique) ou cole uma URL personalizada com listings' },
+            { icon: '⚡', text: 'BrightData coleta dados mesmo em sites JavaScript/SPAs — nome, endereço, telefone, avaliações' },
+            { icon: '✅', text: 'Listings importados automaticamente para o diretório do WordPress' },
+          ]}
+          result={{ label: '🗂️ Importado no WordPress', color: 'green', detail: '— Listings publicados no diretório Custom Post Type' }}
+        />
 
         {/* ── Demo Rápida ───────────────────────────────────────────────── */}
         <Card className="border-primary/30 bg-primary/5">

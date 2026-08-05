@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { getApiBaseUrl, getWpApiHeaders } from '@/lib/api-headers';
+import { ToolInfoCard } from '@/components/ui/tool-info-card';
 import { Loader2, Link2, FileText, CheckCircle2, ExternalLink } from 'lucide-react';
 
 export default function PageFromUrlPage() {
@@ -48,6 +49,15 @@ export default function PageFromUrlPage() {
             Cole a URL de qualquer empresa — a IA extrai as informações e cria uma página completa no seu WordPress.
           </p>
         </div>
+
+        <ToolInfoCard
+          steps={[
+            { icon: '🔗', text: 'Cole a URL de uma empresa, concorrente ou site de referência' },
+            { icon: '🤖', text: 'A IA extrai: nome, descrição, serviços, contato e estrutura de conteúdo' },
+            { icon: '📝', text: 'Cria a página automaticamente no WordPress como rascunho para revisão' },
+          ]}
+          result={{ label: '📝 Rascunho no WordPress', color: 'green', detail: '— Revise e publique em WP Admin → Páginas' }}
+        />
 
         <Card>
           <CardHeader>

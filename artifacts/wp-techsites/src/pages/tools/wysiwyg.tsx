@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { getApiBaseUrl, getWpApiHeaders } from '@/lib/api-headers';
+import { ToolInfoCard } from '@/components/ui/tool-info-card';
 import {
   Loader2, Edit3, Wand2, Copy, CheckCircle2, Bold, Italic,
   List, AlignLeft, Image, Link, Heading1, Heading2
@@ -154,6 +155,15 @@ export default function WysiwygPage() {
             <Edit3 className="w-3 h-3 mr-1" /> IA Powered
           </Badge>
         </div>
+
+        <ToolInfoCard
+          steps={[
+            { icon: '📋', text: 'Cole o conteúdo atual de qualquer post ou página do WordPress' },
+            { icon: '🤖', text: 'Escolha a ação: melhorar SEO, reescrever, expandir, resumir, traduzir ou adicionar CTA' },
+            { icon: '💾', text: 'Informe o ID do post para salvar direto no WordPress — ou copie o HTML para colar no editor' },
+          ]}
+          result={{ label: '✏️ Atualiza post no WordPress', color: 'blue', detail: '— Ou copie o HTML e cole no editor do WP (ID do post é opcional)' }}
+        />
 
         <div className="grid lg:grid-cols-2 gap-5">
           {/* Left: Input */}

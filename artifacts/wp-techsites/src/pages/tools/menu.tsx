@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useWpGenerateMenu } from '@workspace/api-client-react';
 import { getWpApiHeaders } from '@/lib/api-headers';
+import { ToolInfoCard } from '@/components/ui/tool-info-card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Menu as MenuIcon, Link2 } from 'lucide-react';
 
@@ -84,6 +85,15 @@ export default function MenuBuilderPage() {
             5 credits
           </Badge>
         </div>
+
+        <ToolInfoCard
+          steps={[
+            { icon: '🏷️', text: 'Descreva o nicho do site (ex: "clínica odontológica", "loja de roupas femininas")' },
+            { icon: '🤖', text: 'A IA sugere a estrutura de menu ideal para UX e SEO, com páginas e subpáginas' },
+            { icon: '📋', text: 'Resultado exibido na tela — configure em WP Admin → Aparência → Menus' },
+          ]}
+          result={{ label: '📋 Sugestão na tela', color: 'orange', detail: '— Configure manualmente em WP Admin → Aparência → Menus' }}
+        />
 
         {/* Generator Form */}
         <Card>

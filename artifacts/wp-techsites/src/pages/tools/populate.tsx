@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { getApiBaseUrl, getWpApiHeaders } from '@/lib/api-headers';
+import { ToolInfoCard } from '@/components/ui/tool-info-card';
 import { Loader2, MapPin, Store, CheckCircle2, Plus, X } from 'lucide-react';
 
 const PRESET_CATEGORIES = [
@@ -65,6 +66,15 @@ export default function PopulateDirectoryPage() {
             Importa listings reais de qualquer cidade via BrightData — diretamente no seu WordPress.
           </p>
         </div>
+
+        <ToolInfoCard
+          steps={[
+            { icon: '📍', text: 'Informe a cidade e categoria de negócio (ex: "São Paulo" + "Restaurantes")' },
+            { icon: '🌐', text: 'BrightData coleta listings reais: nome, endereço, telefone, site e avaliações' },
+            { icon: '✅', text: 'Listings publicados automaticamente no WordPress como Custom Post Type' },
+          ]}
+          result={{ label: '🗂️ Publicado no WordPress', color: 'green', detail: '— Custom Post Type "listing" visível no site imediatamente' }}
+        />
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <Card>

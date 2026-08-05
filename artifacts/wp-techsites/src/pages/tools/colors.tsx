@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useWpApplyColors } from '@workspace/api-client-react';
 import { getWpApiHeaders } from '@/lib/api-headers';
+import { ToolInfoCard } from '@/components/ui/tool-info-card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Palette, Copy, CheckCircle2 } from 'lucide-react';
 
@@ -85,6 +86,15 @@ export default function BrandColorsPage() {
             5 credits
           </Badge>
         </div>
+
+        <ToolInfoCard
+          steps={[
+            { icon: '🎨', text: 'Insira a cor principal da sua marca (hex, nome ou picker)' },
+            { icon: '🤖', text: 'A IA gera uma paleta completa com variações de fundo, texto, destaque e botões' },
+            { icon: '⚡', text: 'Clique em "Aplicar" — o CSS é injetado automaticamente no tema ativo do WordPress' },
+          ]}
+          result={{ label: '🎨 Aplicado no WordPress', color: 'purple', detail: '— CSS customizado injetado sem editar código' }}
+        />
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Color Picker Form */}
