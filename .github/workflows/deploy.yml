@@ -33,8 +33,10 @@ jobs:
         continue-on-error: true
         run: |
           echo "Triggering APEX deploy on VPS..."
+          # Call VPS IP directly — Cloudflare intercepts apex.techsites.ai with Always-Use-HTTPS
           response=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST https://apex.techsites.ai/webhook/deploy-apex \
+            -X POST http://179.197.229.207/webhook/deploy-apex \
+            -H "Host: apex.techsites.ai" \
             -H "Content-Type: application/json" \
             -d "{\"secret\":\"${{ secrets.DEPLOY_WEBHOOK_SECRET }}\"}" \
             --max-time 20)
