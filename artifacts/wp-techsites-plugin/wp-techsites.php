@@ -3,7 +3,7 @@
  * Plugin Name:  WP TechSites
  * Plugin URI:   https://wp.techsites.ai
  * Description:  O SaaS de IA mais completo para WordPress — directory builder, scraping, logo, SEO, chatbot e muito mais.
- * Version:      2.3.0
+ * Version:      2.4.0
  * Author:       TechSites.ai
  * Author URI:   https://techsites.ai
  * License:      GPL-2.0+
@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'WPTS_VERSION',    '2.3.0' );
+define( 'WPTS_VERSION',    '2.4.0' );
 define( 'WPTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPTS_API_BASE',   'https://wp.techsites.ai/api/wp' );
@@ -22,6 +22,67 @@ require_once WPTS_PLUGIN_DIR . 'includes/theme-detector.php';
 require_once WPTS_PLUGIN_DIR . 'includes/cpt-listings.php';
 require_once WPTS_PLUGIN_DIR . 'includes/ajax-handlers.php';
 require_once WPTS_PLUGIN_DIR . 'admin/admin-page.php';
+
+// ─── Application Password OAuth Callback ─────────────────────────────────────
+// Intercepts the return from wp.techsites.ai after the user authorises the
+// WordPress Application Password. WordPress sends back:
+//   ?page=wp-techsites&auth=sucesso&user_login=X&password=Y&techsites_key=ts_...
+add_action( 'admin_init', 'wpts_handle_auth_callback' );
+function wpts_handle_auth_callback() {
+    if ( ! isset( $_GET['page'] ) || $_GET['page'] !== 'wp-techsites' ) return;
+    if ( ! current_user_can( 'manage_options' ) ) return;
+
+    // ── Rejection handler ──────────────────────────────────────────────────
+    if ( isset( $_GET['auth'] ) && $_GET['auth'] === 'rejeitado' ) {
+        add_action( 'admin_notices', function() {
+            echo '<div class="notice notice-warning is-dismissible"><p>⚠️ Conexão com WP TechSites cancelada. <a href="' .
+                esc_url( admin_url('admin.php?page=wp-techsites&tab=settings') ) . '">Tentar novamente →</a></p></div>';
+        });
+        return;
+    }
+
+    // ── Success handler ────────────────────────────────────────────────────
+    if ( ! isset( $_GET['auth'] ) || $_GET['auth'] !== 'sucesso' ) return;
+
+    $techsites_key = isset( $_GET['techsites_key'] ) ? sanitize_text_field( wp_unslash( $_GET['techsites_key'] ) ) : '';
+    $wp_user       = isset( $_GET['user_login'] )    ? sanitize_text_field( wp_unslash( $_GET['user_login'] ) )    : '';
+    $wp_password   = isset( $_GET['password'] )      ? sanitize_text_field( wp_unslash( $_GET['password'] ) )      : '';
+
+    if ( ! $techsites_key || ! $wp_user || ! $wp_password ) {
+        add_action( 'admin_notices', function() {
+            echo '<div class="notice notice-error is-dismissible"><p>❌ Dados de conexão incompletos. Por favor, tente conectar novamente.</p></div>';
+        });
+        return;
+    }
+
+    // ── Save all credentials at once ───────────────────────────────────────
+    $rest_url = rtrim( get_rest_url(), '/' ); // e.g. https://site.com/wp-json
+
+    update_option( 'wpts_api_key',           $techsites_key );
+    update_option( 'wpts_wp_user',           $wp_user );
+    update_option( 'wpts_wp_app_password',   $wp_password );
+    update_option( 'wpts_wp_rest_url',       $rest_url );
+    update_option( 'wpts_wp_rest_connected', 1 );
+
+    // Notify api-server of new REST credentials (non-blocking / fire-and-forget)
+    wp_remote_post( WPTS_API_BASE . '/connect-rest', [
+        'timeout'  => 5,
+        'blocking' => false,
+        'headers'  => [
+            'Content-Type'  => 'application/json',
+            'X-WP-Site-Key' => $techsites_key,
+        ],
+        'body' => wp_json_encode([
+            'wp_rest_url'     => $rest_url,
+            'wp_user'         => $wp_user,
+            'wp_app_password' => $wp_password,
+        ]),
+    ]);
+
+    // Redirect to settings tab with success flag (cleans up URL params)
+    wp_safe_redirect( admin_url( 'admin.php?page=wp-techsites&tab=settings&connected=1' ) );
+    exit;
+}
 
 // ─── Enable REST API for MyListing / WP Job Manager CPT ──────────────────────
 add_filter( 'register_post_type_args', 'wpts_enable_listing_rest', 10, 2 );

@@ -1095,65 +1095,162 @@ function wpts_page_chat_editor() { ?>
 
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
 function wpts_page_settings() {
-    $saved = ! empty( $_GET['saved'] );
+    // Read connection state
+    $api_key        = get_option( 'wpts_api_key', '' );
+    $rest_connected = (bool) get_option( 'wpts_wp_rest_connected', 0 );
+    $rest_user      = get_option( 'wpts_wp_user', '' );
+    $rest_url       = get_option( 'wpts_wp_rest_url', get_site_url() . '/wp-json' );
+    $fully_connected = $api_key && $rest_connected;
+
+    // Build the 1-click connect URL
+    $connect_url = 'https://wp.techsites.ai/api-keys?' . http_build_query([
+        'site_url' => get_site_url(),
+        'email'    => get_option( 'admin_email' ),
+        'name'     => get_bloginfo( 'name' ),
+    ]);
+
+    // Feedback messages
+    $just_connected = ! empty( $_GET['connected'] ) && $_GET['connected'] === '1';
+    $just_rejected  = ! empty( $_GET['connected'] ) && $_GET['connected'] === '0';
     ?>
-    <?php if ($saved) : ?><div class="wpts-alert wpts-alert-success">✅ Configurações salvas com sucesso.</div><?php endif; ?>
+
+    <?php if ( $just_connected ) : ?>
+    <div class="wpts-alert wpts-alert-success" style="font-size:15px;padding:16px 20px">
+        🎉 <strong>Conectado com sucesso!</strong> Chave API e REST API configuradas automaticamente. Todas as ferramentas estão liberadas.
+    </div>
+    <?php elseif ( $just_rejected ) : ?>
+    <div class="wpts-alert" style="background:#fef2f2;border-color:#fca5a5;color:#7f1d1d;padding:16px 20px">
+        ⚠️ Conexão cancelada. Clique em "Conectar" abaixo para tentar novamente.
+    </div>
+    <?php endif; ?>
+
     <div class="wpts-two-col">
         <div>
-            <div class="wpts-card">
-                <h3>⚙️ Configurações</h3>
-                <div class="wpts-field">
-                    <label>Chave de API WP TechSites</label>
-                    <input type="text" id="wpts-api-key" class="wpts-input" value="<?php echo esc_attr(get_option('wpts_api_key','')); ?>" placeholder="ts_xxxxxxxxxxxxxxxxxxxx">
-                    <p class="wpts-help">Obtenha sua chave em <a href="https://wp.techsites.ai/api-keys" target="_blank">wp.techsites.ai/api-keys</a></p>
+
+            <!-- ── PRIMARY: 1-click connection card ──────────────────────── -->
+            <div class="wpts-card" style="border:2px solid <?php echo $fully_connected ? '#22c55e44' : '#6366f166'; ?>;background:<?php echo $fully_connected ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : 'linear-gradient(135deg,#f8f7ff,#ede9fe)'; ?>">
+
+                <?php if ( $fully_connected ) : ?>
+                <!-- FULLY CONNECTED STATE -->
+                <div style="display:flex;align-items:flex-start;gap:16px">
+                    <div style="width:48px;height:48px;border-radius:50%;background:#22c55e22;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">✅</div>
+                    <div style="flex:1">
+                        <h3 style="margin:0 0 6px;color:#15803d">Site totalmente conectado!</h3>
+                        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+                            <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+                                <span style="color:#22c55e;font-weight:700">✓</span>
+                                <span style="color:#166534">Chave API: <code style="background:#bbf7d0;padding:1px 6px;border-radius:4px;font-size:12px"><?php echo esc_html( substr($api_key,0,8) . '••••••••••••••••' . substr($api_key,-4) ); ?></code></span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+                                <span style="color:#22c55e;font-weight:700">✓</span>
+                                <span style="color:#166534">WordPress REST API: usuário <strong><?php echo esc_html($rest_user); ?></strong></span>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <a href="<?php echo esc_url( admin_url('admin.php?page=wp-techsites&tab=audit') ); ?>" class="wpts-btn wpts-btn-primary" style="font-size:13px">🔍 SEO Audit →</a>
+                            <a href="<?php echo esc_url( admin_url('admin.php?page=wp-techsites&tab=scraping') ); ?>" class="wpts-btn" style="font-size:13px">🌐 Scraping →</a>
+                            <a href="<?php echo esc_url( $connect_url ); ?>" class="wpts-btn" style="font-size:12px;background:#f1f5f9;color:#64748b" target="_blank">↩ Reconectar</a>
+                        </div>
+                    </div>
                 </div>
-                <button id="wpts-save-settings" class="wpts-btn wpts-btn-primary">💾 Salvar</button>
-                <div id="wpts-settings-result"></div>
-            </div>
 
-            <!-- WP REST API Connection -->
-            <?php
-            $rest_connected = get_option('wpts_wp_rest_connected', 0);
-            $rest_user      = get_option('wpts_wp_user', '');
-            $rest_url       = get_option('wpts_wp_rest_url', get_site_url().'/wp-json');
-            ?>
-            <div class="wpts-card" style="border:1px solid <?php echo $rest_connected ? '#22c55e33' : '#6366f133'; ?>">
-                <h4><?php echo $rest_connected ? '🟢' : '🔗'; ?> Conectar WordPress REST API</h4>
-                <p class="wpts-help" style="margin-bottom:12px">Permite que o api-server escreva listings, posts e configurações diretamente no WordPress — sem copiar e colar.</p>
+                <?php else : ?>
+                <!-- NOT CONNECTED STATE -->
+                <div style="display:flex;align-items:flex-start;gap:16px">
+                    <div style="width:48px;height:48px;border-radius:50%;background:#6366f122;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">⬡</div>
+                    <div style="flex:1">
+                        <h3 style="margin:0 0 4px;color:#3730a3">Conectar WP TechSites AI</h3>
+                        <p style="margin:0 0 16px;font-size:13px;color:#4338ca;line-height:1.5">
+                            Configure tudo em <strong>1 clique</strong>: chave API + REST API do WordPress. Sem copiar e colar — autorização automática pelo próprio WordPress.
+                        </p>
 
-                <?php if ($rest_connected) : ?>
-                <div class="wpts-alert wpts-alert-success" style="margin-bottom:12px">
-                    ✅ Conectado como <strong><?php echo esc_html($rest_user); ?></strong> — write-back ativo
+                        <!-- THE PRIMARY BUTTON -->
+                        <a href="<?php echo esc_url( $connect_url ); ?>"
+                           class="wpts-btn wpts-btn-primary"
+                           style="display:inline-flex;align-items:center;gap:8px;font-size:14px;padding:10px 20px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:8px;text-decoration:none;color:#fff;font-weight:600">
+                            ⚡ Conectar com TechSites AI — 1 clique
+                        </a>
+
+                        <p style="margin:12px 0 0;font-size:11px;color:#6b7280">
+                            🔒 Seguro — usa o sistema nativo de senhas de aplicação do WordPress. Nenhuma senha mestre é compartilhada.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- How it works -->
+                <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e0e7ff">
+                    <p style="font-size:12px;color:#4338ca;font-weight:600;margin:0 0 8px">Como funciona em 3 passos:</p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <?php foreach ([
+                            ['1', 'Clique em "Conectar"', 'Vai para wp.techsites.ai'],
+                            ['2', 'Autorize no WordPress', 'Tela nativa de permissão'],
+                            ['3', 'Pronto!', 'Tudo configurado automaticamente'],
+                        ] as $step) : ?>
+                        <div style="flex:1;min-width:120px;background:#ede9fe;border-radius:8px;padding:10px 12px;font-size:12px">
+                            <div style="font-weight:700;color:#6366f1;margin-bottom:3px"><?php echo $step[0]; ?>. <?php echo $step[1]; ?></div>
+                            <div style="color:#6b21a8"><?php echo $step[2]; ?></div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
                 <?php endif; ?>
-
-                <div class="wpts-field">
-                    <label>Usuário WordPress (login)</label>
-                    <input type="text" id="wpts-wp-user" class="wpts-input"
-                           value="<?php echo esc_attr($rest_user); ?>"
-                           placeholder="admin ou seu nome de usuário">
-                </div>
-                <div class="wpts-field">
-                    <label>Application Password <small style="color:#64748b">(WordPress → Usuários → Seu Perfil → Application Passwords)</small></label>
-                    <input type="password" id="wpts-wp-app-pass" class="wpts-input"
-                           value="" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx">
-                    <p class="wpts-help">A senha de aplicação é gerada pelo próprio WordPress e pode ser revogada a qualquer momento.</p>
-                </div>
-                <div class="wpts-field">
-                    <label>URL da REST API</label>
-                    <input type="text" id="wpts-wp-rest-url" class="wpts-input"
-                           value="<?php echo esc_attr($rest_url); ?>"
-                           placeholder="https://seusite.com/wp-json">
-                </div>
-                <div style="display:flex;gap:8px;margin-top:12px">
-                    <button id="wpts-connect-rest" class="wpts-btn wpts-btn-primary">🔗 Conectar</button>
-                    <?php if ($rest_connected) : ?>
-                    <button id="wpts-disconnect-rest" class="wpts-btn" style="background:#1e293b;color:#94a3b8">Desconectar</button>
-                    <?php endif; ?>
-                </div>
-                <div id="wpts-rest-result" style="margin-top:8px"></div>
             </div>
 
+            <!-- ── ADVANCED: Manual fallback (collapsed) ──────────────────── -->
+            <details class="wpts-card" style="padding:0">
+                <summary style="padding:14px 16px;cursor:pointer;font-weight:600;font-size:13px;color:#64748b;list-style:none;display:flex;align-items:center;gap:8px">
+                    <span>⚙️</span> Configuração manual (avançado / fallback)
+                    <span style="margin-left:auto;font-size:11px;font-weight:400">Usar se o fluxo automático não funcionar</span>
+                </summary>
+                <div style="padding:0 16px 16px;border-top:1px solid #e2e8f0">
+                    <p style="font-size:12px;color:#94a3b8;margin:12px 0">Use apenas em ambientes locais (localhost) ou se o seu site tiver restrições de firewall que bloqueiem redirecionamentos externos.</p>
+
+                    <div class="wpts-field">
+                        <label>Chave de API WP TechSites</label>
+                        <input type="text" id="wpts-api-key" class="wpts-input"
+                               value="<?php echo esc_attr($api_key); ?>"
+                               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                        <p class="wpts-help">Obtenha sua chave em <a href="https://wp.techsites.ai/api-keys" target="_blank">wp.techsites.ai/api-keys</a></p>
+                    </div>
+                    <button id="wpts-save-settings" class="wpts-btn wpts-btn-primary">💾 Salvar chave</button>
+                    <div id="wpts-settings-result"></div>
+
+                    <hr style="margin:16px 0;border-color:#f1f5f9">
+
+                    <h4 style="margin:0 0 12px;font-size:13px">Conectar REST API manualmente</h4>
+                    <?php if ($rest_connected) : ?>
+                    <div class="wpts-alert wpts-alert-success" style="margin-bottom:12px">
+                        ✅ Conectado como <strong><?php echo esc_html($rest_user); ?></strong>
+                    </div>
+                    <?php endif; ?>
+                    <div class="wpts-field">
+                        <label>Usuário WordPress (login)</label>
+                        <input type="text" id="wpts-wp-user" class="wpts-input"
+                               value="<?php echo esc_attr($rest_user); ?>"
+                               placeholder="admin">
+                    </div>
+                    <div class="wpts-field">
+                        <label>Application Password <small style="color:#64748b">(Usuários → Seu Perfil → Application Passwords)</small></label>
+                        <input type="password" id="wpts-wp-app-pass" class="wpts-input"
+                               value="" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx">
+                    </div>
+                    <div class="wpts-field">
+                        <label>URL da REST API</label>
+                        <input type="text" id="wpts-wp-rest-url" class="wpts-input"
+                               value="<?php echo esc_attr($rest_url); ?>"
+                               placeholder="https://seusite.com/wp-json">
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:12px">
+                        <button id="wpts-connect-rest" class="wpts-btn wpts-btn-primary">🔗 Conectar manualmente</button>
+                        <?php if ($rest_connected) : ?>
+                        <button id="wpts-disconnect-rest" class="wpts-btn" style="background:#1e293b;color:#94a3b8">Desconectar</button>
+                        <?php endif; ?>
+                    </div>
+                    <div id="wpts-rest-result" style="margin-top:8px"></div>
+                </div>
+            </details>
+
+            <!-- ── Environment info ───────────────────────────────────────── -->
             <div class="wpts-card">
                 <h4>🔍 Informações do ambiente</h4>
                 <?php $theme = wpts_detect_theme(); ?>
@@ -1163,7 +1260,7 @@ function wpts_page_settings() {
                     <div class="wpts-info-row"><span>WordPress</span><strong><?php echo get_bloginfo('version'); ?></strong></div>
                     <div class="wpts-info-row"><span>PHP</span><strong><?php echo PHP_VERSION; ?></strong></div>
                     <div class="wpts-info-row"><span>SSL</span><strong><?php echo is_ssl() ? '✅ Ativo' : '❌ Inativo'; ?></strong></div>
-                    <div class="wpts-info-row"><span>WooCommerce</span><strong><?php echo class_exists('WooCommerce') ? '✅ '.WC_VERSION : '❌ Não instalado'; ?></strong></div>
+                    <div class="wpts-info-row"><span>WooCommerce</span><strong><?php echo class_exists('WooCommerce') ? '✅ '. ( defined('WC_VERSION') ? WC_VERSION : '' ) : '❌ Não instalado'; ?></strong></div>
                     <div class="wpts-info-row"><span>Plugin Version</span><strong><?php echo WPTS_VERSION; ?></strong></div>
                     <div class="wpts-info-row"><span>Plano</span><strong><?php echo strtoupper(get_option('wpts_plan','trial')); ?></strong></div>
                     <div class="wpts-info-row"><span>Créditos</span><strong><?php echo number_format(get_option('wpts_credits',0)); ?></strong></div>
