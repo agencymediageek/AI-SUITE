@@ -286,17 +286,26 @@ router.post("/wp/generate-content", requireSiteKey, async (req, res) => {
       ? "Escribe en español."
       : "Escreva em português brasileiro.";
 
-    const prompt = `Você é um especialista em marketing de conteúdo digital.
-Crie conteúdo para ${type === "post" ? "um artigo de blog" : "uma página"} sobre: "${topic}"
+    const contentTypeMap: Record<string, string> = {
+      post: "um artigo de blog",
+      section: "uma seção de página",
+      "email-marketing": "um e-mail de marketing (com subject line, preview text, body HTML e CTA claro)",
+      social: "posts para redes sociais (Instagram, LinkedIn e Twitter/X com hashtags)",
+      ad: "copy de anúncio/vendas (headline, sub-headline, bullets de benefícios e CTA)",
+    };
+    const contentTypeLabel = contentTypeMap[type] || "uma página";
+
+    const prompt = `Você é um especialista em marketing de conteúdo digital e copywriting.
+Crie conteúdo para ${contentTypeLabel} sobre: "${topic}"
 Tom: ${tone}. ${langInstruction}
-Site: ${site.siteName || site.siteUrl}
+Site/Marca: ${site.siteName || site.siteUrl}
 
 Retorne JSON com este formato exato (nada antes ou depois):
 {
-  "title": "Título atrativo para SEO",
-  "metaDescription": "Meta description de até 155 caracteres",
-  "content": "Conteúdo em HTML com h2, p, ul — completo e profissional",
-  "excerpt": "Resumo de 1 parágrafo"
+  "title": "Título ou subject line atrativo",
+  "metaDescription": "Resumo ou preview text de até 155 caracteres",
+  "content": "Conteúdo completo em HTML (h2, p, ul, strong) — profissional e pronto para usar",
+  "excerpt": "Resumo de 1 parágrafo do conteúdo"
 }`;
 
     const raw = await callGemini(prompt);

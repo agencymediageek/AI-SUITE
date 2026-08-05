@@ -6,9 +6,10 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { clearApiKey, getApiKey } from '@/lib/api-headers';
+import { clearApiKey, getApiKey, getWpApiHeaders } from '@/lib/api-headers';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { useGetWpDashboard, getGetWpDashboardQueryKey } from '@workspace/api-client-react';
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -79,6 +80,14 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const [location, setLocation] = useLocation();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
+  // Live credits + plan from API (cached by React Query — no extra requests if dashboard is open)
+  const { data: dashData } = useGetWpDashboard({
+    query: { queryKey: getGetWpDashboardQueryKey(), staleTime: 60_000 },
+    request: { headers: getWpApiHeaders() },
+  });
+  const credits = dashData?.site?.credits;
+  const plan    = dashData?.site?.plan ?? '';
+
   const handleLogout = () => {
     clearApiKey();
     setLocation('/');
@@ -107,8 +116,15 @@ export function DashboardShell({ children }: DashboardShellProps) {
             <div className="flex items-center gap-2">
               <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
                 <Coins className="w-3 h-3 text-primary" />
-                <span className="text-xs font-medium text-primary">200 créditos</span>
+                <span className="text-xs font-medium text-primary">
+                  {credits !== undefined ? credits.toLocaleString() : '—'} créditos
+                </span>
               </div>
+              {plan && (
+                <Badge variant="outline" className="hidden md:flex text-[10px] border-primary/30 text-primary capitalize">
+                  {plan}
+                </Badge>
+              )}
               <Button
                 variant="ghost"
                 size="sm"

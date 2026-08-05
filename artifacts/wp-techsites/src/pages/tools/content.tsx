@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { useWpGenerateContent } from '@workspace/api-client-react';
 import { getWpApiHeaders } from '@/lib/api-headers';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Wand2, Copy, CheckCircle2, FileText } from 'lucide-react';
+import { Loader2, Wand2, Copy, CheckCircle2, FileText, ClipboardCopy } from 'lucide-react';
 
 export default function ContentGeneratorPage() {
   const { toast } = useToast();
@@ -79,16 +79,30 @@ export default function ContentGeneratorPage() {
       <div className="space-y-6 animate-slide-in-up max-w-5xl">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Content Generator</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Gerador de Conteúdo IA</h1>
             <p className="text-muted-foreground">
-              Create SEO-optimized content for your WordPress pages and posts.
+              Crie conteúdo SEO otimizado para páginas, posts e e-mails do seu WordPress.
             </p>
           </div>
           <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
             <Wand2 className="w-3 h-3 mr-1" />
-            10 credits
+            5 créditos
           </Badge>
         </div>
+
+        {/* How it works */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-4 flex items-start gap-3">
+            <ClipboardCopy className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1">
+              <p className="font-semibold text-foreground">📋 O que acontece com o conteúdo gerado?</p>
+              <p className="text-muted-foreground">
+                O conteúdo é gerado e exibido aqui na tela. Você pode <strong>copiar cada seção</strong> (título, meta description, HTML) e colar diretamente no editor do WordPress. 
+                Não é publicado automaticamente — você tem controle total antes de publicar.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Generator Form */}
         <Card>
@@ -101,10 +115,10 @@ export default function ContentGeneratorPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="topic">Topic or Description *</Label>
+                <Label htmlFor="topic">Tema ou Descrição *</Label>
                 <Input
                   id="topic"
-                  placeholder="e.g., 'Top 10 productivity tips for remote workers'"
+                  placeholder="Ex: '10 dicas para aumentar as vendas online'"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   required
@@ -120,9 +134,12 @@ export default function ContentGeneratorPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="page">Page</SelectItem>
-                      <SelectItem value="post">Blog Post</SelectItem>
-                      <SelectItem value="section">Page Section</SelectItem>
+                      <SelectItem value="page">Página</SelectItem>
+                      <SelectItem value="post">Artigo de Blog</SelectItem>
+                      <SelectItem value="section">Seção de Página</SelectItem>
+                      <SelectItem value="email-marketing">E-mail Marketing</SelectItem>
+                      <SelectItem value="social">Post para Redes Sociais</SelectItem>
+                      <SelectItem value="ad">Anúncio / Copy de Vendas</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -134,10 +151,10 @@ export default function ContentGeneratorPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="professional">Professional</SelectItem>
-                      <SelectItem value="friendly">Friendly</SelectItem>
-                      <SelectItem value="persuasive">Persuasive</SelectItem>
-                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="professional">Profissional</SelectItem>
+                      <SelectItem value="friendly">Amigável</SelectItem>
+                      <SelectItem value="persuasive">Persuasivo</SelectItem>
+                      <SelectItem value="technical">Técnico</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -166,12 +183,12 @@ export default function ContentGeneratorPage() {
                 {generateMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generating Content...
+                    Gerando conteúdo…
                   </>
                 ) : (
                   <>
                     <Wand2 className="w-4 h-4 mr-2" />
-                    Generate Content
+                    Gerar Conteúdo
                   </>
                 )}
               </Button>
@@ -185,9 +202,9 @@ export default function ContentGeneratorPage() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle>Generated Content</CardTitle>
+                  <CardTitle>Conteúdo Gerado</CardTitle>
                   <CardDescription>
-                    Copy sections individually or use the full HTML content in WordPress.
+                    Copie as seções individualmente e cole no editor do WordPress.
                   </CardDescription>
                 </div>
                 <Badge variant="secondary">
