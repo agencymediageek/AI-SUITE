@@ -194,8 +194,8 @@ export default function SettingsPage() {
             </p>
             <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
               {[
-                ['Versão do Plugin', 'v2.4.1'],
-                ['Dashboard', 'v2.4.1'],
+                ['Versão do Plugin', 'v2.4.2'],
+                ['Dashboard', 'v2.4.2'],
                 ['Status', '✅ Conectado'],
                 ['API Server', '✅ Online'],
                 ['Suporte', 'suporte@techsites.ai'],

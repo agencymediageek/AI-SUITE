@@ -86,11 +86,11 @@ export default function SetupPage() {
                       asChild
                     >
                       <a
-                        href="/api/plugins/wp-techsites-plugin-v2.4.1.zip"
-                        download="wp-techsites-plugin-v2.4.1.zip"
+                        href="/api/plugins/wp-techsites-plugin-v2.4.2.zip"
+                        download="wp-techsites-plugin-v2.4.2.zip"
                       >
                         <Download className="w-4 h-4 mr-2" />
-                        Download v2.4.1 — Latest (wp-techsites.zip)
+                        Download v2.4.2 — Latest (wp-techsites.zip)
                       </a>
                     </Button>
                     <p className="text-xs text-muted-foreground">
@@ -112,7 +112,7 @@ export default function SetupPage() {
                     <ol className="list-decimal list-inside space-y-2 mt-3 text-sm">
                       <li>Log in to your WordPress admin panel</li>
                       <li>Navigate to <strong>Plugins → Add New → Upload Plugin</strong></li>
-                      <li>Choose the downloaded <strong>wp-techsites-plugin-v2.4.1.zip</strong> file</li>
+                      <li>Choose the downloaded <strong>wp-techsites-plugin-v2.4.2.zip</strong> file</li>
                       <li>Click <strong>Install Now</strong> and wait for the upload to complete</li>
                       <li>Click <strong>Activate Plugin</strong></li>
                     </ol>

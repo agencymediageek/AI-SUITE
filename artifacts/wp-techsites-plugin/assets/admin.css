@@ -26,6 +26,9 @@
     height: 100vh;
     overflow-y: auto;
     scrollbar-width: none;
+    margin-left: 8px; /* gap from WP admin left sidebar */
+    border-radius: 0 0 0 0;
+    box-shadow: 2px 0 8px rgba(0,0,0,.15);
 }
 .wpts-sidebar::-webkit-scrollbar { display: none; }
 
