@@ -6,6 +6,7 @@
 - [VPS deploy](vps-deploy.md) — SSH key at .agents/deploy_key (gitignored); GitHub Actions auto-deploys on push to main; fallback: sshpass with VPS_ROOT_PASSWORD
 - [Supabase → PostgreSQL](supabase-complete.md) — 100% migrated; zero supabaseAdmin calls in production; documents/upload uses local /tmp storage
 - [Estado da plataforma](platform-state.md) — status pós-refinamento mobile: o que funciona, o que está pendente, infra
+- [WP TechSites production](wp-techsites-production.md) — VPS+nginx+PM2 no ar; Cloudflare Worker proxy; PostgreSQL local; redeploy via tar+SSH
 - [APEX deployment](apex-deployment.md) — apex.techsites.ai → VPS 179.197.229.207; PM2 apex-api port 8080; nginx self-signed SSL; CF proxied
 - [CI pnpm version](ci-pnpm.md) — lockfile gerado com pnpm v10; CI deve usar version: 10 em pnpm/action-setup; v9 causa ERR_PNPM_LOCKFILE_CONFIG_MISMATCH
 - [useToast infinite loop](use-toast-fix.md) — dependência [state] no useEffect de use-toast.ts causa Maximum update depth exceeded; corrigir para []
