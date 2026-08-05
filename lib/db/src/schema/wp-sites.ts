@@ -14,6 +14,8 @@ export const wpSitesTable = pgTable("wp_sites", {
   wpUser: text("wp_user").notNull().default(""),
   wpAppPassword: text("wp_app_password").notNull().default(""),
   wpRestUrl: text("wp_rest_url").notNull().default(""),
+  // JSON blob: { theme, plugins, wp_version, language, posts_count, pages_count, tagline }
+  siteMetadata: text("site_metadata").notNull().default("{}"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
 });

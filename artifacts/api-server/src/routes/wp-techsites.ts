@@ -39,6 +39,7 @@ async function ensureWpSitesTable() {
   await db.execute(sql`ALTER TABLE wp_sites ADD COLUMN IF NOT EXISTS wp_user TEXT NOT NULL DEFAULT ''`);
   await db.execute(sql`ALTER TABLE wp_sites ADD COLUMN IF NOT EXISTS wp_app_password TEXT NOT NULL DEFAULT ''`);
   await db.execute(sql`ALTER TABLE wp_sites ADD COLUMN IF NOT EXISTS wp_rest_url TEXT NOT NULL DEFAULT ''`);
+  await db.execute(sql`ALTER TABLE wp_sites ADD COLUMN IF NOT EXISTS site_metadata TEXT NOT NULL DEFAULT '{}'`);
 }
 ensureWpSitesTable().catch(console.error);
 
@@ -447,7 +448,9 @@ router.post("/wp/audit/seo", requireSiteKey, async (req, res) => {
       return;
     }
 
-    const siteData = req.body;
+    // Merge request body with stored site metadata (fallback to DB data when plugin didn't send it)
+    const stored = (() => { try { return JSON.parse((site as any).siteMetadata || "{}"); } catch { return {}; } })();
+    const siteData = { ...stored, ...req.body };
     const { site_name, site_url, tagline, posts_count, pages_count, permalink, ssl, plugins = [], theme, language, wp_version } = siteData;
 
     const pluginList = Array.isArray(plugins) ? plugins.slice(0, 15).join(", ") : "";
@@ -1308,13 +1311,24 @@ router.post("/wp/onboarding", requireSiteKey, async (req, res) => {
       wp_version, php_version, language, plugins = [], pages_count = 0, posts_count = 0,
     } = req.body;
 
-    // Update site name/url in DB if provided
-    if (site_name || site_url) {
-      await db.update(wpSitesTable).set({
-        siteName: site_name || site.siteName,
-        siteUrl:  site_url  || site.siteUrl,
-      }).where(eq(wpSitesTable.id, site.id));
-    }
+    // Update site name/url + persist metadata (theme, plugins) for later use by audit
+    await db.update(wpSitesTable).set({
+      siteName: site_name || site.siteName,
+      siteUrl:  site_url  || site.siteUrl,
+      siteMetadata: JSON.stringify({
+        theme:       theme || { label: "WordPress", type: "generic" },
+        plugins:     plugins || [],
+        wp_version:  wp_version || "",
+        php_version: php_version || "",
+        language:    language || "pt_BR",
+        posts_count: posts_count || 0,
+        pages_count: pages_count || 0,
+        tagline:     tagline || "",
+        permalink:   permalink || "/%postname%/",
+        ssl:         ssl ?? true,
+        updated_at:  new Date().toISOString(),
+      }),
+    }).where(eq(wpSitesTable.id, site.id));
 
     // Quick local SEO audit
     const audit = buildLocalAudit({
