@@ -23,6 +23,7 @@ import ChatbotPage from '@/pages/tools/chatbot';
 import SeoAuditPage from '@/pages/tools/seo-audit';
 import LogoAiPage from '@/pages/tools/logo-ai';
 import SettingsPage from '@/pages/tools/settings';
+import ApiKeysPage from '@/pages/api-keys';
 import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
 import { getApiKey } from '@/lib/api-headers';
 
@@ -137,6 +138,9 @@ function AppRouter() {
         </Route>
         <Route path="/tools/settings">
           <AuthGuard><SettingsPage /></AuthGuard>
+        </Route>
+        <Route path="/api-keys">
+          <ApiKeysPage />
         </Route>
         <Route component={NotFound} />
       </Switch>
