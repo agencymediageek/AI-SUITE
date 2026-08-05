@@ -69,7 +69,7 @@ function AutoConnectFlow({ siteUrl, email: initEmail, name: initName }: {
 
       const wpAuthUrl = `${siteUrl}/wp-admin/authorize-application.php?${new URLSearchParams({
         app_name:    'WP TechSites AI',
-        app_id:      'wp-techsites-ai-saas',
+        app_id:      '7e9f3a8b-2c4d-4f6e-b8a1-9d5c7e3f2b1a', // fixed UUID required by WP
         success_url: successUrl,
         reject_url:  rejectUrl,
       }).toString()}`;
