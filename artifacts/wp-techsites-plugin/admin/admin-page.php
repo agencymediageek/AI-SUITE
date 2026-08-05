@@ -85,9 +85,21 @@ function wpts_render_admin_page() {
                     <span><?php echo $theme['icon']; ?></span>
                     <span><?php echo esc_html($theme['label']); ?></span>
                 </div>
-                <a href="https://wp.techsites.ai" target="_blank" class="wpts-upgrade-btn">
-                    ↑ Upgrade
+                <?php
+                $api_key = get_option('wpts_api_key', '');
+                if ($api_key) :
+                    $dashboard_url = 'https://wp.techsites.ai/wp-techsites/autologin?key=' . urlencode($api_key);
+                ?>
+                <a href="<?php echo esc_url($dashboard_url); ?>" target="_blank"
+                   class="wpts-upgrade-btn wpts-dashboard-btn"
+                   title="Abrir painel completo com sua conta">
+                    🚀 Abrir Dashboard
                 </a>
+                <?php else : ?>
+                <a href="https://wp.techsites.ai/wp-techsites/" target="_blank" class="wpts-upgrade-btn">
+                    ↑ Ativar conta
+                </a>
+                <?php endif; ?>
             </div>
         </aside>
 

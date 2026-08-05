@@ -141,6 +141,9 @@
     white-space: nowrap;
 }
 .wpts-upgrade-btn:hover { opacity: .9; }
+/* Dashboard shortcut — green-to-blue gradient */
+.wpts-dashboard-btn { background: linear-gradient(135deg,#22c55e,#0ea5e9) !important; letter-spacing: .3px; }
+.wpts-dashboard-btn:hover { opacity: .88; color: #fff !important; }
 
 /* ── Main ───────────────────────────────────────────────────────────── */
 .wpts-main {

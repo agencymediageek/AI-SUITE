@@ -25,6 +25,7 @@ import LogoAiPage from '@/pages/tools/logo-ai';
 import SettingsPage from '@/pages/tools/settings';
 import PlanosPage from '@/pages/planos';
 import ApiKeysPage from '@/pages/api-keys';
+import AutoLoginPage from '@/pages/autologin';
 import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
 import { getApiKey } from '@/lib/api-headers';
 
@@ -149,6 +150,8 @@ function AppRouter() {
         <Route path="/api-keys">
           <ApiKeysPage />
         </Route>
+        {/* Auto-login from WordPress plugin sidebar button */}
+        <Route path="/autologin" component={AutoLoginPage} />
         <Route component={NotFound} />
       </Switch>
     </WouterRouter>
