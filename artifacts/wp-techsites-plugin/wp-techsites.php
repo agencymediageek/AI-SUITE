@@ -183,12 +183,39 @@ register_activation_hook( __FILE__, 'wpts_activate' );
 function wpts_activate() {
     wpts_register_cpts();
     flush_rewrite_rules();
-    if ( ! get_option( 'wpts_credits' ) ) update_option( 'wpts_credits', 100 );
+    if ( ! get_option( 'wpts_credits' ) ) update_option( 'wpts_credits', 150 );
     if ( ! get_option( 'wpts_plan' )    ) update_option( 'wpts_plan', 'trial' );
     if ( ! get_option( 'wpts_audit_done' ) ) {
         update_option( 'wpts_audit_pending', 1 );
     }
-    // Trigger onboarding on next admin load (API key may not be set yet)
+
+    // ── Auto-register: cria conta automaticamente se ainda não há API key ──────
+    if ( ! get_option( 'wpts_api_key' ) ) {
+        $admin    = get_user_by( 'email', get_bloginfo( 'admin_email' ) );
+        $response = wp_remote_post( WPTS_API_BASE . '/register', [
+            'timeout'     => 15,
+            'headers'     => [ 'Content-Type' => 'application/json' ],
+            'body'        => wp_json_encode( [
+                'siteUrl'  => get_site_url(),
+                'siteName' => get_bloginfo( 'name' ),
+                'email'    => get_bloginfo( 'admin_email' ),
+                'name'     => $admin ? $admin->display_name : get_bloginfo( 'name' ),
+            ] ),
+        ] );
+
+        if ( ! is_wp_error( $response ) ) {
+            $data = json_decode( wp_remote_retrieve_body( $response ), true );
+            if ( ! empty( $data['apiKey'] ) ) {
+                update_option( 'wpts_api_key', sanitize_text_field( $data['apiKey'] ) );
+                if ( ! empty( $data['credits'] ) ) {
+                    update_option( 'wpts_credits', (int) $data['credits'] );
+                }
+            }
+        }
+        // Se falhar, segue normalmente — o usuário pode entrar com a chave manualmente
+    }
+
+    // Trigger onboarding on next admin load
     update_option( 'wpts_onboarding_pending', 1 );
 }
 

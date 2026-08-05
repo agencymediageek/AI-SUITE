@@ -145,6 +145,35 @@
 .wpts-dashboard-btn { background: linear-gradient(135deg,#22c55e,#0ea5e9) !important; letter-spacing: .3px; }
 .wpts-dashboard-btn:hover { opacity: .88; color: #fff !important; }
 
+/* ── Update notification banner ─────────────────────────────────────────────── */
+.wpts-update-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 20px;
+    background: linear-gradient(90deg,#fef9c3,#fef08a);
+    border-bottom: 1px solid #fde047;
+    font-size: 13px;
+    color: #713f12;
+    flex-wrap: wrap;
+}
+.wpts-update-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    background: #16a34a;
+    color: #fff !important;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 12px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity .2s;
+}
+.wpts-update-download:hover { opacity: .85; color: #fff !important; }
+
 /* ── Main ───────────────────────────────────────────────────────────── */
 .wpts-main {
     flex: 1;

@@ -118,22 +118,49 @@ router.use("/wp", (req, res, next) => {
   next();
 });
 
+// ── GET /api/wp/plugin-version ────────────────────────────────────────────────
+// Returns the latest plugin version so the WP plugin can show an update banner.
+router.get("/wp/plugin-version", (_req, res) => {
+  res.json({
+    latest: "2.4.2",
+    download_url: "https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.4.2.zip",
+    changelog: "Botão Abrir Dashboard com autologin, créditos dinâmicos no header, correção de spinners infinitos, fix de margem no WP Admin.",
+  });
+});
+
 // ── POST /api/wp/register ─────────────────────────────────────────────────────
 // Creates a new WP TechSites account and returns an API key.
 router.post("/wp/register", async (req, res) => {
   try {
     const { email, name, siteUrl, siteName } = req.body;
-    if (!email || !siteUrl) {
-      res.status(400).json({ error: "email e siteUrl são obrigatórios" });
+    if (!siteUrl) {
+      res.status(400).json({ error: "siteUrl é obrigatório" });
       return;
     }
 
-    // Check if site already registered
-    const [existing] = await db
+    // Check if site already registered by URL (each WP install = unique account)
+    const [existingBySite] = await db
       .select()
       .from(wpSitesTable)
-      .where(eq(wpSitesTable.ownerEmail, email))
+      .where(eq(wpSitesTable.siteUrl, siteUrl.trim()))
       .limit(1);
+
+    if (existingBySite) {
+      res.json({
+        apiKey: existingBySite.apiKey,
+        credits: existingBySite.creditBalance,
+        plan: existingBySite.plan,
+        message: "Site já registrado — chave recuperada",
+      });
+      return;
+    }
+
+    // Check if email already registered (fallback)
+    const [existing] = email ? await db
+      .select()
+      .from(wpSitesTable)
+      .where(eq(wpSitesTable.ownerEmail, email.trim().toLowerCase()))
+      .limit(1) : [null];
 
     if (existing) {
       res.json({
@@ -146,13 +173,14 @@ router.post("/wp/register", async (req, res) => {
     }
 
     const apiKey = randomUUID();
+    const safeEmail = email ? email.trim().toLowerCase() : `auto-${Date.now()}@wp.techsites.ai`;
     const [site] = await db
       .insert(wpSitesTable)
       .values({
         apiKey,
         siteUrl: siteUrl.trim(),
         siteName: siteName?.trim() || new URL(siteUrl).hostname,
-        ownerEmail: email.trim().toLowerCase(),
+        ownerEmail: safeEmail,
         ownerName: name?.trim() || "",
         creditBalance: 150, // Trial bonus
         plan: "trial",

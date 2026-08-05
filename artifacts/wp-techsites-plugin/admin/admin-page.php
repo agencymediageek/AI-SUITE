@@ -120,6 +120,31 @@ function wpts_render_admin_page() {
                 </div>
             </div>
 
+            <?php
+            /* ── Update notification banner (checked once every 12 h via transient) ── */
+            $update_info = get_transient( 'wpts_update_check' );
+            if ( false === $update_info ) {
+                $resp = wp_remote_get( WPTS_API_BASE . '/plugin-version', [ 'timeout' => 6 ] );
+                $update_info = ! is_wp_error( $resp )
+                    ? json_decode( wp_remote_retrieve_body( $resp ), true )
+                    : [ 'latest' => WPTS_VERSION ];
+                if ( empty( $update_info['latest'] ) ) $update_info = [ 'latest' => WPTS_VERSION ];
+                set_transient( 'wpts_update_check', $update_info, 12 * HOUR_IN_SECONDS );
+            }
+            if ( version_compare( WPTS_VERSION, $update_info['latest'], '<' ) ) : ?>
+            <div class="wpts-update-banner">
+                <span>⚡ Nova versão <strong>v<?php echo esc_html( $update_info['latest'] ); ?></strong> disponível
+                <?php if ( ! empty( $update_info['changelog'] ) ) : ?>
+                  &mdash; <?php echo esc_html( $update_info['changelog'] ); ?>
+                <?php endif; ?>
+                </span>
+                <?php if ( ! empty( $update_info['download_url'] ) ) : ?>
+                <a href="<?php echo esc_url( $update_info['download_url'] ); ?>" target="_blank"
+                   class="wpts-update-download">⬇ Atualizar agora</a>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
             <div class="wpts-content">
                 <?php
                 switch ( $active ) {
