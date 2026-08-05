@@ -1103,7 +1103,7 @@ function wpts_page_settings() {
     $fully_connected = $api_key && $rest_connected;
 
     // Build the 1-click connect URL
-    $connect_url = 'https://wp.techsites.ai/api-keys?' . http_build_query([
+    $connect_url = 'https://wp.techsites.ai/wp-techsites/api-keys?' . http_build_query([
         'site_url' => get_site_url(),
         'email'    => get_option( 'admin_email' ),
         'name'     => get_bloginfo( 'name' ),
@@ -1210,7 +1210,7 @@ function wpts_page_settings() {
                         <input type="text" id="wpts-api-key" class="wpts-input"
                                value="<?php echo esc_attr($api_key); ?>"
                                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-                        <p class="wpts-help">Obtenha sua chave em <a href="https://wp.techsites.ai/api-keys" target="_blank">wp.techsites.ai/api-keys</a></p>
+                        <p class="wpts-help">Obtenha sua chave em <a href="https://wp.techsites.ai/wp-techsites/api-keys" target="_blank">wp.techsites.ai/wp-techsites/api-keys</a></p>
                     </div>
                     <button id="wpts-save-settings" class="wpts-btn wpts-btn-primary">💾 Salvar chave</button>
                     <div id="wpts-settings-result"></div>
