@@ -9,10 +9,10 @@ jobs:
   deploy-vps:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger deploy webhook
+      - name: Trigger deploy webhook (mediageek)
         continue-on-error: true
         run: |
-          echo "Triggering deploy on VPS..."
+          echo "Triggering mediageek deploy on VPS..."
           response=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST https://mediageek.io/webhook/deploy \
             -H "Content-Type: application/json" \
@@ -22,6 +22,26 @@ jobs:
             echo "✅ Deploy triggered successfully (HTTP $response)"
             echo "VPS will run: git pull + npm install + npm build + pm2 restart"
             echo "Monitor: pm2 logs mediageek"
+          else
+            echo "⚠️  Webhook returned HTTP $response (non-blocking)"
+          fi
+
+  deploy-wptechsites:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger WP TechSites deploy on VPS
+        continue-on-error: true
+        run: |
+          echo "Triggering WP TechSites deploy on VPS..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST https://wp.techsites.ai/webhook/deploy-wptechsites \
+            -H "Content-Type: application/json" \
+            -d "{\"secret\":\"${{ secrets.DEPLOY_WEBHOOK_SECRET }}\"}" \
+            --max-time 20)
+          if [ "$response" = "200" ]; then
+            echo "✅ WP TechSites deploy triggered (HTTP $response)"
+            echo "VPS will run: git pull + build api-server + build dashboard + pm2 restart"
+            echo "Monitor: pm2 logs wptechsites-api"
           else
             echo "⚠️  Webhook returned HTTP $response (non-blocking)"
           fi
