@@ -404,8 +404,15 @@ add_action( 'wp_ajax_wpts_populate_directory', function () {
 
 // ─── Página de Empresa a partir de URL ───────────────────────────────────────
 add_action( 'wp_ajax_wpts_page_from_url', function () {
+    @set_time_limit( 180 );
     wpts_ajax_check();
-    $url       = esc_url_raw( $_POST['url']       ?? '' );
+    // Use sanitize_text_field instead of esc_url_raw — esc_url_raw can empty valid URLs
+    // (e.g. URLs with special chars or missing scheme), causing false "URL is required" errors.
+    $url = sanitize_text_field( wp_unslash( $_POST['url'] ?? '' ) );
+    // Auto-prepend https:// if missing (mirrors the JS-side fix)
+    if ( $url && ! preg_match( '/^https?:\/\//i', $url ) ) {
+        $url = 'https://' . $url;
+    }
     $page_type = sanitize_text_field( $_POST['page_type'] ?? 'empresa' );
     $publish   = ! empty( $_POST['publish'] );
 
@@ -415,7 +422,7 @@ add_action( 'wp_ajax_wpts_page_from_url', function () {
         'url'       => $url,
         'page_type' => $page_type,
         'publish'   => $publish,
-    ]);
+    ], 120 );
 
     if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result ); return; }
     if ( isset( $result['credits_remaining'] ) ) update_option( 'wpts_credits', $result['credits_remaining'] );

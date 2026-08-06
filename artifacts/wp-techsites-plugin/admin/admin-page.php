@@ -25,7 +25,8 @@ function wpts_get_tools() {
         [ 'id' => 'populate',     'icon' => '⚡', 'label' => 'Popular Diretório',    'badge' => 'NOVO' ],
         [ 'id' => 'listings',     'icon' => '📌', 'label' => 'Listings',             'badge' => '' ],
         [ 'id' => 'page-from-url','icon' => '🔗', 'label' => 'Página de Empresa',   'badge' => 'NOVO' ],
-        [ 'id' => 'article',      'icon' => '📰', 'label' => 'Artigo com Imagens',  'badge' => 'NOVO' ],
+        [ 'id' => 'article',       'icon' => '📰', 'label' => 'Artigo com Imagens',  'badge' => '' ],
+        [ 'id' => 'seo-articles',  'icon' => '📅', 'label' => 'Artigos SEO',          'badge' => 'NOVO' ],
         [ 'id' => 'logo',         'icon' => '🎯', 'label' => 'Logo Builder',        'badge' => '' ],
         [ 'id' => 'content',      'icon' => '✍️', 'label' => 'Conteúdo IA',         'badge' => '' ],
         [ 'id' => 'branding',     'icon' => '🎨', 'label' => 'Identidade Visual',   'badge' => '' ],
@@ -161,6 +162,7 @@ function wpts_render_admin_page() {
                     case 'menu':          wpts_page_menu();          break;
                     case 'chatbot':       wpts_page_chatbot();       break;
                     case 'monetize':      wpts_page_monetize();      break;
+                    case 'seo-articles':  wpts_page_seo_articles();  break;
                     case 'chat-editor':   wpts_page_chat_editor();   break;
                     case 'settings':      wpts_page_settings();      break;
                     default:              wpts_page_dashboard();     break;
@@ -559,39 +561,8 @@ function wpts_page_populate() { ?>
         </div>
     </div>
 
-    <script>
-    document.getElementById('wpts-run-populate').addEventListener('click', function() {
-        const city = document.getElementById('wpts-pop-city').value.trim();
-        const rawCats = document.getElementById('wpts-pop-categories').value;
-        const cats = rawCats.split(',').map(c => c.trim()).filter(c => c);
-        const count = parseInt(document.getElementById('wpts-pop-count').value) || 10;
-        const btn = this;
-        const prog = document.getElementById('wpts-pop-progress');
-        const res = document.getElementById('wpts-pop-result');
-
-        btn.disabled = true;
-        prog.style.display = 'block';
-        prog.textContent = `⏳ Importando ${cats.length} categorias em ${city}… aguarde ${cats.length * 30}s`;
-        res.innerHTML = '';
-
-        jQuery.post(ajaxurl, {
-            action: 'wpts_populate_directory',
-            nonce: WPTS.nonce,
-            city, categories: JSON.stringify(cats), count_per_category: count
-        }, function(r) {
-            btn.disabled = false; prog.style.display = 'none';
-            if (r.success) {
-                let html = `<div class="wpts-alert wpts-alert-success"><strong>${r.data.summary}</strong><ul style="margin-top:8px">`;
-                (r.data.breakdown || []).forEach(b => { html += `<li>${b.category}: ${b.imported} importados (${b.source})</li>`; });
-                html += `</ul></div>`;
-                res.innerHTML = html;
-            } else {
-                res.innerHTML = `<div class="wpts-alert wpts-alert-error">❌ ${r.data?.error || 'Erro desconhecido'}</div>`;
-            }
-        });
-    });
-    </script>
     <?php
+    // Handler em admin.js — sem script inline
 }
 
 // ─── PÁGINA DE EMPRESA ────────────────────────────────────────────────────────
@@ -645,35 +616,8 @@ function wpts_page_page_from_url() { ?>
         </div>
     </div>
 
-    <script>
-    document.getElementById('wpts-run-pfu').addEventListener('click', function() {
-        const url = document.getElementById('wpts-pfu-url').value.trim();
-        if (!url) { alert('Informe a URL da empresa'); return; }
-        const type = document.getElementById('wpts-pfu-type').value;
-        const publish = document.getElementById('wpts-pfu-publish').checked ? 1 : 0;
-        const btn = this; const prog = document.getElementById('wpts-pfu-progress'); const res = document.getElementById('wpts-pfu-result');
-        btn.disabled = true; prog.style.display = 'block'; res.innerHTML = '';
-
-        jQuery.post(ajaxurl, {
-            action: 'wpts_page_from_url', nonce: WPTS.nonce,
-            url, page_type: type, publish
-        }, function(r) {
-            btn.disabled = false; prog.style.display = 'none';
-            if (r.success) {
-                const d = r.data;
-                const previewEl = document.getElementById('wpts-pfu-preview');
-                const previewContent = document.getElementById('wpts-pfu-preview-content');
-                previewEl.style.display = 'block';
-                previewContent.innerHTML = `<p><strong>${d.title}</strong></p><p style="font-size:12px;color:#666">${d.meta_description}</p>
-                    ${d.wp_page_url ? `<a href="${d.wp_page_url}" target="_blank" class="wpts-btn wpts-btn-primary" style="margin-top:8px">Ver página →</a>` : ''}`;
-                res.innerHTML = `<div class="wpts-alert wpts-alert-success">✅ Página criada: <strong>${d.title}</strong></div>`;
-            } else {
-                res.innerHTML = `<div class="wpts-alert wpts-alert-error">❌ ${r.data?.error || 'Erro ao criar página'}</div>`;
-            }
-        });
-    });
-    </script>
     <?php
+    // Handler em admin.js — sem script inline
 }
 
 // ─── ARTIGO COM IMAGENS ───────────────────────────────────────────────────────
@@ -742,56 +686,91 @@ function wpts_page_article() { ?>
         </div>
     </div>
 
-    <script>
-    document.getElementById('wpts-run-article').addEventListener('click', function() {
-        const topic = document.getElementById('wpts-art-topic').value.trim();
-        if (!topic) { alert('Informe o tópico do artigo'); return; }
-        const city = document.getElementById('wpts-art-city').value.trim();
-        const cat = document.getElementById('wpts-art-cat').value.trim();
-        const tone = document.getElementById('wpts-art-tone').value;
-        const words = parseInt(document.getElementById('wpts-art-words').value);
-        const publish = document.getElementById('wpts-art-publish').checked ? 1 : 0;
-        const btn = this; const prog = document.getElementById('wpts-art-progress'); const res = document.getElementById('wpts-art-result');
-        btn.disabled = true; prog.style.display = 'block'; res.innerHTML = '';
-
-        // Usa $.ajax com timeout maior (140s) — artigo SEO com IA pode demorar até 60s
-        jQuery.ajax({
-            url: ajaxurl,
-            method: 'POST',
-            timeout: 140000,
-            dataType: 'json',
-            data: {
-                action: 'wpts_article_with_images', nonce: WPTS.nonce,
-                topic, city, category: cat, tone, word_count: words, publish
-            },
-            success: function(r) {
-                btn.disabled = false; prog.style.display = 'none';
-                if (r && r.success) {
-                    const d = r.data;
-                    const prev = document.getElementById('wpts-art-preview');
-                    const prevContent = document.getElementById('wpts-art-preview-content');
-                    prev.style.display = 'block';
-                    prevContent.innerHTML =
-                        '<img src="' + d.hero_image + '" style="width:100%;border-radius:8px;margin-bottom:8px" alt="' + d.title + '">' +
-                        '<strong>' + d.title + '</strong><br>' +
-                        '<span style="font-size:12px;color:#666">🔑 ' + d.focus_keyword + ' · ⏱ ' + d.reading_time + ' min leitura</span><br>' +
-                        '<span style="font-size:11px;color:#999">Tags: ' + (d.tags||[]).join(', ') + '</span>' +
-                        (d.wp_post_url ? '<br><a href="' + d.wp_post_url + '" target="_blank" class="wpts-btn wpts-btn-primary" style="margin-top:8px;display:inline-block">Ver artigo →</a>' : '');
-                    res.innerHTML = '<div class="wpts-alert wpts-alert-success">✅ Artigo gerado: <strong>' + d.title + '</strong></div>';
-                } else {
-                    res.innerHTML = '<div class="wpts-alert wpts-alert-error">❌ ' + ((r && r.data) || 'Erro ao gerar artigo') + '</div>';
-                }
-            },
-            error: function(xhr, status) {
-                btn.disabled = false; prog.style.display = 'none';
-                var msg = status === 'timeout' ? 'Tempo esgotado — tente novamente (a IA pode estar ocupada).' : 'Erro de conexão (' + status + ').';
-                res.innerHTML = '<div class="wpts-alert wpts-alert-error">❌ ' + msg + '</div>';
-            }
-        });
-    });
-    </script>
     <?php
+    // Handler em admin.js — sem script inline
 }
+
+// ─── ARTIGOS SEO (múltiplos artigos + agendamento) ────────────────────────────
+function wpts_page_seo_articles() { ?>
+    <div class="wpts-two-col">
+        <div>
+            <div class="wpts-card">
+                <h3>📅 Artigos SEO em Série</h3>
+                <p class="wpts-help">Gere múltiplos artigos SEO com imagens e publique de forma escalonada para evitar penalizações do Google.</p>
+
+                <div class="wpts-field">
+                    <label>Palavra-chave / Tema *</label>
+                    <input type="text" id="wpts-seo-keyword" class="wpts-input" placeholder="Ex: cafés especiais em Curitiba, turismo no Paraná...">
+                </div>
+                <div class="wpts-field">
+                    <label>Categoria WordPress</label>
+                    <input type="text" id="wpts-seo-category" class="wpts-input" placeholder="Ex: Gastronomia, Turismo, Notícias...">
+                </div>
+                <div class="wpts-field">
+                    <label>Quantidade de artigos</label>
+                    <select id="wpts-seo-quantity" class="wpts-input">
+                        <option value="1">1 artigo</option>
+                        <option value="3" selected>3 artigos</option>
+                        <option value="5">5 artigos</option>
+                    </select>
+                </div>
+                <div class="wpts-field">
+                    <label>Tamanho</label>
+                    <select id="wpts-seo-wordcount" class="wpts-input">
+                        <option value="500">~500 palavras (curto)</option>
+                        <option value="800" selected>~800 palavras (médio)</option>
+                        <option value="1200">~1200 palavras (longo)</option>
+                    </select>
+                </div>
+                <div class="wpts-field">
+                    <label>Publicação</label>
+                    <select id="wpts-seo-frequency" class="wpts-input">
+                        <option value="immediate">⚡ Publicar imediatamente</option>
+                        <option value="draft" selected>📝 Salvar como rascunho</option>
+                    </select>
+                </div>
+                <div class="wpts-field">
+                    <label>Idioma</label>
+                    <select id="wpts-seo-language" class="wpts-input">
+                        <option value="pt" selected>🇧🇷 Português</option>
+                        <option value="en">🇺🇸 Inglês</option>
+                        <option value="es">🇪🇸 Espanhol</option>
+                    </select>
+                </div>
+
+                <button id="wpts-run-seo-articles" class="wpts-btn wpts-btn-primary" style="width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+                    📅 Gerar Artigos SEO
+                </button>
+                <div id="wpts-seo-progress" style="display:none" class="wpts-loading">✍️ Gerando artigos…</div>
+                <div id="wpts-seo-result"></div>
+            </div>
+        </div>
+        <div>
+            <div class="wpts-card" style="background:#fdf4ff;border-color:#e879f9">
+                <h4>📅 Como funciona:</h4>
+                <ul style="font-size:13px;line-height:2">
+                    <li>✅ Cada artigo tem ângulo diferente</li>
+                    <li>✅ Título SEO com palavra-chave</li>
+                    <li>✅ Imagem hero + imagem de apoio</li>
+                    <li>✅ Meta description otimizada</li>
+                    <li>✅ Tags automáticas por categoria</li>
+                    <li>✅ Estrutura H2/H3 para SEO</li>
+                    <li>✅ Links diretos para editar no WP</li>
+                </ul>
+            </div>
+            <div class="wpts-card" style="background:#fef9c3;border-color:#fde047;margin-top:12px">
+                <h4>⚡ Custo por artigo</h4>
+                <p style="font-size:13px;color:#713f12">8 créditos por artigo.<br>
+                3 artigos = 24 créditos.<br>
+                Você tem <strong><?php echo number_format(get_option('wpts_credits',0)); ?> créditos</strong>.</p>
+            </div>
+            <div class="wpts-card" style="background:#eff6ff;border-color:#93c5fd;margin-top:12px">
+                <h4>💡 Dica SEO</h4>
+                <p style="font-size:13px;color:#1e40af">Publique 1-2 artigos por semana para construir autoridade gradualmente. O Google penaliza picos de conteúdo repentinos.</p>
+            </div>
+        </div>
+    </div>
+<?php }
 
 // ─── LOGO BUILDER ─────────────────────────────────────────────────────────────
 function wpts_page_logo() { ?>

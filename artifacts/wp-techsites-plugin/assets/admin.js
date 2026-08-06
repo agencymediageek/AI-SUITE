@@ -19,10 +19,16 @@
         });
     }
 
-    function wpAjax(action, data) {
+    // Upgraded wpAjax — $.ajax with configurable timeout (default 90s)
+    function wpAjax(action, data, timeout) {
         data.action = action;
         data.nonce  = NONCE;
-        return $.post(AJAX, data);
+        return $.ajax({
+            url:     AJAX,
+            method:  'POST',
+            data:    data,
+            timeout: timeout || 90000,
+        });
     }
 
     function showResult(el, html) { $(el).html(html).show(); }
@@ -465,6 +471,164 @@
 
     $(document).on('keydown', '#wpts-chat-cmd', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#wpts-send-chat').trigger('click'); }
+    });
+
+    // ── Page from URL ─────────────────────────────────────────────────────
+    $(document).on('click', '#wpts-run-pfu', function () {
+        var url = $('#wpts-pfu-url').val().trim();
+        if (!url) { alert('Informe a URL da empresa'); return; }
+        // Auto-prepend https:// so esc_url_raw() on the server never empties the value
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        var type    = $('#wpts-pfu-type').val();
+        var publish = $('#wpts-pfu-publish').is(':checked') ? 1 : 0;
+        var $btn    = $(this).prop('disabled', true);
+        $('#wpts-pfu-progress').show();
+        $('#wpts-pfu-result').html('');
+
+        wpAjax('wpts_page_from_url', { url: url, page_type: type, publish: publish }, 120000)
+            .done(function (r) {
+                if (r.success) {
+                    var d = r.data;
+                    $('#wpts-pfu-preview').show();
+                    $('#wpts-pfu-preview-content').html(
+                        '<p><strong>' + d.title + '</strong></p>' +
+                        '<p style="font-size:12px;color:#666">' + (d.meta_description || '') + '</p>' +
+                        (d.wp_page_url ? '<a href="' + d.wp_page_url + '" target="_blank" class="wpts-btn wpts-btn-primary" style="margin-top:8px">Ver página →</a>' : '')
+                    );
+                    $('#wpts-pfu-result').html(okHtml('Página criada: <strong>' + d.title + '</strong>'));
+                } else {
+                    var err = (r.data && r.data.error) ? r.data.error : (r.data || 'Erro ao criar página');
+                    $('#wpts-pfu-result').html(errHtml(err));
+                }
+            })
+            .fail(function (xhr, status) {
+                var msg = status === 'timeout'
+                    ? 'Tempo esgotado — o site pode estar demorando para carregar. Tente novamente.'
+                    : 'Erro de conexão (' + status + ').';
+                $('#wpts-pfu-result').html(errHtml(msg));
+            })
+            .always(function () { $btn.prop('disabled', false); $('#wpts-pfu-progress').hide(); });
+    });
+
+    // ── Populate Directory ────────────────────────────────────────────────
+    $(document).on('click', '#wpts-run-populate', function () {
+        var city    = $('#wpts-pop-city').val().trim();
+        var rawCats = $('#wpts-pop-categories').val();
+        var cats    = rawCats.split(',').map(function (c) { return c.trim(); }).filter(Boolean);
+        var count   = parseInt($('#wpts-pop-count').val()) || 10;
+        var $btn    = $(this).prop('disabled', true);
+        var $prog   = $('#wpts-pop-progress');
+        $prog.show().text('⏳ Importando ' + cats.length + ' categorias em ' + city + '… aguarde ' + (cats.length * 30) + 's');
+        $('#wpts-pop-result').html('');
+
+        wpAjax('wpts_populate_directory', { city: city, categories: JSON.stringify(cats), count_per_category: count }, 180000)
+            .done(function (r) {
+                if (r.success) {
+                    var html = '<div class="wpts-alert wpts-alert-success"><strong>' + r.data.summary + '</strong><ul style="margin-top:8px">';
+                    (r.data.breakdown || []).forEach(function (b) {
+                        html += '<li>' + b.category + ': ' + b.imported + ' importados (' + b.source + ')</li>';
+                    });
+                    html += '</ul></div>';
+                    $('#wpts-pop-result').html(html);
+                } else {
+                    $('#wpts-pop-result').html(errHtml((r.data && r.data.error) || 'Erro desconhecido'));
+                }
+            })
+            .fail(function (xhr, status) {
+                var msg = status === 'timeout' ? 'Tempo esgotado — tente novamente.' : 'Erro de conexão (' + status + ').';
+                $('#wpts-pop-result').html(errHtml(msg));
+            })
+            .always(function () { $btn.prop('disabled', false); $prog.hide(); });
+    });
+
+    // ── Article with Images (moved from inline PHP script) ────────────────
+    $(document).on('click', '#wpts-run-article', function () {
+        var topic   = $('#wpts-art-topic').val().trim();
+        if (!topic) { alert('Informe o tópico do artigo'); return; }
+        var city    = $('#wpts-art-city').val().trim();
+        var cat     = $('#wpts-art-cat').val().trim();
+        var tone    = $('#wpts-art-tone').val();
+        var words   = parseInt($('#wpts-art-words').val());
+        var publish = $('#wpts-art-publish').is(':checked') ? 1 : 0;
+        var $btn    = $(this).prop('disabled', true);
+        $('#wpts-art-progress').show();
+        $('#wpts-art-result').html('');
+
+        wpAjax('wpts_article_with_images', { topic: topic, city: city, category: cat, tone: tone, word_count: words, publish: publish }, 140000)
+            .done(function (r) {
+                if (r && r.success) {
+                    var d = r.data;
+                    $('#wpts-art-preview').show();
+                    $('#wpts-art-preview-content').html(
+                        (d.hero_image ? '<img src="' + d.hero_image + '" style="width:100%;border-radius:8px;margin-bottom:8px" alt="' + d.title + '">' : '') +
+                        '<strong>' + d.title + '</strong><br>' +
+                        '<span style="font-size:12px;color:#666">🔑 ' + (d.focus_keyword || '') + ' · ⏱ ' + (d.reading_time || '?') + ' min leitura</span><br>' +
+                        '<span style="font-size:11px;color:#999">Tags: ' + (d.tags || []).join(', ') + '</span>' +
+                        (d.wp_post_url ? '<br><a href="' + d.wp_post_url + '" target="_blank" class="wpts-btn wpts-btn-primary" style="margin-top:8px;display:inline-block">Ver artigo →</a>' : '')
+                    );
+                    $('#wpts-art-result').html(okHtml('Artigo gerado: <strong>' + d.title + '</strong>'));
+                } else {
+                    $('#wpts-art-result').html(errHtml((r && r.data) || 'Erro ao gerar artigo'));
+                }
+            })
+            .fail(function (xhr, status) {
+                var msg = status === 'timeout'
+                    ? 'Tempo esgotado — tente novamente (a IA pode estar ocupada).'
+                    : 'Erro de conexão (' + status + ').';
+                $('#wpts-art-result').html(errHtml(msg));
+            })
+            .always(function () { $btn.prop('disabled', false); $('#wpts-art-progress').hide(); });
+    });
+
+    // ── SEO Articles (múltiplos artigos sequenciais) ──────────────────────
+    $(document).on('click', '#wpts-run-seo-articles', function () {
+        var keyword  = $('#wpts-seo-keyword').val().trim();
+        if (!keyword) { alert('Informe a palavra-chave'); return; }
+        var category  = $('#wpts-seo-category').val().trim();
+        var quantity  = parseInt($('#wpts-seo-quantity').val()) || 1;
+        var frequency = $('#wpts-seo-frequency').val();
+        var wordCount = parseInt($('#wpts-seo-wordcount').val()) || 800;
+        var language  = $('#wpts-seo-language').val() || 'pt';
+        var publish   = frequency === 'immediate' ? 1 : 0;
+        var $btn      = $(this).prop('disabled', true);
+        var $prog     = $('#wpts-seo-progress');
+        var $result   = $('#wpts-seo-result');
+        var generated = [];
+
+        function generateNext(index) {
+            if (index >= quantity) {
+                $btn.prop('disabled', false);
+                $prog.hide();
+                if (generated.length === 0) {
+                    $result.html(errHtml('Nenhum artigo gerado. Verifique seus créditos.'));
+                } else {
+                    var html = okHtml(generated.length + ' de ' + quantity + ' artigo(s) ' + (publish ? 'publicado(s)!' : 'criado(s) como rascunho!'));
+                    html += '<ul style="margin-top:10px;font-size:13px;line-height:2">';
+                    generated.forEach(function (a, i) {
+                        html += '<li>' + (i+1) + '. <strong>' + a.title + '</strong>' +
+                            (a.wp_post_url ? ' — <a href="' + a.wp_post_url + '" target="_blank">Ver →</a>' : '') + '</li>';
+                    });
+                    html += '</ul>';
+                    $result.html(html);
+                }
+                return;
+            }
+            $prog.show().text('✍️ Gerando artigo ' + (index + 1) + ' de ' + quantity + '… (pode levar 30-60s por artigo)');
+            // Use variant prefixes to get different angles on the same keyword
+            var variants = ['Guia completo: ', 'Como usar: ', 'Tudo sobre: ', 'Melhores dicas de: ', 'Por que investir em: '];
+            var topic = index === 0 ? keyword : variants[index % variants.length] + keyword;
+            wpAjax('wpts_article_with_images', {
+                topic: topic, city: '', category: category,
+                tone: 'professional', word_count: wordCount, publish: publish
+            }, 140000)
+                .done(function (r) {
+                    if (r && r.success) generated.push(r.data);
+                })
+                .always(function () { generateNext(index + 1); });
+        }
+
+        $result.html('');
+        generateNext(0);
     });
 
 })(jQuery);
