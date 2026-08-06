@@ -39,6 +39,43 @@ function wpts_detect_theme() {
     $info['version'] = $theme->get( 'Version' );
     $info['parent']  = $theme->parent() ? $theme->parent()->get( 'Name' ) : null;
 
+    // ── BeTheme: detect active template/preset ─────────────────────────────────
+    // BeTheme has 700+ templates stored as presets. We read the active one so the
+    // api-server can decide if it's a directory-style template without needing to
+    // know all 700+ slugs. The active template slug is stored in BeTheme's options.
+    if ( in_array( $slug, [ 'betheme', 'be-theme', 'mfn-theme' ], true ) ) {
+        $active_template = '';
+        // BeTheme stores the currently applied preset in mfn-theme-options
+        $mfn_opts = get_option( 'mfn-theme-options', [] );
+        if ( ! empty( $mfn_opts['mfn-presets-current'] ) ) {
+            $active_template = sanitize_title( $mfn_opts['mfn-presets-current'] );
+        } elseif ( ! empty( $mfn_opts['preset'] ) ) {
+            $active_template = sanitize_title( $mfn_opts['preset'] );
+        } elseif ( ! empty( $mfn_opts['mfn_presets_current'] ) ) {
+            $active_template = sanitize_title( $mfn_opts['mfn_presets_current'] );
+        } else {
+            // Fallback: check if a preset file name is stored as the active skin
+            $skin = get_option( 'mfn_presets', [] );
+            if ( is_array( $skin ) && ! empty( $skin['current'] ) ) {
+                $active_template = sanitize_title( $skin['current'] );
+            }
+        }
+        // Directory-style templates in BeTheme include bedirectory, belisting,
+        // real-estate, cars, hotels, restaurants, travel, jobs, classified etc.
+        $dir_keywords = [ 'directory', 'listing', 'real-estate', 'realestate',
+                          'hotel', 'restaurant', 'travel', 'cars', 'jobs',
+                          'classified', 'property', 'estate', 'rental' ];
+        foreach ( $dir_keywords as $kw ) {
+            if ( str_contains( strtolower( $active_template ), $kw ) ) {
+                $info['type'] = 'directory';
+                break;
+            }
+        }
+        if ( $active_template ) {
+            $info['activeTemplate'] = $active_template;
+        }
+    }
+
     // detect page builders in use
     $builders = [];
     if ( defined( 'ELEMENTOR_VERSION' ) )       $builders[] = 'Elementor';

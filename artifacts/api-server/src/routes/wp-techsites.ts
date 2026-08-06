@@ -1508,25 +1508,69 @@ function parseSiteMetadata(raw: string | null | undefined): Record<string, any> 
 }
 
 function detectSiteType(meta: Record<string, any>): { siteType: "directory" | "standard"; themeName: string } {
-  // Defensive: theme must be a string, plugins must be an array of strings
+  // meta.theme can be a plain string (legacy) OR the structured object from
+  // wpts_detect_theme() in theme-detector.php: { slug, label, type, activeTemplate, ... }
   const rawTheme = meta?.theme;
-  const theme    = typeof rawTheme === "string" ? rawTheme.toLowerCase().replace(/[\s_]+/g, "-") : "";
 
+  let themeSlug     = "";   // e.g. "betheme", "mylisting"
+  let themeLabel    = "";   // e.g. "BeTheme", "MyListing"
+  let themeType     = "";   // "directory" | "multipurpose" | "page-builder" | "custom"
+  let activeTpl     = "";   // BeTheme active template slug, e.g. "bedirectory"
+
+  if (typeof rawTheme === "string") {
+    themeSlug  = rawTheme.toLowerCase().replace(/[\s_]+/g, "-");
+    themeLabel = rawTheme;
+  } else if (rawTheme && typeof rawTheme === "object") {
+    themeSlug  = typeof rawTheme.slug  === "string" ? rawTheme.slug.toLowerCase()  : "";
+    themeLabel = typeof rawTheme.label === "string" ? rawTheme.label
+               : typeof rawTheme.name  === "string" ? rawTheme.name : "";
+    themeType  = typeof rawTheme.type  === "string" ? rawTheme.type.toLowerCase()  : "";
+    activeTpl  = typeof rawTheme.activeTemplate === "string"
+               ? rawTheme.activeTemplate.toLowerCase() : "";
+  }
+
+  // Plugins list: may be "folder/file.php" paths or plain folder names
   const rawPlugins = meta?.plugins;
   const plugins: string[] = Array.isArray(rawPlugins)
     ? rawPlugins.filter((p: any) => typeof p === "string").map((p: string) => p.toLowerCase())
     : [];
 
-  const directoryThemes  = ["my-listing", "mylisting", "listingpro", "listing-pro", "listify", "listivo", "houzez", "findkit", "geodirectory", "directory-starter", "listdom"];
-  const directoryPlugins = ["directorist", "geodirectory", "business-directory-plugin", "listdom", "geo-directory", "wp-listings", "listify"];
+  // Known pure-directory theme slugs (these themes ONLY do directories)
+  const directoryThemes  = [
+    "my-listing", "mylisting", "listingpro", "listing-pro",
+    "listify", "listivo", "houzez", "findkit",
+    "geodirectory", "directory-starter", "listdom",
+    "listable", "jobster",
+  ];
+
+  // Directory-specific plugins (slug or path fragment)
+  const directoryPlugins = [
+    "directorist", "geodirectory", "business-directory-plugin",
+    "listdom", "geo-directory", "wp-listings", "listify",
+    "wp-job-manager",  // used by Listify / directory sites
+  ];
+
+  // BeTheme active templates that indicate a directory site
+  // (BeTheme has 700+ templates — we only flag the explicitly directory-style ones)
+  const directoryBeThemeTemplates = [
+    "directory", "listing", "listings", "bedirectory",
+    "real-estate", "realestate", "hotel", "restaurants",
+    "travel", "cars", "jobs", "classified",
+  ];
 
   const isDirectory =
-    directoryThemes.some(t => theme.includes(t)) ||
+    // 1. Plugin already classified the theme as "directory" (e.g. MyListing child theme)
+    themeType === "directory" ||
+    // 2. Known directory theme slug
+    directoryThemes.some(t => themeSlug.includes(t)) ||
+    // 3. BeTheme (or other multipurpose) with a directory-style active template
+    directoryBeThemeTemplates.some(t => activeTpl.includes(t)) ||
+    // 4. Directory plugin installed
     plugins.some(p => directoryPlugins.some(dp => p.includes(dp)));
 
   return {
     siteType:  isDirectory ? "directory" : "standard",
-    themeName: typeof rawTheme === "string" && rawTheme ? rawTheme : "Padrão",
+    themeName: themeLabel || (typeof rawTheme === "string" && rawTheme ? rawTheme : "Padrão"),
   };
 }
 
