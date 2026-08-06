@@ -231,6 +231,8 @@ function wpts_page_dashboard() {
 
 // ─── SEO AUDIT ────────────────────────────────────────────────────────────────
 function wpts_page_audit() {
+    // Zera a flag imediatamente ao carregar a página — impede qualquer loop de auto-trigger
+    update_option( 'wpts_audit_pending', 0 );
     $audit = get_option('wpts_last_audit');
     $date  = get_option('wpts_last_audit_date');
     ?>

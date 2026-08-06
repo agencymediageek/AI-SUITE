@@ -70,16 +70,24 @@ add_action( 'wp_ajax_wpts_disconnect_rest', function () {
 // ─── SEO Audit ────────────────────────────────────────────────────────────────
 add_action( 'wp_ajax_wpts_run_audit', function () {
     wpts_ajax_check();
-    $site_data = wpts_get_site_audit_data();
-    $result    = wpts_call_api( '/audit/seo', $site_data );
-    if ( ! empty( $result['error'] ) ) {
-        // Fallback: local audit
-        $result = wpts_local_seo_audit( $site_data );
+    // Zera a flag ANTES da chamada API — garante que não fica em loop mesmo se a chamada falhar
+    update_option( 'wpts_audit_pending', 0 );
+    try {
+        $site_data = wpts_get_site_audit_data();
+        $result    = wpts_call_api( '/audit/seo', $site_data );
+        if ( ! empty( $result['error'] ) ) {
+            $result = wpts_local_seo_audit( $site_data );
+        }
+        update_option( 'wpts_last_audit',      $result );
+        update_option( 'wpts_last_audit_date', current_time('mysql') );
+        wp_send_json_success( $result );
+    } catch ( \Exception $e ) {
+        // Fallback local em caso de exceção — nunca retorna erro vazio que trava o JS
+        $result = wpts_local_seo_audit( wpts_get_site_audit_data() );
+        update_option( 'wpts_last_audit',      $result );
+        update_option( 'wpts_last_audit_date', current_time('mysql') );
+        wp_send_json_success( $result );
     }
-    update_option( 'wpts_last_audit',      $result );
-    update_option( 'wpts_last_audit_date', current_time('mysql') );
-    update_option( 'wpts_audit_pending',   0 );
-    wp_send_json_success( $result );
 });
 
 function wpts_local_seo_audit( $data ) {

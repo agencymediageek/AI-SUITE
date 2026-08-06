@@ -3,7 +3,7 @@
  * Plugin Name:  WP TechSites
  * Plugin URI:   https://wp.techsites.ai
  * Description:  O SaaS de IA mais completo para WordPress — directory builder, scraping, logo, SEO, chatbot e muito mais.
- * Version:      2.5.1
+ * Version:      2.5.2
  * Author:       TechSites.ai
  * Author URI:   https://techsites.ai
  * License:      GPL-2.0+
@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'WPTS_VERSION',    '2.5.1' );
+define( 'WPTS_VERSION',    '2.5.2' );
 define( 'WPTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPTS_API_BASE',   'https://wp.techsites.ai/api/wp' );
@@ -275,7 +275,7 @@ function wpts_admin_assets( $hook ) {
         'siteurl'   => get_site_url(),
         'sitename'  => get_bloginfo( 'name' ),
         'theme'     => wpts_detect_theme(),
-        'auditPending' => (int) get_option( 'wpts_audit_pending', 0 ),
+        'auditPending' => 0, // sempre 0 — auditoria só roda com clique explícito no botão
     ]);
 }
 
