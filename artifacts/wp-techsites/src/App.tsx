@@ -16,6 +16,7 @@ import PageFromUrlPage from '@/pages/tools/page-from-url';
 import ArticleWithImagesPage from '@/pages/tools/article';
 // New tools
 import ScrapingPage from '@/pages/tools/scraping';
+import ListingsImportPage from '@/pages/tools/listings-import';
 import WysiwygPage from '@/pages/tools/wysiwyg';
 import PageBuilderPage from '@/pages/tools/page-builder';
 import SeoArticlesPage from '@/pages/tools/seo-articles';
@@ -122,6 +123,13 @@ function AppRouter() {
         {/* New tools */}
         <Route path="/tools/scraping">
           <AuthGuard><ScrapingPage /></AuthGuard>
+        </Route>
+        <Route path="/tools/listings-import">
+          <AuthGuard><ListingsImportPage /></AuthGuard>
+        </Route>
+        {/* Legacy URL — redirect to new listings-import */}
+        <Route path="/tools/populate">
+          <AuthGuard><ListingsImportPage /></AuthGuard>
         </Route>
         <Route path="/tools/wysiwyg">
           <AuthGuard><WysiwygPage /></AuthGuard>

@@ -10,27 +10,34 @@ import { useToast } from '@/hooks/use-toast';
 import { getApiBaseUrl, getWpApiHeaders } from '@/lib/api-headers';
 import { ToolInfoCard } from '@/components/ui/tool-info-card';
 import {
-  Loader2, Search, MapPin, CheckCircle2, Download, Store,
+  Loader2, Search, MapPin, Download, Store,
   Coffee, Scissors, Wrench, Camera, ShoppingCart, Heart, Dumbbell,
-  Car, Building2, Utensils, Pill, GraduationCap
+  Car, Building2, Utensils, Pill, GraduationCap, FileDown,
 } from 'lucide-react';
 
 const COMMERCE_CATEGORIES = [
-  { value: 'cafeterias', label: 'Cafeterias', icon: Coffee },
-  { value: 'restaurantes', label: 'Restaurantes', icon: Utensils },
-  { value: 'barbearias', label: 'Barbearias', icon: Scissors },
-  { value: 'oficinas_mecanica', label: 'Oficinas Mecânica', icon: Wrench },
-  { value: 'borracharias', label: 'Borracharias', icon: Car },
-  { value: 'pontos_turisticos', label: 'Pontos Turísticos', icon: Camera },
-  { value: 'farmacias', label: 'Farmácias', icon: Pill },
-  { value: 'supermercados', label: 'Supermercados', icon: ShoppingCart },
-  { value: 'saloes_beleza', label: 'Salões de Beleza', icon: Heart },
-  { value: 'academias', label: 'Academias', icon: Dumbbell },
-  { value: 'hoteis', label: 'Hotéis', icon: Building2 },
-  { value: 'educacao', label: 'Educação', icon: GraduationCap },
+  { value: 'cafeterias',        label: 'Cafeterias',    icon: Coffee },
+  { value: 'restaurantes',      label: 'Restaurantes',  icon: Utensils },
+  { value: 'barbearias',        label: 'Barbearias',    icon: Scissors },
+  { value: 'oficinas_mecanica', label: 'Of. Mecânica',  icon: Wrench },
+  { value: 'borracharias',      label: 'Borracharias',  icon: Car },
+  { value: 'pontos_turisticos', label: 'Turismo',        icon: Camera },
+  { value: 'farmacias',         label: 'Farmácias',     icon: Pill },
+  { value: 'supermercados',     label: 'Supermercados', icon: ShoppingCart },
+  { value: 'saloes_beleza',     label: 'Beleza',        icon: Heart },
+  { value: 'academias',         label: 'Academias',     icon: Dumbbell },
+  { value: 'hoteis',            label: 'Hotéis',        icon: Building2 },
+  { value: 'educacao',          label: 'Educação',      icon: GraduationCap },
 ];
 
-interface ScrapingResult {
+const DEMO_PRESETS = [
+  { label: 'Curitiba — Restaurantes',    city: 'Curitiba',       country: 'Brasil', category: 'restaurantes', count: '10' },
+  { label: 'São Paulo — Cafeterias',     city: 'São Paulo',      country: 'Brasil', category: 'cafeterias',   count: '10' },
+  { label: 'Florianópolis — Hotéis',     city: 'Florianópolis',  country: 'Brasil', category: 'hoteis',       count: '8'  },
+  { label: 'Rio de Janeiro — Academias', city: 'Rio de Janeiro', country: 'Brasil', category: 'academias',    count: '10' },
+];
+
+interface LeadResult {
   name: string;
   address: string;
   phone?: string;
@@ -38,24 +45,35 @@ interface ScrapingResult {
   category: string;
 }
 
-const DEMO_PRESETS = [
-  { label: 'Curitiba — Restaurantes', city: 'Curitiba', country: 'Brasil', category: 'restaurantes', count: '10' },
-  { label: 'São Paulo — Cafeterias', city: 'São Paulo', country: 'Brasil', category: 'cafeterias', count: '10' },
-  { label: 'Florianópolis — Hotéis', city: 'Florianópolis', country: 'Brasil', category: 'hoteis', count: '8' },
-  { label: 'Rio de Janeiro — Academias', city: 'Rio de Janeiro', country: 'Brasil', category: 'academias', count: '10' },
-];
+function exportCsv(results: LeadResult[], city: string, category: string) {
+  const header = 'Nome,Endereço,Telefone,Avaliação,Categoria';
+  const rows = results.map(r =>
+    [r.name, r.address, r.phone || '', r.rating || '', r.category]
+      .map(v => `"${String(v).replace(/"/g, '""')}"`)
+      .join(',')
+  );
+  const csv  = [header, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href: url,
+    download: `leads-${category}-${city}-${Date.now()}.csv`,
+  });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
-export default function ScrapingPage() {
+export default function ColetarLeadsPage() {
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [customCategory, setCustomCategory] = useState('');
-  const [city, setCity] = useState('');
+  const [customCategory, setCustomCategory]     = useState('');
+  const [city, setCity]       = useState('');
   const [country, setCountry] = useState('Brasil');
-  const [count, setCount] = useState('10');
-  const [loading, setLoading] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const [results, setResults] = useState<ScrapingResult[]>([]);
-  const [imported, setImported] = useState(false);
+  const [count, setCount]     = useState('10');
+  const [loading, setLoading]       = useState(false);
+  const [results, setResults]       = useState<LeadResult[]>([]);
   const [demoRunning, setDemoRunning] = useState(false);
 
   const applyPreset = (preset: typeof DEMO_PRESETS[0]) => {
@@ -64,7 +82,6 @@ export default function ScrapingPage() {
     setSelectedCategory(preset.category);
     setCount(preset.count);
     setResults([]);
-    setImported(false);
   };
 
   const runDemo = async (preset: typeof DEMO_PRESETS[0]) => {
@@ -74,25 +91,17 @@ export default function ScrapingPage() {
       const res = await fetch(`${getApiBaseUrl()}wp/demo`, {
         method: 'POST',
         headers: { ...getWpApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          category: preset.category,
-          city: preset.city,
-          count: parseInt(preset.count),
-        }),
+        body: JSON.stringify({ category: preset.category, city: preset.city, count: parseInt(preset.count) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro na demo');
-      toast({
-        title: `✅ Demo concluída em ${(data.total_ms / 1000).toFixed(1)}s`,
-        description: data.summary || `${data.listings_imported} listings importados`,
-      });
+      toast({ title: `✅ ${data.listings_generated || preset.count} leads coletados`, description: `${preset.city} — ${preset.category}` });
       if (data.listings_generated > 0) {
-        setResults(Array.from({ length: Math.min(5, data.listings_generated) }, (_, i) => ({
-          name: `${preset.category.charAt(0).toUpperCase() + preset.category.slice(1)} ${i + 1} — ${preset.city}`,
-          address: `${preset.city}, ${preset.country}`,
+        setResults(Array.from({ length: Math.min(8, data.listings_generated) }, (_, i) => ({
+          name:     `${preset.category.charAt(0).toUpperCase() + preset.category.slice(1)} ${i + 1} — ${preset.city}`,
+          address:  `${preset.city}, ${preset.country}`,
           category: preset.category,
         })));
-        setImported(data.listings_imported > 0);
       }
     } catch (err: any) {
       toast({ title: 'Erro na demo', description: err.message, variant: 'destructive' });
@@ -111,7 +120,6 @@ export default function ScrapingPage() {
     }
     setLoading(true);
     setResults([]);
-    setImported(false);
     try {
       const res = await fetch(`${getApiBaseUrl()}wp/populate-directory`, {
         method: 'POST',
@@ -125,27 +133,24 @@ export default function ScrapingPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao buscar');
-
-      // Build preview from response
       const listings = data.listings || data.results || [];
       if (listings.length > 0) {
         setResults(listings.map((l: any) => ({
-          name: l.name || l.title || 'Estabelecimento',
-          address: l.address || l.location || `${city}, ${country}`,
-          phone: l.phone || l.telephone,
-          rating: l.rating,
+          name:     l.name || l.title || 'Estabelecimento',
+          address:  l.address || l.location || `${city}, ${country}`,
+          phone:    l.phone || l.telephone,
+          rating:   l.rating,
           category: activeCategory,
         })));
       } else {
-        // Show placeholder preview with count
         const total = data.created || data.total || parseInt(count);
-        setResults(Array.from({ length: Math.min(total, 5) }, (_, i) => ({
-          name: `${COMMERCE_CATEGORIES.find(c => c.value === selectedCategory)?.label || activeCategory} ${i + 1}`,
-          address: `${city}, ${country}`,
+        setResults(Array.from({ length: Math.min(total, 8) }, (_, i) => ({
+          name:     `${COMMERCE_CATEGORIES.find(c => c.value === selectedCategory)?.label || activeCategory} ${i + 1}`,
+          address:  `${city}, ${country}`,
           category: activeCategory,
         })));
-        toast({ title: `${total} listings encontrados`, description: 'Clique em Importar para adicionar ao WordPress.' });
       }
+      toast({ title: `${data.total || results.length || count} leads encontrados`, description: 'Exporte como CSV para usar no seu CRM.' });
     } catch (err: any) {
       toast({ title: 'Erro na busca', description: err.message, variant: 'destructive' });
     } finally {
@@ -153,65 +158,41 @@ export default function ScrapingPage() {
     }
   };
 
-  const handleImport = async () => {
-    setImporting(true);
-    try {
-      const res = await fetch(`${getApiBaseUrl()}wp/populate-directory`, {
-        method: 'POST',
-        headers: { ...getWpApiHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          city: `${city}, ${country}`,
-          categories: [activeCategory],
-          count_per_category: parseInt(count),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao importar');
-      setImported(true);
-      toast({
-        title: `✅ ${data.created || data.total || results.length} listings importados!`,
-        description: `Categoria: ${activeCategory} — ${city}`,
-      });
-    } catch (err: any) {
-      toast({ title: 'Erro ao importar', description: err.message, variant: 'destructive' });
-    } finally {
-      setImporting(false);
-    }
-  };
-
   return (
     <DashboardShell>
       <div className="space-y-6 animate-slide-in-up max-w-3xl">
+
+        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground mb-1">BrightData Scraping</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-1">Coletar Leads / Dados</h1>
             <p className="text-sm text-muted-foreground">
-              Importe listings reais de qualquer cidade e categoria via BrightData — diretamente no seu WordPress.
+              Coleta informações de negócios em qualquer cidade via BrightData — exporte como CSV para usar no seu CRM ou campanhas.
             </p>
           </div>
-          <Badge className="bg-primary/10 text-primary border-primary/30 border">
-            <Search className="w-3 h-3 mr-1" /> BrightData
+          <Badge className="bg-primary/10 text-primary border-primary/30 border shrink-0">
+            <Search className="w-3 h-3 mr-1" /> Universal
           </Badge>
         </div>
 
         <ToolInfoCard
           steps={[
-            { icon: '🌐', text: 'Use a Demo Rápida (1 clique) ou cole uma URL personalizada com listings' },
-            { icon: '⚡', text: 'BrightData coleta dados mesmo em sites JavaScript/SPAs — nome, endereço, telefone, avaliações' },
-            { icon: '✅', text: 'Listings importados automaticamente para o diretório do WordPress' },
+            { icon: '🌐', text: 'Use a Demo Rápida (1 clique) ou configure cidade + categoria manualmente' },
+            { icon: '⚡', text: 'BrightData coleta nome, endereço, telefone e avaliações em tempo real' },
+            { icon: '📥', text: 'Exporte os dados como CSV e use no seu CRM, planilhas ou campanhas de e-mail' },
           ]}
-          result={{ label: '🗂️ Importado no WordPress', color: 'green', detail: '— Listings publicados no diretório Custom Post Type' }}
+          result={{ label: '📥 Exporta como CSV', color: 'orange', detail: '— Use no CRM, Google Sheets ou campanhas de prospecção' }}
         />
 
-        {/* ── Demo Rápida ───────────────────────────────────────────────── */}
+        {/* Demo Rápida */}
         <Card className="border-primary/30 bg-primary/5">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Loader2 className={`w-4 h-4 ${demoRunning ? 'animate-spin text-primary' : 'text-primary'}`} />
-              Demo Rápida — Importar com 1 clique
+              Demo Rápida — Coletar com 1 clique
             </CardTitle>
             <CardDescription>
-              Busca dados reais via BrightData e importa direto no WordPress — ideal para demonstrações.
+              Busca dados reais via BrightData — perfeito para demonstrações e prospecção rápida.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -226,7 +207,9 @@ export default function ScrapingPage() {
                   onClick={() => runDemo(preset)}
                   className="border-primary/40 text-primary hover:bg-primary/10 font-medium"
                 >
-                  {demoRunning ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> : <MapPin className="w-3 h-3 mr-1.5" />}
+                  {demoRunning
+                    ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                    : <MapPin  className="w-3 h-3 mr-1.5" />}
                   {preset.label}
                 </Button>
               ))}
@@ -234,16 +217,16 @@ export default function ScrapingPage() {
           </CardContent>
         </Card>
 
+        {/* Manual form */}
         <form onSubmit={handleSearch} className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <Store className="w-4 h-4 text-primary" /> Tipo de Comércio
+                <Store className="w-4 h-4 text-primary" /> Tipo de Negócio
               </CardTitle>
               <CardDescription>Selecione uma categoria ou digite uma personalizada</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Category grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {COMMERCE_CATEGORIES.map((cat) => {
                   const Icon = cat.icon;
@@ -277,8 +260,6 @@ export default function ScrapingPage() {
                   <span>Outro...</span>
                 </button>
               </div>
-
-              {/* Custom category input */}
               {selectedCategory === 'outro' && (
                 <div className="space-y-1.5">
                   <Label htmlFor="custom">Categoria personalizada</Label>
@@ -314,9 +295,7 @@ export default function ScrapingPage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="country">País</Label>
                   <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger id="country">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger id="country"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Brasil">🇧🇷 Brasil</SelectItem>
                       <SelectItem value="Argentina">🇦🇷 Argentina</SelectItem>
@@ -330,9 +309,8 @@ export default function ScrapingPage() {
                   </Select>
                 </div>
               </div>
-
               <div className="mt-4 space-y-1.5">
-                <Label>Quantidade de listings</Label>
+                <Label>Quantidade de resultados</Label>
                 <div className="flex items-center gap-3">
                   <input
                     type="range" min={5} max={50} step={5}
@@ -356,48 +334,52 @@ export default function ScrapingPage() {
             size="lg"
           >
             {loading ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Buscando via BrightData...</>
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Coletando via BrightData...</>
             ) : (
-              <><Search className="w-4 h-4 mr-2" />Buscar {activeCategory ? `— ${COMMERCE_CATEGORIES.find(c=>c.value===selectedCategory)?.label || activeCategory}` : 'Listings'}</>
+              <><Search className="w-4 h-4 mr-2" />Coletar {activeCategory ? `— ${COMMERCE_CATEGORIES.find(c=>c.value===selectedCategory)?.label || activeCategory}` : 'Leads'}</>
             )}
           </Button>
         </form>
 
-        {/* Results preview */}
+        {/* Results */}
         {results.length > 0 && (
           <Card className="border-primary/20">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Preview — {results.length} listings encontrados</CardTitle>
-                {imported ? (
-                  <Badge className="bg-green-500/10 text-green-600 border-green-500/30 border">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />Importados
-                  </Badge>
-                ) : (
-                  <Button size="sm" onClick={handleImport} disabled={importing}>
-                    {importing ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1.5" />}
-                    Importar para WP
-                  </Button>
-                )}
+                <CardTitle className="text-base">{results.length} leads coletados</CardTitle>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    exportCsv(results, city, activeCategory);
+                    toast({ title: '✅ CSV exportado!', description: 'Arquivo salvo na pasta de downloads.' });
+                  }}
+                >
+                  <FileDown className="w-3.5 h-3.5 mr-1.5" />
+                  Exportar CSV
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {results.slice(0, 5).map((r, i) => (
+                {results.slice(0, 8).map((r, i) => (
                   <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border">
                     <Store className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{r.name}</p>
-                      <p className="text-xs text-muted-foreground">{r.address}</p>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        <p className="text-xs text-muted-foreground">{r.address}</p>
+                        {r.phone && <p className="text-xs text-muted-foreground">{r.phone}</p>}
+                      </div>
                     </div>
                     {r.rating && (
                       <Badge variant="outline" className="text-xs">⭐ {r.rating}</Badge>
                     )}
                   </div>
                 ))}
-                {results.length > 5 && (
+                {results.length > 8 && (
                   <p className="text-xs text-muted-foreground text-center pt-1">
-                    + {results.length - 5} listings adicionais serão importados
+                    + {results.length - 8} leads adicionais incluídos no CSV
                   </p>
                 )}
               </div>

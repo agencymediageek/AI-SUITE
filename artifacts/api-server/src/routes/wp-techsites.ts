@@ -122,9 +122,9 @@ router.use("/wp", (req, res, next) => {
 // Returns the latest plugin version so the WP plugin can show an update banner.
 router.get("/wp/plugin-version", (_req, res) => {
   res.json({
-    latest: "2.4.2",
-    download_url: "https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.4.2.zip",
-    changelog: "Botão Abrir Dashboard com autologin, créditos dinâmicos no header, correção de spinners infinitos, fix de margem no WP Admin.",
+    latest: "2.5.0",
+    download_url: "https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.5.0.zip",
+    changelog: "Detecção automática de tema/plugin de diretório, ferramentas gateadas por tipo de site (directory vs. standard), Coletar Leads agora universal, Importar Listings exclusivo para temas directory.",
   });
 });
 
@@ -1481,6 +1481,8 @@ router.get("/wp/tools", requireSiteKey, async (req, res) => {
 // Dashboard data for the wp.techsites.ai customer panel.
 router.get("/wp/dashboard", requireSiteKey, async (req, res) => {
   const site = (req as any).wpSite;
+  const meta = parseSiteMetadata(site.siteMetadata);
+  const { siteType, themeName } = detectSiteType(meta);
   res.json({
     site: {
       id: site.id,
@@ -1492,11 +1494,35 @@ router.get("/wp/dashboard", requireSiteKey, async (req, res) => {
       credits: site.creditBalance,
       connectedAt: site.createdAt,
       lastSeen: site.lastSeenAt,
+      siteType,
+      themeName,
     },
     tools: getAvailableTools(site.plan),
     usageTip: "Cada ação consome créditos. Recarregue a qualquer momento.",
   });
 });
+
+// ── Helpers: site-type detection ──────────────────────────────────────────────
+function parseSiteMetadata(raw: string | null | undefined): Record<string, any> {
+  try { return JSON.parse(raw || "{}"); } catch { return {}; }
+}
+
+function detectSiteType(meta: Record<string, any>): { siteType: "directory" | "standard"; themeName: string } {
+  const theme   = (meta?.theme   || "").toLowerCase().replace(/[\s_]+/g, "-");
+  const plugins: string[] = (meta?.plugins || []).map((p: string) => p.toLowerCase());
+
+  const directoryThemes  = ["my-listing", "mylisting", "listingpro", "listing-pro", "listify", "listivo", "houzez", "findkit", "geodirectory", "directory-starter", "listdom"];
+  const directoryPlugins = ["directorist", "geodirectory", "business-directory-plugin", "listdom", "geo-directory", "wp-listings", "listify"];
+
+  const isDirectory =
+    directoryThemes.some(t => theme.includes(t)) ||
+    plugins.some(p => directoryPlugins.some(dp => p.includes(dp)));
+
+  return {
+    siteType:  isDirectory ? "directory" : "standard",
+    themeName: meta?.theme || "Padrão",
+  };
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getAvailableTools(plan: string) {
