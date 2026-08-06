@@ -3,7 +3,7 @@
  * Plugin Name:  WP TechSites
  * Plugin URI:   https://wp.techsites.ai
  * Description:  O SaaS de IA mais completo para WordPress — directory builder, scraping, logo, SEO, chatbot e muito mais.
- * Version:      2.6.1
+ * Version:      2.6.2
  * Author:       TechSites.ai
  * Author URI:   https://techsites.ai
  * License:      GPL-2.0+
@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'WPTS_VERSION',    '2.6.1' );
+define( 'WPTS_VERSION',    '2.6.2' );
 define( 'WPTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPTS_API_BASE',   'https://wp.techsites.ai/api/wp' );
@@ -299,7 +299,7 @@ function wpts_check_for_update( $transient ) {
             'sslverify' => true,
         ]);
         if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
-            set_transient( 'wpts_remote_version', [ 'version' => $current_ver, 'url' => '' ], 12 * HOUR_IN_SECONDS );
+            set_transient( 'wpts_remote_version', [ 'version' => $current_ver, 'url' => '' ], HOUR_IN_SECONDS );
             return $transient;
         }
         $data   = json_decode( wp_remote_retrieve_body( $response ), true );
@@ -308,7 +308,7 @@ function wpts_check_for_update( $transient ) {
             'url'       => $data['download_url'] ?? '',
             'changelog' => $data['changelog']    ?? '',
         ];
-        set_transient( 'wpts_remote_version', $cached, 12 * HOUR_IN_SECONDS );
+        set_transient( 'wpts_remote_version', $cached, HOUR_IN_SECONDS );
     }
 
     if ( version_compare( $current_ver, $cached['version'], '<' ) ) {
@@ -364,6 +364,7 @@ function wpts_clear_update_cache( $upgrader, $options ) {
         in_array( 'wp-techsites/wp-techsites.php', (array) $options['plugins'], true )
     ) {
         delete_transient( 'wpts_remote_version' );
+        delete_transient( 'wpts_update_check' );
     }
 }
 

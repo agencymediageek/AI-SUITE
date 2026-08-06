@@ -122,7 +122,7 @@ function wpts_render_admin_page() {
             </div>
 
             <?php
-            /* ── Update notification banner (checked once every 12 h via transient) ── */
+            /* ── Update notification banner (checked every 1 h via transient) ── */
             $update_info = get_transient( 'wpts_update_check' );
             if ( false === $update_info ) {
                 $resp = wp_remote_get( WPTS_API_BASE . '/plugin-version', [ 'timeout' => 6 ] );
@@ -130,7 +130,7 @@ function wpts_render_admin_page() {
                     ? json_decode( wp_remote_retrieve_body( $resp ), true )
                     : [ 'latest' => WPTS_VERSION ];
                 if ( empty( $update_info['latest'] ) ) $update_info = [ 'latest' => WPTS_VERSION ];
-                set_transient( 'wpts_update_check', $update_info, 12 * HOUR_IN_SECONDS );
+                set_transient( 'wpts_update_check', $update_info, HOUR_IN_SECONDS );
             }
             if ( version_compare( WPTS_VERSION, $update_info['latest'], '<' ) ) : ?>
             <div class="wpts-update-banner">
