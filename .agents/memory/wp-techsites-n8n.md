@@ -38,6 +38,33 @@ These 3 tools have N8N URLs seeded. They currently route to GROK because N8N
 returns empty bodies. When N8N workflows are configured with "Respond to Webhook",
 they will auto-route to N8N without any code change.
 
+## Working N8N workflow pattern (created via API, Aug 2026)
+
+seo-audit routes via workflow "WPTS - SEO Audit (GROK)" at webhook/wpts-seo-audit:
+Webhook (responseMode: responseNode) → HTTP Request api.x.ai (httpHeaderAuth cred
+"GROK xAI Bearer") → Respond to Webhook returning {output, via}.
+
+**Critical:** workflows created via N8N API must have `webhookId` (any UUID) set on
+the webhook node or the production webhook returns 404 even when active. Fix: PUT
+workflow with webhookId + deactivate/activate cycle.
+
+Old route /wp/audit/seo now calls executeWpTool (N8N-first) instead of callGeminiLong.
+
+## Plugin auto-trigger removed (v2.5.1)
+
+admin.js used to auto-click #wpts-run-audit when wpts_audit_pending was set —
+caused "audit starts without clicking" complaints. Removed; flag now only shows banner.
+
+## Deploy gotcha
+
+GitHub Actions deploy webhook never worked (DEPLOY_WEBHOOK_SECRET not in GitHub
+secrets → 401). Workflow now falls back to server default secret. Manual deploy:
+ssh VPS → cd /var/www/mediageek && git pull && pnpm --filter api-server build &&
+cp dist to /opt/wptechsites-api/ && pm2 restart wptechsites-api.
+
+Invalid GEMINI key on VPS (starts "AQ.", not "AIzaSy") made callGemini try 3 models
+before GROK → nginx 502 timeouts. callGemini/Long now validate key prefix.
+
 ## NULL Credits Fix (Task #104)
 
 Root cause: ALTER TABLE ADD COLUMN doesn't set DEFAULT on existing rows in some 
