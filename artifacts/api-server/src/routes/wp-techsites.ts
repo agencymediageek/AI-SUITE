@@ -1512,10 +1512,18 @@ Retorne JSON EXATO:
   "reading_time": 4
 }`;
 
-    const raw = await callGeminiLong(prompt);
+    // N8N-first: gera artigo via workflow (GROK com max_tokens:4096 para ~900 palavras)
+    const { output } = await executeWpTool({
+      toolId: "article-with-images",
+      inputs: { prompt },
+      site,
+      systemPrompt: "Você é um especialista em SEO e marketing de conteúdo digital. Responda SOMENTE com o JSON solicitado, sem texto adicional, sem markdown.",
+      language: "pt-BR",
+    });
+
     let article: any;
     try {
-      const match = raw.match(/\{[\s\S]*\}/);
+      const match = output.match(/\{[\s\S]*\}/);
       article = match ? JSON.parse(match[0]) : null;
     } catch { article = null; }
 
