@@ -3,7 +3,7 @@
  * Plugin Name:  WP TechSites
  * Plugin URI:   https://wp.techsites.ai
  * Description:  O SaaS de IA mais completo para WordPress — directory builder, scraping, logo, SEO, chatbot e muito mais.
- * Version:      2.6.2
+ * Version:      2.7.0
  * Author:       TechSites.ai
  * Author URI:   https://techsites.ai
  * License:      GPL-2.0+
@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'WPTS_VERSION',    '2.6.2' );
+define( 'WPTS_VERSION',    '2.7.0' );
 define( 'WPTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPTS_API_BASE',   'https://wp.techsites.ai/api/wp' );
@@ -377,9 +377,11 @@ function wpts_chatbot_frontend() {
     $name  = get_option( 'wpts_chatbot_name', 'Assistente' );
     wp_enqueue_script( 'wpts-chatbot', WPTS_PLUGIN_URL . 'assets/chatbot.js', ['jquery'], WPTS_VERSION, true );
     wp_localize_script( 'wpts-chatbot', 'WPTS_CHAT', [
-        'api'   => WPTS_API_BASE,
-        'key'   => $key,
-        'color' => $color,
-        'name'  => $name,
+        'api'    => WPTS_API_BASE,
+        'key'    => $key,
+        'color'  => $color,
+        'name'   => $name,
+        'prompt' => get_option( 'wpts_chatbot_prompt', '' ),
+        'wpJson' => esc_url( trailingslashit( get_site_url() ) . 'wp-json' ),
     ]);
 }

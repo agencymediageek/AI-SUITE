@@ -299,6 +299,19 @@ add_action( 'wp_ajax_wpts_create_directory', function () {
     // Save config
     update_option( 'wpts_directory_config', $config );
     update_option( 'wpts_directory_page',   $page_id );
+
+    // Create category taxonomy terms so Popular Diretório can assign them
+    foreach ( $config['categories'] as $cat_name ) {
+        $cat_name = trim( $cat_name );
+        if ( $cat_name && ! get_term_by( 'name', $cat_name, 'wpts_category' ) ) {
+            wp_insert_term( $cat_name, 'wpts_category' );
+        }
+    }
+    // Create city term if provided
+    if ( ! empty( $config['city'] ) && ! get_term_by( 'name', $config['city'], 'wpts_city' ) ) {
+        wp_insert_term( $config['city'], 'wpts_city' );
+    }
+
     flush_rewrite_rules();
     wp_send_json_success([
         'page_id'   => $page_id,

@@ -354,9 +354,9 @@ router.post("/wp/execute", requireSiteKey, async (req, res) => {
 // Returns the latest plugin version so the WP plugin can show an update banner.
 router.get("/wp/plugin-version", (_req, res) => {
   res.json({
-    latest: "2.6.2",
-    download_url: "https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.6.2.zip",
-    changelog: "Detecção automática de tema/plugin de diretório, ferramentas gateadas por tipo de site (directory vs. standard), Coletar Leads agora universal, Importar Listings exclusivo para temas directory.",
+    latest: "2.7.0",
+    download_url: "https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.7.0.zip",
+    changelog: "REST endpoint /wp-techsites/v1/listings (wpts_listing CPT nativo), shortcode [wpts_directory] com grid responsivo, Directory Builder cria taxonomy terms, chatbot com contexto real do site, Page-from-URL com Hero/Cards/Testemunhos/CTA + adiciona ao menu.",
   });
 });
 
@@ -678,26 +678,63 @@ Use emojis únicos por item. Máximo 7 itens. Em ${language === "pt" ? "portugu�
 });
 
 // ── POST /api/wp/chatbot ──────────────────────────────────────────────────────
-// Alias used by plugin v2.0.0 frontend chatbot widget (messages[] array style)
+// Alias used by plugin v2.0.0+ frontend chatbot widget (messages[] array style)
 router.post("/wp/chatbot", requireSiteKey, async (req, res) => {
   try {
     const site = (req as any).wpSite;
-    const { messages = [], siteUrl, prompt: customPrompt } = req.body;
+    const { messages = [], siteUrl, prompt: customPrompt, sitePages = [] } = req.body;
     if (!messages.length) { res.status(400).json({ error: "messages required" }); return; }
     if (site.creditBalance <= 0) {
       res.json({ reply: "Seu saldo de créditos acabou. Acesse wp.techsites.ai para recarregar." });
       return;
     }
 
+    // Build site context from pages/posts provided by the plugin frontend
+    const pageContext = Array.isArray(sitePages) && sitePages.length
+      ? sitePages.map((p: any) => `- **${p.title || "Página"}**: ${p.excerpt || ""} → ${p.link || ""}`).join("\n")
+      : "";
+
+    // If no context from frontend, try to fetch it server-side
+    let serverContext = "";
+    if (!pageContext && siteUrl) {
+      serverContext = await fetchSiteContext(siteUrl);
+    }
+
+    const siteContext = pageContext || serverContext;
+
     const history = messages
-      .slice(-8)
+      .slice(-10)
       .map((m: any) => `${m.role === "user" ? "Visitante" : "Assistente"}: ${m.content}`)
       .join("\n");
 
-    const systemPrompt = customPrompt ||
-      `Você é o assistente IA do site "${site.siteName || siteUrl}". Responda de forma útil e amigável em português.`;
+    const siteName = site.siteName || siteUrl || "este site";
 
-    const reply = await callGemini(`${systemPrompt}\n\nHistórico:\n${history}\n\nResposta:`);
+    const systemPrompt = customPrompt
+      ? `${customPrompt}
+
+=== CONTEÚDO REAL DO SITE ===
+${siteContext || "(Nenhuma página indexada ainda)"}
+
+=== REGRAS DE RESPOSTA ===
+- Responda SEMPRE com base no conteúdo real do site acima.
+- Se o visitante perguntar sobre um tópico que existe no site, mencione o link da página: [Ver página](url)
+- Se houver uma página ou post relevante, ofereça navegar até ela: "Temos uma página sobre isso: [Nome](url)"
+- Se não souber algo, admita honestamente e sugira explorar o site.
+- Responda em português de forma natural e amigável.`
+      : `Você é o assistente virtual do site **${siteName}**. Seu papel é ajudar visitantes a encontrar o que precisam.
+
+=== CONTEÚDO DO SITE ===
+${siteContext || "(Nenhuma página encontrada ainda — responda de forma geral sobre o site)"}
+
+=== REGRAS ===
+- Baseie suas respostas no conteúdo real do site acima.
+- Quando o visitante perguntar sobre algo que tem no site, mencione o link: [Ver página](url)
+- Proponha páginas relevantes proativamente quando fizer sentido.
+- Se não tiver certeza sobre algo específico do site, diga que pode ajudar a navegar.
+- Responda em português, de forma amigável e útil.`;
+
+    const prompt = `${systemPrompt}\n\n=== HISTÓRICO DA CONVERSA ===\n${history}\n\nAssistente:`;
+    const reply = await callGemini(prompt);
 
     await db.update(wpSitesTable).set({ creditBalance: site.creditBalance - 1 }).where(eq(wpSitesTable.id, site.id));
     res.json({ reply: reply.trim() });
@@ -1281,26 +1318,35 @@ router.post("/wp/page-from-url", requireSiteKey, async (req, res) => {
     }
 
     // 2. AI extracts business info and writes the page
-    const prompt = `Você é um especialista em criação de páginas WordPress.
+    const prompt = `Você é um especialista em design de páginas WordPress modernas.
 
 Analise o conteúdo deste site: ${url}
 
 Conteúdo extraído:
 ${pageText}
 
-Crie uma página WordPress profissional para este negócio. Tipo: ${page_type}.
+Crie uma página WordPress profissional e moderna para este negócio. Tipo: ${page_type}.
+
+O conteúdo HTML deve incluir obrigatoriamente:
+1. HERO SECTION — título impactante, subtítulo, botão CTA (inline styles, gradiente atraente)
+2. SOBRE / SERVIÇOS — seção com cards em grid (3 cards mínimo) descrevendo o que fazem
+3. TESTEMUNHOS — seção com 3 depoimentos fictícios mas realistas (nomes, foto emoji, texto)
+4. CTA FINAL — seção de conversão com botão para entrar em contato/visitar o site
+Use APENAS inline CSS (sem classes externas). Design moderno, responsivo, cores coerentes com o negócio.
+
 Retorne JSON EXATO (nada antes ou depois):
 {
-  "title": "Nome da Empresa / Título da Página",
+  "title": "Nome Empresa — Título Atraente da Página",
   "slug": "nome-empresa",
-  "meta_description": "Descrição SEO da empresa (150 chars)",
-  "content_html": "Conteúdo HTML completo da página com h2, h3, p, ul — profissional, em português. Mínimo 400 palavras. Use dados reais extraídos do site.",
-  "excerpt": "Resumo em 1 frase",
+  "meta_description": "Descrição SEO da empresa em até 155 caracteres",
+  "content_html": "HTML COMPLETO com hero, cards de serviços, testemunhos e CTA — mínimo 600 palavras de conteúdo real extraído do site. Inline CSS apenas. Responsivo via max-width e flex-wrap.",
+  "excerpt": "Resumo em 1 frase poderosa",
   "business_info": {
     "name": "Nome da empresa",
     "phone": "telefone se encontrado ou null",
     "email": "email se encontrado ou null",
     "address": "endereço se encontrado ou null",
+    "website": "${url}",
     "category": "categoria do negócio",
     "summary": "descrição em 2 frases"
   }
@@ -1320,6 +1366,7 @@ Retorne JSON EXATO (nada antes ou depois):
 
     // 3. Create the page in WordPress
     let wpPage: any = null;
+    let menuResult: any = null;
     if (site.wpRestUrl && site.wpUser && site.wpAppPassword) {
       wpPage = await wpCall(site, "/wp/v2/pages", "POST", {
         title:   pageData.title,
@@ -1329,6 +1376,12 @@ Retorne JSON EXATO (nada antes ou depois):
         status:  publish ? "publish" : "draft",
         meta:    { _meta_description: pageData.meta_description || "" },
       });
+      // 4. Add page to the first nav menu automatically
+      if (wpPage?.id) {
+        try {
+          menuResult = await wpCall(site, "/wp-techsites/v1/add-to-menu", "POST", { page_id: wpPage.id });
+        } catch { /* menu optional */ }
+      }
     }
 
     // Deduct credits
@@ -1342,6 +1395,7 @@ Retorne JSON EXATO (nada antes ou depois):
       business_info: pageData.business_info,
       wp_page_id:    wpPage?.id || null,
       wp_page_url:   wpPage?.link || null,
+      menu_added:    menuResult?.menu || null,
       source_url:    url,
       credits_used:  5,
       credits_remaining: Math.max(0, site.creditBalance - 5),
@@ -1857,56 +1911,129 @@ async function wpCall(site: any, path: string, method = "GET", body?: any): Prom
   return data;
 }
 
-// ── Smart listing creator: plugin endpoint → job_listing → post fallback ─────
+// ── Smart listing creator: plugin REST → wpts_listing CPT → rich post fallback ─
 async function wpCreateListing(site: any, listing: {
   title: string; content?: string; address?: string; phone?: string; website?: string;
   rating?: number | null; review_count?: number; hours?: string; lat?: number | null;
-  lng?: number | null; category?: string; source?: string;
+  lng?: number | null; category?: string; city?: string; source?: string;
+  photo_url?: string; summary?: string; place_id?: string;
 }): Promise<{ id: number; endpoint: string }> {
-  // 1. Try plugin custom endpoint (v2.1.0+)
+
+  // 1. Try plugin custom REST endpoint (v2.7.0+) — creates proper wpts_listing CPT
   try {
     const r = await wpCall(site, "/wp-techsites/v1/listings", "POST", listing);
     return { id: r.id, endpoint: "plugin" };
   } catch { /* fallthrough */ }
 
-  // 2. Try job_listing CPT via standard WP REST (if plugin v2.1.0 enabled show_in_rest)
+  // 2. Try wpts_listing CPT via standard WP REST (show_in_rest: true in CPT registration)
   try {
-    const r = await wpCall(site, "/wp/v2/job_listing", "POST", {
+    const r = await wpCall(site, "/wp/v2/wpts_listing", "POST", {
       title:   listing.title,
-      content: listing.content || `<p>${listing.address || ""}</p>`,
+      content: listing.content || "",
+      excerpt: listing.summary || "",
       status:  "publish",
-      meta:    {
-        _job_location: listing.address || "",
-        _phone:        listing.phone   || "",
-        _job_website:  listing.website || "",
-        _rating:       String(listing.rating   || ""),
-        _review_count: String(listing.review_count || ""),
-        _hours:        listing.hours   || "",
-        _geolocation_lat:  String(listing.lat || ""),
-        _geolocation_long: String(listing.lng || ""),
+      meta: {
+        wpts_address:   listing.address      || "",
+        wpts_phone:     listing.phone        || "",
+        wpts_website:   listing.website      || "",
+        wpts_rating:    String(listing.rating   ?? ""),
+        wpts_reviews:   String(listing.review_count ?? ""),
+        wpts_hours:     listing.hours        || "",
+        wpts_lat:       String(listing.lat   ?? ""),
+        wpts_lng:       String(listing.lng   ?? ""),
+        wpts_source:    listing.source       || "import",
       },
     });
-    return { id: r.id, endpoint: "job_listing" };
+    return { id: r.id, endpoint: "wpts_listing_rest" };
   } catch { /* fallthrough */ }
 
-  // 3. Fallback: regular post with structured content
-  const content = `
-<p>${listing.content || ""}</p>
-<ul>
-  ${listing.address      ? `<li>📍 <strong>Endereço:</strong> ${listing.address}</li>` : ""}
-  ${listing.phone        ? `<li>📞 <strong>Telefone:</strong> ${listing.phone}</li>` : ""}
-  ${listing.website      ? `<li>🌐 <strong>Site:</strong> <a href="${listing.website}">${listing.website}</a></li>` : ""}
-  ${listing.rating       ? `<li>⭐ <strong>Avaliação:</strong> ${listing.rating}/5 (${listing.review_count || 0} avaliações)</li>` : ""}
-  ${listing.hours        ? `<li>🕐 <strong>Horários:</strong> ${listing.hours}</li>` : ""}
-  ${listing.category     ? `<li>🏷️ <strong>Categoria:</strong> ${listing.category}</li>` : ""}
-</ul>`.trim();
+  // 3. Fallback: rich post with full HTML (Google Maps embed, hours table, CTA buttons)
+  const googleMapsUrl = (listing.lat && listing.lng)
+    ? `https://www.google.com/maps?q=${listing.lat},${listing.lng}&z=15`
+    : listing.address
+      ? `https://www.google.com/maps/search/${encodeURIComponent(listing.address)}`
+      : null;
+
+  const mapEmbed = (listing.lat && listing.lng)
+    ? `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)">
+  <iframe src="https://maps.google.com/maps?q=${listing.lat},${listing.lng}&z=15&output=embed"
+    width="100%" height="280" style="border:0;display:block" loading="lazy"
+    allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+</div>` : "";
+
+  const hoursRows = listing.hours
+    ? listing.hours.split(/[,;]/).map(h => `<tr><td style="padding:6px 12px;border-bottom:1px solid #f1f5f9;font-size:14px;color:#374151">${h.trim()}</td></tr>`).join("")
+    : "";
+
+  const hoursHtml = hoursRows ? `
+<div style="margin:24px 0">
+  <h3 style="font-size:16px;font-weight:700;margin:0 0 12px;color:#1e293b">🕐 Horários de Funcionamento</h3>
+  <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:10px;overflow:hidden">${hoursRows}</table>
+</div>` : "";
+
+  const starRating = listing.rating
+    ? `<div style="color:#f59e0b;font-size:18px;font-weight:700;margin-top:10px">
+    ${"★".repeat(Math.round(Number(listing.rating)))}${"☆".repeat(5 - Math.round(Number(listing.rating)))}
+    <span style="color:#64748b;font-size:14px;font-weight:400">${listing.rating}/5 (${listing.review_count || 0} avaliações)</span>
+  </div>` : "";
+
+  const content = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:820px;margin:0 auto">
+
+  <!-- Hero -->
+  <div style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);border-radius:16px;padding:36px 32px;color:#fff;margin-bottom:28px">
+    <h1 style="margin:0 0 6px;font-size:26px;font-weight:800">${listing.title}</h1>
+    ${listing.category ? `<span style="background:rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase">${listing.category}</span>` : ""}
+    ${starRating}
+  </div>
+
+  <!-- Description -->
+  ${listing.content ? `<p style="font-size:15px;line-height:1.75;color:#374151;margin-bottom:24px">${listing.content}</p>` : ""}
+
+  <!-- Info Cards -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px">
+    ${listing.address ? `<div style="background:#f8fafc;border-radius:12px;padding:16px"><div style="font-size:22px;margin-bottom:6px">📍</div><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Endereço</div><div style="font-size:13px;color:#1e293b">${listing.address}</div></div>` : ""}
+    ${listing.phone ? `<div style="background:#f8fafc;border-radius:12px;padding:16px"><div style="font-size:22px;margin-bottom:6px">📞</div><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Telefone</div><div style="font-size:13px;color:#1e293b">${listing.phone}</div></div>` : ""}
+    ${listing.website ? `<div style="background:#f8fafc;border-radius:12px;padding:16px"><div style="font-size:22px;margin-bottom:6px">🌐</div><div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Website</div><a href="${listing.website}" target="_blank" style="font-size:13px;color:#6366f1;word-break:break-all">${listing.website.replace(/^https?:\/\//, "")}</a></div>` : ""}
+  </div>
+
+  <!-- CTA Buttons -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px">
+    ${listing.phone ? `<a href="tel:${listing.phone}" style="background:#22c55e;color:#fff;padding:12px 22px;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px">📞 Ligar Agora</a>` : ""}
+    ${googleMapsUrl ? `<a href="${googleMapsUrl}" target="_blank" rel="noopener" style="background:#6366f1;color:#fff;padding:12px 22px;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px">📍 Ver no Mapa</a>` : ""}
+    ${listing.website ? `<a href="${listing.website}" target="_blank" rel="noopener" style="background:#0f172a;color:#fff;padding:12px 22px;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px">🌐 Visitar Site</a>` : ""}
+  </div>
+
+  ${hoursHtml}
+  ${mapEmbed}
+</div>`.trim();
+
   const r = await wpCall(site, "/wp/v2/posts", "POST", {
     title:   listing.title,
     content,
     status:  "publish",
     meta:    { _import_source: listing.source || "import" },
   });
-  return { id: r.id, endpoint: "post" };
+  return { id: r.id, endpoint: "post_rich" };
+}
+
+// ── Fetch site pages/posts for chatbot context ────────────────────────────────
+async function fetchSiteContext(siteUrl: string): Promise<string> {
+  try {
+    const base = siteUrl.replace(/\/$/, "");
+    const [pagesRaw, postsRaw] = await Promise.all([
+      fetch(`${base}/wp-json/wp/v2/pages?per_page=20&status=publish&_fields=title,excerpt,link`, { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${base}/wp-json/wp/v2/posts?per_page=20&status=publish&_fields=title,excerpt,link`,  { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : []).catch(() => []),
+    ]);
+    const pages = Array.isArray(pagesRaw) ? pagesRaw : [];
+    const posts = Array.isArray(postsRaw) ? postsRaw : [];
+    const fmt = (items: any[], type: string) =>
+      items.map((p: any) =>
+        `- [${type}] ${(p.title?.rendered || "").replace(/<[^>]+>/g, "")}: ${(p.excerpt?.rendered || "").replace(/<[^>]+>/g, "").trim().slice(0, 180)} → ${p.link || ""}`
+      ).join("\n");
+    return `${fmt(pages, "Página")}\n${fmt(posts, "Post")}`.trim();
+  } catch {
+    return "";
+  }
 }
 
 // ── Extended AI call (more tokens for audit/scraping) ────────────────────────
