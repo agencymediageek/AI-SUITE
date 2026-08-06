@@ -173,8 +173,8 @@ export default function SeoAuditPage() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // 35-second hard timeout
-    const timeoutId = setTimeout(() => controller.abort(), 35_000);
+    // 90-second hard timeout (GEMINI fallback tries 3 models before GROK kicks in)
+    const timeoutId = setTimeout(() => controller.abort(), 90_000);
 
     if (mountedRef.current) { setLoading(true); setResult(null); }
     try {

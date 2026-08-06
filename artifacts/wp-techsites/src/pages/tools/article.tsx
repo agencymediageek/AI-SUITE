@@ -16,7 +16,7 @@ export default function ArticleWithImagesPage() {
   const [niche, setNiche] = useState('directory');
   const [keywords, setKeywords] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ postUrl?: string; title?: string; message?: string } | null>(null);
+  const [result, setResult] = useState<{ postUrl?: string; wp_post_url?: string; title?: string; message?: string } | null>(null);
   const mountedRef = useRef(true);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -177,8 +177,8 @@ export default function ArticleWithImagesPage() {
                 <div className="flex-1">
                   <p className="font-semibold text-foreground">{result.title || 'Artigo publicado!'}</p>
                   <p className="text-sm text-muted-foreground mt-1">{result.message || 'Artigo salvo como rascunho no WordPress'}</p>
-                  {result.postUrl && (
-                    <a href={result.postUrl} target="_blank" rel="noopener noreferrer"
+                  {(result.wp_post_url || result.postUrl) && (
+                    <a href={result.wp_post_url || result.postUrl} target="_blank" rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 mt-2 text-sm text-primary hover:underline">
                       <ExternalLink className="w-3 h-3" /> Abrir rascunho no WordPress
                     </a>
