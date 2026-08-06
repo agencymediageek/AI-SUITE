@@ -1483,33 +1483,37 @@ router.post("/wp/article-with-images", requireSiteKey, async (req, res) => {
     const heroImg = `${imgBase}${heroPhotoId}`;
     const bodyImg  = `${imgBase}1486325212027-8081e485255e?w=800&q=80`;
 
+    const minWords = Math.round(word_count * 0.9);
     const prompt = `Você é um especialista em SEO e marketing de conteúdo digital.
 
-Crie um artigo SEO profissional com aproximadamente ${word_count} palavras sobre:
-Tópico: "${topic}"
-${city ? `Cidade: ${city}` : ""}
-${category ? `Categoria: ${category}` : ""}
-Tom: ${tone}
-Idioma: Português (pt-BR)
+TAREFA: Escreva um artigo SEO profissional sobre o tópico abaixo.
 
-Requisitos:
-- Título H1 impactante e com palavra-chave principal
-- Meta description de 150 caracteres
-- Subtítulos H2 estratégicos (3 a 5)
-- Parágrafos ricos com informações úteis e locais
-- Uma lista ul ou ol com dicas/destaques
-- CTA (call-to-action) ao final
-- Conteúdo 100% original, não genérico
+PARÂMETROS OBRIGATÓRIOS:
+- Tópico: "${topic}"
+${city ? `- Cidade: ${city}` : ""}
+${category ? `- Categoria: ${category}` : ""}
+- Tom: ${tone}
+- Idioma: Português do Brasil (pt-BR)
+- Contagem mínima de palavras no campo content_html: ${minWords} palavras (OBRIGATÓRIO — não entregue um texto menor)
 
-Retorne JSON EXATO:
+ESTRUTURA OBRIGATÓRIA do content_html (não inclua o H1 — ele vira o título do post):
+1. Parágrafo de introdução cativante (80-120 palavras)
+2. <h2> Seção 1 </h2> + 2 parágrafos densos (cada um 80-100 palavras)
+3. <h2> Seção 2 </h2> + 2 parágrafos densos (cada um 80-100 palavras)
+4. <h2> Destaques / Dicas </h2> + lista <ul> com 5-7 itens detalhados
+5. <h2> Seção 3 </h2> + 2 parágrafos densos (cada um 80-100 palavras)
+6. <h2> Conclusão e CTA </h2> + parágrafo final chamando para ação
+Total content_html mínimo: ${minWords} palavras. Use linguagem local, específica e rica em detalhes.
+
+RETORNE APENAS este JSON (sem markdown, sem texto antes ou depois):
 {
-  "title": "Título do Artigo",
-  "slug": "titulo-do-artigo-slug",
-  "meta_description": "Meta description SEO (max 155 chars)",
-  "focus_keyword": "palavra chave principal",
-  "content_html": "Conteúdo HTML completo com h2, h3, p, ul, strong — sem incluir o H1 (será o título do post)",
-  "tags": ["tag1", "tag2", "tag3"],
-  "reading_time": 4
+  "title": "Título SEO impactante com palavra-chave (máx 65 chars)",
+  "slug": "titulo-seo-url-amigavel",
+  "meta_description": "Descrição meta SEO entre 120-155 caracteres exatos",
+  "focus_keyword": "palavra-chave principal",
+  "content_html": "<h2>...</h2><p>...</p>...(HTML completo — mínimo ${minWords} palavras)",
+  "tags": ["tag1", "tag2", "tag3", "tag4"],
+  "reading_time": ${Math.ceil(word_count / 200)}
 }`;
 
     // N8N-first: gera artigo via workflow (GROK com max_tokens:4096 para ~900 palavras)
