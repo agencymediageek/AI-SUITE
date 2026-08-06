@@ -754,25 +754,38 @@ function wpts_page_article() { ?>
         const btn = this; const prog = document.getElementById('wpts-art-progress'); const res = document.getElementById('wpts-art-result');
         btn.disabled = true; prog.style.display = 'block'; res.innerHTML = '';
 
-        jQuery.post(ajaxurl, {
-            action: 'wpts_article_with_images', nonce: wptsAdmin.nonce,
-            topic, city, category: cat, tone, word_count: words, publish
-        }, function(r) {
-            btn.disabled = false; prog.style.display = 'none';
-            if (r.success) {
-                const d = r.data;
-                const prev = document.getElementById('wpts-art-preview');
-                const prevContent = document.getElementById('wpts-art-preview-content');
-                prev.style.display = 'block';
-                prevContent.innerHTML = `
-                    <img src="${d.hero_image}" style="width:100%;border-radius:8px;margin-bottom:8px" alt="${d.title}">
-                    <strong>${d.title}</strong><br>
-                    <span style="font-size:12px;color:#666">🔑 ${d.focus_keyword} · ⏱ ${d.reading_time} min leitura</span><br>
-                    <span style="font-size:11px;color:#999">Tags: ${(d.tags||[]).join(', ')}</span>
-                    ${d.wp_post_url ? `<br><a href="${d.wp_post_url}" target="_blank" class="wpts-btn wpts-btn-primary" style="margin-top:8px;display:inline-block">Ver artigo →</a>` : ''}`;
-                res.innerHTML = `<div class="wpts-alert wpts-alert-success">✅ Artigo publicado: <strong>${d.title}</strong></div>`;
-            } else {
-                res.innerHTML = `<div class="wpts-alert wpts-alert-error">❌ ${r.data?.error || 'Erro ao gerar artigo'}</div>`;
+        // Usa $.ajax com timeout maior (140s) — artigo SEO com IA pode demorar até 60s
+        jQuery.ajax({
+            url: ajaxurl,
+            method: 'POST',
+            timeout: 140000,
+            dataType: 'json',
+            data: {
+                action: 'wpts_article_with_images', nonce: wptsAdmin.nonce,
+                topic, city, category: cat, tone, word_count: words, publish
+            },
+            success: function(r) {
+                btn.disabled = false; prog.style.display = 'none';
+                if (r && r.success) {
+                    const d = r.data;
+                    const prev = document.getElementById('wpts-art-preview');
+                    const prevContent = document.getElementById('wpts-art-preview-content');
+                    prev.style.display = 'block';
+                    prevContent.innerHTML =
+                        '<img src="' + d.hero_image + '" style="width:100%;border-radius:8px;margin-bottom:8px" alt="' + d.title + '">' +
+                        '<strong>' + d.title + '</strong><br>' +
+                        '<span style="font-size:12px;color:#666">🔑 ' + d.focus_keyword + ' · ⏱ ' + d.reading_time + ' min leitura</span><br>' +
+                        '<span style="font-size:11px;color:#999">Tags: ' + (d.tags||[]).join(', ') + '</span>' +
+                        (d.wp_post_url ? '<br><a href="' + d.wp_post_url + '" target="_blank" class="wpts-btn wpts-btn-primary" style="margin-top:8px;display:inline-block">Ver artigo →</a>' : '');
+                    res.innerHTML = '<div class="wpts-alert wpts-alert-success">✅ Artigo gerado: <strong>' + d.title + '</strong></div>';
+                } else {
+                    res.innerHTML = '<div class="wpts-alert wpts-alert-error">❌ ' + ((r && r.data) || 'Erro ao gerar artigo') + '</div>';
+                }
+            },
+            error: function(xhr, status) {
+                btn.disabled = false; prog.style.display = 'none';
+                var msg = status === 'timeout' ? 'Tempo esgotado — tente novamente (a IA pode estar ocupada).' : 'Erro de conexão (' + status + ').';
+                res.innerHTML = '<div class="wpts-alert wpts-alert-error">❌ ' + msg + '</div>';
             }
         });
     });

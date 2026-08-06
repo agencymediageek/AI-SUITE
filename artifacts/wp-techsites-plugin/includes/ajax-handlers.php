@@ -11,10 +11,10 @@ function wpts_ajax_check() {
     }
 }
 
-function wpts_call_api( $endpoint, $body ) {
+function wpts_call_api( $endpoint, $body, $timeout = 90 ) {
     $key = get_option( 'wpts_api_key', '' );
     $res = wp_remote_post( WPTS_API_BASE . $endpoint, [
-        'timeout' => 60,
+        'timeout' => $timeout,
         'headers' => [ 'Content-Type' => 'application/json', 'X-WP-Site-Key' => $key ],
         'body'    => wp_json_encode( $body ),
     ]);
@@ -424,6 +424,8 @@ add_action( 'wp_ajax_wpts_page_from_url', function () {
 
 // ─── Artigo SEO com Imagens ───────────────────────────────────────────────────
 add_action( 'wp_ajax_wpts_article_with_images', function () {
+    // Aumenta o tempo limite do PHP para esta requisição — geração de artigo leva ~30-60s
+    @set_time_limit( 180 );
     wpts_ajax_check();
     $topic      = sanitize_text_field( $_POST['topic']      ?? '' );
     $city       = sanitize_text_field( $_POST['city']       ?? '' );
@@ -434,6 +436,7 @@ add_action( 'wp_ajax_wpts_article_with_images', function () {
 
     if ( ! $topic ) { wp_send_json_error( 'Tópico é obrigatório.' ); return; }
 
+    // timeout 150s para suportar geração de artigo longo via IA
     $result = wpts_call_api( '/article-with-images', [
         'topic'      => $topic,
         'city'       => $city,
@@ -441,9 +444,9 @@ add_action( 'wp_ajax_wpts_article_with_images', function () {
         'tone'       => $tone,
         'word_count' => $word_count,
         'publish'    => $publish,
-    ]);
+    ], 150 );
 
-    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result ); return; }
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result['error'] ); return; }
     if ( isset( $result['credits_remaining'] ) ) update_option( 'wpts_credits', $result['credits_remaining'] );
     wp_send_json_success( $result );
 });

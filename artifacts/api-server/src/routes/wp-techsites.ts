@@ -198,7 +198,7 @@ async function executeWpTool(opts: WpExecuteOptions): Promise<{ output: string; 
           systemPrompt,
           language,
         }),
-        signal: AbortSignal.timeout(60_000),
+        signal: AbortSignal.timeout(120_000),
       });
 
       if (response.ok) {
@@ -354,8 +354,8 @@ router.post("/wp/execute", requireSiteKey, async (req, res) => {
 // Returns the latest plugin version so the WP plugin can show an update banner.
 router.get("/wp/plugin-version", (_req, res) => {
   res.json({
-    latest: "2.5.2",
-    download_url: "https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.5.2.zip",
+    latest: "2.5.3",
+    download_url: "https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.5.3.zip",
     changelog: "Detecção automática de tema/plugin de diretório, ferramentas gateadas por tipo de site (directory vs. standard), Coletar Leads agora universal, Importar Listings exclusivo para temas directory.",
   });
 });
