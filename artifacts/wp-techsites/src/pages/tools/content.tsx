@@ -110,7 +110,7 @@ export default function ContentGeneratorPage() {
             { icon: '🤖', text: 'A IA gera título, meta description e HTML completo otimizado para SEO' },
             { icon: '📋', text: 'Copie cada seção e cole diretamente no editor do WordPress' },
           ]}
-          result={{ label: '📋 Exibido na tela', color: 'violet', detail: '— Copie e cole no WP' }}
+          result={{ label: '📋 Exibido na tela', color: 'purple', detail: '— Copie e cole no WP' }}
         />
 
         <Card>
