@@ -763,10 +763,18 @@ Gere uma auditoria profissional em JSON com este formato EXATO (nada antes ou de
 
 Inclua pelo menos 10 checks cobrindo: SSL, URL structure, meta description, title tag, content volume, plugin SEO, cache/performance, schema markup, mobile-friendly, link building, heading structure, image optimization.`;
 
-    const raw = await callGeminiLong(prompt);
+    // N8N-first: usa executeWpTool (roteia via wp_tools_config → N8N → GROK fallback)
+    const { output } = await executeWpTool({
+      toolId: "seo-audit",
+      inputs: { prompt },
+      site,
+      systemPrompt: "Você é um especialista em SEO técnico para WordPress. Responda APENAS com o JSON solicitado, sem markdown.",
+      language: language || "pt-BR",
+    });
+
     let audit: any;
     try {
-      const match = raw.match(/\{[\s\S]*\}/);
+      const match = output.match(/\{[\s\S]*\}/);
       audit = match ? JSON.parse(match[0]) : null;
     } catch {
       audit = null;
@@ -777,7 +785,7 @@ Inclua pelo menos 10 checks cobrindo: SSL, URL structure, meta description, titl
       audit = buildLocalAudit(siteData);
     }
 
-    await db.update(wpSitesTable).set({ creditBalance: site.creditBalance - 10 }).where(eq(wpSitesTable.id, site.id));
+    await db.update(wpSitesTable).set({ creditBalance: Math.max(0, (site.creditBalance ?? 0) - 10) }).where(eq(wpSitesTable.id, site.id));
     res.json({ ...audit, creditsUsed: 10 });
   } catch (err: any) {
     req.log?.error(err, "wp/audit/seo error");

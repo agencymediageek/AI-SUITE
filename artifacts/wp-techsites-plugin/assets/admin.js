@@ -29,10 +29,8 @@
     function errHtml(msg) { return '<div class="wpts-alert wpts-alert-warn" style="margin-top:12px">❌ ' + msg + '</div>'; }
     function okHtml(msg)  { return '<div class="wpts-alert wpts-alert-success" style="margin-top:12px">✅ ' + msg + '</div>'; }
 
-    // ── Auto-trigger pending audit ──────────────────────────────────────
-    if (WPTS.auditPending && $('#wpts-run-audit').length) {
-        setTimeout(function () { $('#wpts-run-audit').trigger('click'); }, 800);
-    }
+    // Auto-trigger removido — auditoria roda somente com clique explícito no botão.
+    // (flag wpts_audit_pending agora só exibe o banner informativo)
 
     // ── SEO Audit ──────────────────────────────────────────────────────
     $(document).on('click', '#wpts-run-audit', function () {
