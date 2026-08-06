@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'WPTS_VERSION',    '2.8.0' );
+define( 'WPTS_VERSION',    '2.9.0' );
 define( 'WPTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPTS_API_BASE',   'https://wp.techsites.ai/api/wp' );

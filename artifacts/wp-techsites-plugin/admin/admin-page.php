@@ -514,56 +514,197 @@ function wpts_page_listings() { ?>
 }
 
 // ─── POPULAR DIRETÓRIO ────────────────────────────────────────────────────────
-function wpts_page_populate() { ?>
+function wpts_page_populate() {
+    $credits = (int) get_option('wpts_credits', 0);
+    $plan    = get_option('wpts_plan', 'trial');
+    ?>
+    <style>
+    .wpts-pop-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .wpts-pop-chip{padding:5px 12px;border-radius:20px;border:1.5px solid #6366f1;background:#fff;color:#6366f1;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s}
+    .wpts-pop-chip.active{background:#6366f1;color:#fff}
+    .wpts-pop-qty-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
+    .wpts-pop-qty-card{padding:10px 8px;border-radius:10px;border:2px solid #e2e8f0;background:#fff;cursor:pointer;text-align:center;transition:all .18s}
+    .wpts-pop-qty-card:hover,.wpts-pop-qty-card.active{border-color:#6366f1;background:#eef2ff}
+    .wpts-pop-qty-card .qty-num{font-size:18px;font-weight:800;color:#3730a3}
+    .wpts-pop-qty-card .qty-mode{font-size:10px;color:#6b7280;margin-top:2px}
+    .wpts-pop-qty-card.active .qty-mode{color:#4f46e5}
+    .wpts-pop-estimate{background:linear-gradient(135deg,#eef2ff,#f0fdf4);border:1.5px solid #c7d2fe;border-radius:12px;padding:16px 18px;margin:14px 0 0}
+    .wpts-pop-estimate-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed #e0e7ff;font-size:13px}
+    .wpts-pop-estimate-row:last-child{border:none}
+    .wpts-pop-estimate-row .ev{font-weight:700;color:#3730a3}
+    .wpts-mode-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700}
+    .mode-immediate{background:#d1fae5;color:#065f46}
+    .mode-background{background:#fef3c7;color:#92400e}
+    .mode-queue{background:#ede9fe;color:#4c1d95}
+    .wpts-progress-track{height:10px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:8px 0}
+    .wpts-progress-bar{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:99px;transition:width .5s ease}
+    .wpts-log-box{max-height:160px;overflow-y:auto;background:#0f172a;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:12px;color:#94a3b8;margin-top:10px}
+    .wpts-log-box .log-ok{color:#4ade80}
+    .wpts-log-box .log-err{color:#f87171}
+    .wpts-log-box .log-info{color:#60a5fa}
+    .wpts-job-phase{display:none}
+    .wpts-csv-cta{background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;text-align:center;text-decoration:none;display:block}
+    .wpts-csv-cta:hover{opacity:.9}
+    .wpts-publish-cta{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px}
+    </style>
+
+    <!-- ════════════════ CONFIGURAÇÃO ════════════════ -->
     <div class="wpts-two-col">
-        <div>
-            <div class="wpts-card">
-                <h3>⚡ Popular Diretório em Massa</h3>
-                <p class="wpts-help">Importe listings reais de múltiplas categorias de uma só vez com BrightData + IA.</p>
+      <div>
+        <div class="wpts-card">
+          <h3 style="margin-top:0">⚡ Popular Diretório em Massa</h3>
+          <p class="wpts-help" style="margin-bottom:16px">BrightData raspa dados reais do Google Maps. Para grandes volumes, usa N8N como esteira de requisições — sem bloqueios, sem derrubar o servidor.</p>
 
-                <div class="wpts-field">
-                    <label>Cidade</label>
-                    <input type="text" id="wpts-pop-city" class="wpts-input" value="Curitiba" placeholder="Ex: São Paulo">
-                </div>
-                <div class="wpts-field">
-                    <label>Categorias (separadas por vírgula)</label>
-                    <input type="text" id="wpts-pop-categories" class="wpts-input" value="restaurantes, hotéis, turismo, serviços, saúde" placeholder="restaurantes, hotéis, ...">
-                </div>
-                <div class="wpts-field">
-                    <label>Listings por categoria</label>
-                    <input type="number" id="wpts-pop-count" class="wpts-input" value="10" min="1" max="30" style="width:120px">
-                </div>
+          <!-- Cidade -->
+          <div class="wpts-field">
+            <label><strong>Cidade</strong></label>
+            <input type="text" id="wpts-pop-city" class="wpts-input" value="Curitiba" placeholder="Ex: São Paulo, Nova York, Miami">
+          </div>
 
-                <button id="wpts-run-populate" class="wpts-btn wpts-btn-primary" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);width:100%">
-                    ⚡ Iniciar Importação em Massa
-                </button>
-                <div id="wpts-pop-progress" style="display:none" class="wpts-loading">
-                    ⏳ Importando listings via BrightData + IA… pode levar 30-90s por categoria.
-                </div>
-                <div id="wpts-pop-result"></div>
+          <!-- Categorias -->
+          <div class="wpts-field">
+            <label><strong>Categorias</strong> <span style="font-weight:400;color:#9ca3af">(clique para ativar)</span></label>
+            <div class="wpts-pop-chips">
+              <?php
+              $cats_preset = ['🍕 restaurantes','🏨 hotéis','💊 saúde','🔧 serviços','🌍 turismo','🛍️ compras','📚 educação','🏠 imóveis'];
+              foreach ($cats_preset as $c) : $key = explode(' ', $c, 2)[1]; ?>
+              <span class="wpts-pop-chip active" data-cat="<?php echo esc_attr($key); ?>"><?php echo esc_html($c); ?></span>
+              <?php endforeach; ?>
             </div>
+            <input type="text" id="wpts-pop-categories" class="wpts-input" style="margin-top:6px" placeholder="Ou digite categorias personalizadas separadas por vírgula" value="restaurantes, hotéis, saúde, serviços, turismo">
+          </div>
+
+          <!-- Quantidade por categoria -->
+          <div class="wpts-field">
+            <label><strong>Listings por categoria</strong></label>
+            <div class="wpts-pop-qty-grid">
+              <?php
+              $qtys = [
+                ['n'=>10,  'label'=>'Demo',       'desc'=>'Imediato (~30s)'],
+                ['n'=>25,  'label'=>'Rápido',      'desc'=>'Imediato (~60s)'],
+                ['n'=>50,  'label'=>'Padrão',      'desc'=>'Background (~2min)'],
+                ['n'=>100, 'label'=>'Pro',         'desc'=>'Esteira (~8min)'],
+                ['n'=>500, 'label'=>'Máximo',      'desc'=>'Esteira (~35min)'],
+                ['n'=>1000,'label'=>'Ultra',       'desc'=>'Esteira (~70min)'],
+              ];
+              foreach ($qtys as $q) : ?>
+              <div class="wpts-pop-qty-card <?php echo $q['n']===10?'active':''; ?>" data-qty="<?php echo $q['n']; ?>">
+                <div class="qty-num"><?php echo $q['n']; ?></div>
+                <div style="font-size:11px;font-weight:700;color:#6366f1"><?php echo $q['label']; ?></div>
+                <div class="qty-mode"><?php echo $q['desc']; ?></div>
+              </div>
+              <?php endforeach; ?>
+            </div>
+            <input type="hidden" id="wpts-pop-count" value="10">
+          </div>
+
+          <!-- Filtros extras -->
+          <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:14px">
+            <div class="wpts-field" style="flex:1;margin:0">
+              <label style="font-size:12px">Avaliação mínima</label>
+              <select id="wpts-pop-rating" class="wpts-input" style="padding:8px">
+                <option value="0">Qualquer ★</option>
+                <option value="3.5">3.5+ ★★★</option>
+                <option value="4.0">4.0+ ★★★★</option>
+                <option value="4.5">4.5+ ★★★★★</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;padding-bottom:2px">
+              <input type="checkbox" id="wpts-pop-publish" style="width:16px;height:16px">
+              <label for="wpts-pop-publish" style="font-size:13px;margin:0">Publicar no WP automaticamente</label>
+            </div>
+          </div>
+
+          <!-- Estimativa live -->
+          <div class="wpts-pop-estimate" id="wpts-pop-estimate">
+            <div style="font-size:12px;font-weight:700;color:#6366f1;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">📊 Estimativa</div>
+            <div class="wpts-pop-estimate-row"><span>Total de listings</span><span class="ev" id="est-total">50</span></div>
+            <div class="wpts-pop-estimate-row"><span>Lotes N8N</span><span class="ev" id="est-batches">1</span></div>
+            <div class="wpts-pop-estimate-row"><span>Tempo estimado</span><span class="ev" id="est-time">~30s</span></div>
+            <div class="wpts-pop-estimate-row"><span>Créditos</span><span class="ev" id="est-credits">20</span></div>
+            <div class="wpts-pop-estimate-row"><span>Modo</span><span id="est-mode"><span class="wpts-mode-badge mode-immediate">Imediato</span></span></div>
+          </div>
+
+          <button id="wpts-run-populate" class="wpts-btn wpts-btn-primary" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);width:100%;margin-top:16px;font-size:15px;padding:14px">
+            ⚡ Iniciar Esteira de Scraping
+          </button>
+          <div id="wpts-pop-result" style="margin-top:10px"></div>
+        </div><!-- /card config -->
+      </div>
+
+      <!-- COLUNA DIREITA -->
+      <div>
+        <!-- Card de status do job (aparece após iniciar) -->
+        <div class="wpts-card wpts-job-phase" id="wpts-pop-status-card" style="border-color:#6366f1">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h4 style="margin:0" id="wpts-pop-status-title">⏳ Preparando esteira…</h4>
+            <div id="wpts-pop-mode-badge"></div>
+          </div>
+
+          <div class="wpts-progress-track"><div class="wpts-progress-bar" id="wpts-pop-bar" style="width:0%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280;margin-bottom:12px">
+            <span id="wpts-pop-scraped-label">0 listings coletados</span>
+            <span id="wpts-pop-pct-label">0%</span>
+          </div>
+
+          <!-- Per-category progress -->
+          <div id="wpts-pop-cat-progress" style="font-size:12px;color:#475569;line-height:1.9"></div>
+
+          <!-- Log box -->
+          <div class="wpts-log-box" id="wpts-pop-log">
+            <span class="log-info">🔄 Aguardando início da esteira…</span>
+          </div>
+
+          <!-- Actions -->
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button id="wpts-pop-pause" class="wpts-btn" style="flex:1;background:#f1f5f9;color:#475569;font-size:12px">⏸ Pausar</button>
+            <button id="wpts-pop-resume" class="wpts-btn" style="flex:1;background:#d1fae5;color:#065f46;font-size:12px;display:none">▶ Retomar</button>
+            <button id="wpts-pop-cancel" class="wpts-btn" style="flex:1;background:#fee2e2;color:#991b1b;font-size:12px">✕ Cancelar</button>
+          </div>
+
+          <!-- Next batch -->
+          <div id="wpts-pop-next" style="font-size:11px;color:#9ca3af;margin-top:8px;text-align:center"></div>
         </div>
-        <div>
-            <div class="wpts-card" style="background:#f0fdf4;border-color:#86efac">
-                <h4>✅ Como funciona</h4>
-                <ol class="wpts-steps">
-                    <li>Selecione as categorias e a cidade</li>
-                    <li>BrightData busca dados reais do Google Maps</li>
-                    <li>IA enriquece os dados (descrição, SEO)</li>
-                    <li>Listings criados automaticamente no WP</li>
-                    <li>Resultado: diretório completo em minutos</li>
-                </ol>
-            </div>
-            <div class="wpts-card" style="background:#fef9c3;border-color:#fde047">
-                <h4>⚡ Custo estimado</h4>
-                <p style="font-size:13px;color:#713f12">20 créditos por categoria. 5 categorias = 100 créditos.<br>Você tem <strong><?php echo number_format(get_option('wpts_credits',0)); ?> créditos</strong> disponíveis.</p>
-            </div>
-        </div>
-    </div>
 
-    <?php
-    // Handler em admin.js — sem script inline
-}
+        <!-- Card de resultados / download (aparece quando feito) -->
+        <div class="wpts-card wpts-job-phase" id="wpts-pop-done-card" style="background:#f0fdf4;border-color:#86efac">
+          <h4 style="margin-top:0;color:#065f46">✅ Coleta concluída!</h4>
+          <div id="wpts-pop-done-stats" style="font-size:13px;line-height:2;color:#374151"></div>
+
+          <a href="#" id="wpts-pop-csv-btn" class="wpts-csv-cta" target="_blank">
+            ⬇ Baixar CSV Completo
+          </a>
+          <p style="font-size:11px;color:#6b7280;margin:6px 0 12px;text-align:center">
+            CSV contém nome, endereço, telefone, website, avaliação, bairro, horários, coordenadas GPS e score de marketing
+          </p>
+
+          <button id="wpts-pop-publish-btn" class="wpts-publish-cta">
+            🌐 Publicar todos no WordPress
+          </button>
+          <div id="wpts-pop-publish-result" style="margin-top:8px"></div>
+        </div>
+
+        <!-- Card informativo (some quando job inicia) -->
+        <div class="wpts-card" id="wpts-pop-info-card" style="background:#eff6ff;border-color:#93c5fd">
+          <h4>📦 Campos do CSV gerado</h4>
+          <ul style="font-size:12px;line-height:2;color:#1e40af;margin:0;padding-left:16px">
+            <li><strong>nome, categoria, cidade, bairro</strong> — identificação</li>
+            <li><strong>telefone, website</strong> — contato direto</li>
+            <li><strong>avaliação, total_avaliações, score_marketing</strong> — priorização de campanha</li>
+            <li><strong>lat, lng, google_maps_url</strong> — localização precisa</li>
+            <li><strong>horário, descrição, foto</strong> — enriquecimento</li>
+            <li><strong>place_id</strong> — ID único Google Maps</li>
+          </ul>
+        </div>
+
+        <div class="wpts-card" style="background:#fef9c3;border-color:#fde047;margin-top:12px">
+          <h4 style="margin:0 0 6px">⚡ Créditos disponíveis</h4>
+          <p style="font-size:22px;font-weight:800;color:#92400e;margin:0"><?php echo number_format($credits); ?></p>
+          <p style="font-size:12px;color:#78350f;margin:4px 0 0">Plano: <strong><?php echo strtoupper($plan); ?></strong> · 20 créditos por categoria/lote</p>
+        </div>
+      </div>
+    </div><!-- /two-col -->
+<?php }
 
 // ─── PÁGINA DE EMPRESA ────────────────────────────────────────────────────────
 function wpts_page_page_from_url() { ?>

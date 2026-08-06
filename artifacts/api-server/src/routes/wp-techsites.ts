@@ -58,6 +58,35 @@ async function ensureWpSitesTable() {
     )
   `);
 
+  // ── directory_jobs ────────────────────────────────────────────────────────
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS directory_jobs (
+      id               TEXT PRIMARY KEY,
+      site_key         TEXT NOT NULL,
+      status           TEXT NOT NULL DEFAULT 'queued',
+      city             TEXT NOT NULL DEFAULT '',
+      categories       TEXT NOT NULL DEFAULT '[]',
+      batch_queue      TEXT NOT NULL DEFAULT '[]',
+      batches_total    INTEGER NOT NULL DEFAULT 0,
+      batches_done     INTEGER NOT NULL DEFAULT 0,
+      total_requested  INTEGER NOT NULL DEFAULT 0,
+      total_scraped    INTEGER NOT NULL DEFAULT 0,
+      listings_json    TEXT NOT NULL DEFAULT '[]',
+      place_ids_seen   TEXT NOT NULL DEFAULT '[]',
+      min_rating       REAL    NOT NULL DEFAULT 0,
+      publish_to_wp    BOOLEAN NOT NULL DEFAULT false,
+      wp_published     INTEGER NOT NULL DEFAULT 0,
+      n8n_exec_id      TEXT,
+      error_msg        TEXT,
+      created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      started_at       TIMESTAMPTZ,
+      completed_at     TIMESTAMPTZ,
+      next_batch_at    TIMESTAMPTZ,
+      credits_reserved INTEGER NOT NULL DEFAULT 0,
+      credits_used     INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
   // Seed N8N webhook URLs for tools that already have workflows on n8n.xbest.cloud.
   // ON CONFLICT DO NOTHING — never overrides admin customization.
   const n8nBase = WP_N8N_BASE_URL;
@@ -356,7 +385,7 @@ router.get("/wp/plugin-version", (_req, res) => {
   res.json({
     latest: "2.7.0",
     download_url: "https://wp.techsites.ai/api/plugins/wp-techsites-plugin-v2.7.0.zip",
-    changelog: "REST endpoint /wp-techsites/v1/listings (wpts_listing CPT nativo), shortcode [wpts_directory] com grid responsivo, Directory Builder cria taxonomy terms, chatbot com contexto real do site, Page-from-URL com Hero/Cards/Testemunhos/CTA + adiciona ao menu.",
+    changelog: "Esteira N8N para Popular Diretório: CSV completo com score_marketing+GPS+bairro, modo imediato/background/queue automático, pausa/retoma/cancela, Fase 2 publicação WP separada.",
   });
 });
 
@@ -1507,97 +1536,331 @@ Retorne JSON EXATO (nada antes ou depois):
   }
 });
 
-// ── POST /api/wp/populate-directory ──────────────────────────────────────────
-// Batch-populates the WordPress directory with real BrightData listings across
-// multiple categories. The core "wow" endpoint for the investor demo.
-router.post("/wp/populate-directory", requireSiteKey, async (req, res) => {
+// ── POST /api/wp/populate-directory/schedule ─────────────────────────────────
+// Smart entry point: immediate (<= 50 listings) or N8N queue job (> 50).
+router.post("/wp/populate-directory/schedule", requireSiteKey, async (req, res) => {
   const site = (req as any).wpSite;
-  const startedAt = Date.now();
   try {
     const {
       city               = "Curitiba",
       categories         = ["restaurantes", "hotéis", "turismo", "serviços", "saúde"],
       count_per_category = 10,
-      save_to            = "wp",
       min_rating         = 0,
+      publish_to_wp      = false,
     } = req.body;
 
-    const cats: string[] = Array.isArray(categories) ? categories.slice(0, 10) : [categories];
-    const countPer = Math.min(Number(count_per_category) || 10, 30);
-    const totalMax = cats.length * countPer;
-    const creditCost = Math.min(20 * cats.length, 200);
+    const cats: string[]  = (Array.isArray(categories) ? categories : [categories]).slice(0, 20);
+    const countPer        = Math.max(1, Number(count_per_category) || 10);
+    const totalRequested  = cats.length * countPer;
+    const BATCH_SIZE      = 50;
+    const IMMEDIATE_LIMIT = 50;
 
+    // Credit reservation: 20 per category, capped at 400
+    const creditCost = Math.min(20 * cats.length * Math.ceil(countPer / BATCH_SIZE), 400);
     if (site.creditBalance < creditCost) {
-      res.status(402).json({ error: `Créditos insuficientes (${creditCost} necessários)` });
+      res.status(402).json({ error: `Créditos insuficientes (${creditCost} necessários, você tem ${site.creditBalance})` });
       return;
     }
 
-    const bdKey = process.env["BRIGHTDATA"];
-    const summary: { category: string; generated: number; imported: number; source: string; ms: number }[] = [];
-    let totalImported = 0;
+    // ── IMMEDIATE MODE (≤ 50 total) ──────────────────────────────────────────
+    if (totalRequested <= IMMEDIATE_LIMIT) {
+      const bdKey = process.env["BRIGHTDATA"];
+      const allListings: any[] = [];
+      const seenIds = new Set<string>();
+      const summary: any[] = [];
 
-    for (const category of cats) {
-      const catStart = Date.now();
-      let listings: any[] = [];
+      for (const category of cats) {
+        let listings: any[] = bdKey
+          ? await scrapeBrightData(bdKey, category, city, countPer, Number(min_rating))
+          : [];
+        if (!listings.length) listings = await generateDemoListings(category, city, countPer);
 
-      if (bdKey) {
-        listings = await scrapeBrightData(bdKey, category, city, countPer, Number(min_rating));
-      }
-      if (!listings.length) {
-        listings = await generateDemoListings(category, city, countPer);
-      }
-      const source = listings[0]?.source === "brightdata" ? "brightdata" : "demo";
-
-      let catImported = 0;
-      if (save_to === "wp" && site.wpRestUrl && site.wpUser && site.wpAppPassword) {
-        for (const listing of listings) {
-          try {
-            await wpCreateListing(site, {
-              title:        listing.name,
-              content:      listing.description || "",
-              address:      listing.address      || "",
-              phone:        listing.phone        || "",
-              website:      listing.website      || "",
-              rating:       listing.rating       || null,
-              review_count: listing.review_count || 0,
-              hours:        listing.hours        || "",
-              lat:          listing.lat          || null,
-              lng:          listing.lng          || null,
-              category:     listing.category     || category,
-              source,
-            });
-            catImported++;
-            totalImported++;
-          } catch { /* skip failed */ }
-        }
+        const source = listings[0]?.source === "brightdata" ? "brightdata" : "demo";
+        const unique  = listings.filter(l => { const k = l.place_id || l.name + l.address; if (seenIds.has(k)) return false; seenIds.add(k); return true; });
+        const tagged  = unique.map(l => ({ ...l, city, category: l.category || category, scraped_at: new Date().toISOString().split("T")[0] }));
+        allListings.push(...tagged);
+        summary.push({ category, scraped: tagged.length, source });
       }
 
-      summary.push({ category, generated: listings.length, imported: catImported, source, ms: Date.now() - catStart });
+      await db.update(wpSitesTable).set({ creditBalance: Math.max(0, site.creditBalance - creditCost) }).where(eq(wpSitesTable.id, site.id));
+
+      return res.json({
+        mode:              "immediate",
+        success:           true,
+        total_scraped:     allListings.length,
+        total_requested:   totalRequested,
+        city,
+        categories:        cats,
+        breakdown:         summary,
+        csv:               buildCsv(allListings),
+        listings_preview:  allListings.slice(0, 5),
+        credits_used:      creditCost,
+        credits_remaining: Math.max(0, site.creditBalance - creditCost),
+      });
     }
 
-    await db.update(wpSitesTable)
-      .set({ creditBalance: Math.max(0, site.creditBalance - creditCost) })
-      .where(eq(wpSitesTable.id, site.id));
+    // ── JOB MODE (> 50 total) — create job + trigger N8N ─────────────────────
+    const jobId     = randomUUID();
+    const batchQueue = generateBatchQueue(cats, city, countPer, BATCH_SIZE);
 
-    const totalMs = Date.now() - startedAt;
-    const brightDataCount = summary.filter(s => s.source === "brightdata").reduce((a, s) => a + s.generated, 0);
+    await db.execute(sql`
+      INSERT INTO directory_jobs
+        (id, site_key, status, city, categories, batch_queue, batches_total, batches_done,
+         total_requested, total_scraped, listings_json, place_ids_seen, min_rating,
+         publish_to_wp, credits_reserved, started_at)
+      VALUES
+        (${jobId}, ${site.apiKey}, 'queued', ${city}, ${JSON.stringify(cats)},
+         ${JSON.stringify(batchQueue)}, ${batchQueue.length}, 0,
+         ${totalRequested}, 0, '[]', '[]', ${Number(min_rating)},
+         ${publish_to_wp ? true : false}, ${creditCost}, NOW())
+    `);
 
-    res.json({
-      success:          totalImported > 0 || save_to !== "wp",
-      summary:          `✅ ${totalImported} listings importados em ${cats.length} categorias para ${site.siteName} em ${(totalMs / 1000).toFixed(1)}s`,
+    // Debit credits upfront
+    await db.update(wpSitesTable).set({ creditBalance: Math.max(0, site.creditBalance - creditCost) }).where(eq(wpSitesTable.id, site.id));
+
+    // Trigger N8N queue workflow (fire-and-forget)
+    const n8nBase = process.env["N8N_BASE_URL"] || "";
+    const apiBase = "https://wp.techsites.ai/api";
+    if (n8nBase) {
+      fetch(`${n8nBase}/webhook/populate-directory-queue`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: jobId, site_key: site.apiKey, api_base: apiBase }),
+        signal: AbortSignal.timeout(8000),
+      }).catch(() => {/* non-blocking */});
+    }
+
+    const delayMinutes = batchQueue.length <= 5 ? batchQueue.length * 5 : batchQueue.length * 3;
+    return res.json({
+      mode:              "job",
+      success:           true,
+      job_id:            jobId,
+      batches_total:     batchQueue.length,
+      total_requested:   totalRequested,
+      estimated_minutes: delayMinutes,
       city,
-      categories:       cats,
-      total_generated:  summary.reduce((a, s) => a + s.generated, 0),
-      total_imported:   totalImported,
-      brightdata_count: brightDataCount,
-      breakdown:        summary,
-      total_ms:         totalMs,
-      credits_used:     creditCost,
+      categories:        cats,
+      credits_used:      creditCost,
       credits_remaining: Math.max(0, site.creditBalance - creditCost),
+      message:           `⚡ Esteira iniciada! ${batchQueue.length} lotes agendados para ${totalRequested} listings em ${city}. Tempo estimado: ~${delayMinutes} min.`,
     });
   } catch (err: any) {
-    req.log?.error(err, "wp/populate-directory error");
+    req.log?.error(err, "populate-directory/schedule error");
     res.status(500).json({ error: "Erro: " + err.message });
+  }
+});
+
+// ── GET /api/wp/jobs/:id/status ───────────────────────────────────────────────
+router.get("/wp/jobs/:id/status", requireSiteKey, async (req, res) => {
+  const site = (req as any).wpSite;
+  try {
+    const rows = await db.execute(sql`SELECT * FROM directory_jobs WHERE id = ${req.params["id"]} AND site_key = ${site.apiKey} LIMIT 1`);
+    const job  = (rows.rows || [])[0] as any;
+    if (!job) { res.status(404).json({ error: "Job não encontrado" }); return; }
+
+    const listings  = safeJsonParse(job.listings_json, []);
+    const batchQ    = safeJsonParse(job.batch_queue,   []);
+    const done      = Number(job.batches_done);
+    const total     = Number(job.batches_total);
+    const pct       = total ? Math.round((done / total) * 100) : 0;
+    const remaining = batchQ.slice(done);
+
+    res.json({
+      job_id:          job.id,
+      status:          job.status,
+      city:            job.city,
+      categories:      safeJsonParse(job.categories, []),
+      batches_done:    done,
+      batches_total:   total,
+      progress_pct:    pct,
+      total_requested: Number(job.total_requested),
+      total_scraped:   Number(job.total_scraped),
+      wp_published:    Number(job.wp_published),
+      can_download:    listings.length > 0,
+      can_publish:     job.status === "done" && listings.length > 0,
+      listings_preview: listings.slice(0, 3),
+      next_batch_keyword: remaining[0]?.keyword || null,
+      error_msg:       job.error_msg || null,
+      created_at:      job.created_at,
+      completed_at:    job.completed_at,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/wp/jobs/:id/csv ──────────────────────────────────────────────────
+router.get("/wp/jobs/:id/csv", async (req: any, res: any) => {
+  // Auth: site_key as query param (for direct browser download link)
+  const key = (req.query["site_key"] as string) || req.headers["x-wp-site-key"] as string;
+  if (!key) { res.status(401).json({ error: "Autenticação obrigatória" }); return; }
+  try {
+    const rows = await db.execute(sql`SELECT * FROM directory_jobs WHERE id = ${req.params["id"]} AND site_key = ${key} LIMIT 1`);
+    const job  = (rows.rows || [])[0] as any;
+    if (!job) { res.status(404).json({ error: "Job não encontrado" }); return; }
+
+    const listings = safeJsonParse(job.listings_json, []);
+    const csv      = buildCsv(listings);
+    const filename = `listings-${job.city.toLowerCase().replace(/\s+/g, "-")}-${listings.length}-${new Date().toISOString().split("T")[0]}.csv`;
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Cache-Control", "no-cache");
+    res.send("\uFEFF" + csv); // BOM for Excel UTF-8
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/wp/jobs/:id/action ──────────────────────────────────────────────
+router.post("/wp/jobs/:id/action", requireSiteKey, async (req, res) => {
+  const site   = (req as any).wpSite;
+  const { action } = req.body as { action: "pause" | "resume" | "cancel" };
+  if (!["pause", "resume", "cancel"].includes(action)) { res.status(400).json({ error: "action inválida" }); return; }
+  try {
+    const newStatus = action === "pause" ? "paused" : action === "cancel" ? "cancelled" : "queued";
+    await db.execute(sql`
+      UPDATE directory_jobs SET status = ${newStatus}
+      WHERE id = ${req.params["id"]} AND site_key = ${site.apiKey}
+    `);
+    res.json({ ok: true, status: newStatus });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/wp/jobs/:id/publish — Phase 2: publish accumulated listings to WP
+router.post("/wp/jobs/:id/publish", requireSiteKey, async (req, res) => {
+  const site = (req as any).wpSite;
+  try {
+    const rows = await db.execute(sql`SELECT * FROM directory_jobs WHERE id = ${req.params["id"]} AND site_key = ${site.apiKey} LIMIT 1`);
+    const job  = (rows.rows || [])[0] as any;
+    if (!job) { res.status(404).json({ error: "Job não encontrado" }); return; }
+    if (job.status !== "done" && Number(job.total_scraped) === 0) {
+      res.status(400).json({ error: "Scraping ainda em andamento — aguarde a conclusão" });
+      return;
+    }
+
+    const listings = safeJsonParse(job.listings_json, []);
+    if (!listings.length) { res.status(400).json({ error: "Nenhum listing para publicar" }); return; }
+
+    let published = 0;
+    let skipped   = 0;
+    for (const l of listings) {
+      try {
+        await wpCreateListing(site, {
+          title: l.name, content: l.description || "", address: l.address || "",
+          phone: l.phone || "", website: l.website || "", rating: l.rating || null,
+          review_count: l.review_count || 0, hours: l.hours || "",
+          lat: l.lat || null, lng: l.lng || null,
+          category: l.category || "", source: l.source || "brightdata",
+        });
+        published++;
+      } catch { skipped++; }
+    }
+
+    await db.execute(sql`
+      UPDATE directory_jobs SET wp_published = ${published}, status = 'done'
+      WHERE id = ${req.params["id"]}
+    `);
+
+    res.json({
+      success:  true,
+      published,
+      skipped,
+      message:  `✅ ${published} listings publicados no WordPress (${skipped} ignorados).`,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── N8N Orchestration endpoints (auth: n8n_secret header or query) ────────────
+const N8N_SECRET = process.env["WP_ADMIN_TOKEN"] || "techsites-admin-2026";
+
+function requireN8nSecret(req: any, res: any, next: any) {
+  const s = (req.query["n8n_secret"] as string) || req.headers["x-n8n-secret"] as string;
+  if (s !== N8N_SECRET) { res.status(401).json({ error: "Unauthorized" }); return; }
+  next();
+}
+
+// GET /api/wp/jobs/:id/next-batch — N8N fetches the next keyword to process
+router.get("/wp/jobs/:id/next-batch", requireN8nSecret, async (req: any, res: any) => {
+  try {
+    const rows = await db.execute(sql`SELECT * FROM directory_jobs WHERE id = ${req.params["id"]} LIMIT 1`);
+    const job  = (rows.rows || [])[0] as any;
+    if (!job) { res.json({ done: true }); return; }
+    if (job.status === "paused" || job.status === "cancelled") { res.json({ done: true, reason: job.status }); return; }
+
+    const queue  = safeJsonParse(job.batch_queue, []);
+    const done   = Number(job.batches_done);
+    if (done >= queue.length) {
+      // Mark complete
+      await db.execute(sql`UPDATE directory_jobs SET status = 'done', completed_at = NOW() WHERE id = ${req.params["id"]}`);
+      res.json({ done: true });
+      return;
+    }
+
+    const batch = queue[done];
+    await db.execute(sql`UPDATE directory_jobs SET status = 'running' WHERE id = ${req.params["id"]} AND status = 'queued'`);
+    res.json({ done: false, batch, batch_index: done, batches_total: queue.length });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/wp/jobs/:id/run-batch — N8N triggers BrightData for one batch
+router.post("/wp/jobs/:id/run-batch", requireN8nSecret, async (req: any, res: any) => {
+  try {
+    const rows = await db.execute(sql`SELECT * FROM directory_jobs WHERE id = ${req.params["id"]} LIMIT 1`);
+    const job  = (rows.rows || [])[0] as any;
+    if (!job) { res.status(404).json({ error: "Job not found" }); return; }
+    if (job.status === "paused" || job.status === "cancelled") { res.json({ skipped: true, reason: job.status }); return; }
+
+    const { keyword, category, size = 50 } = req.body;
+    const bdKey    = process.env["BRIGHTDATA"];
+    const existing = safeJsonParse(job.place_ids_seen, []);
+    const seenIds  = new Set<string>(existing);
+    const current  = safeJsonParse(job.listings_json, []);
+
+    let fetched: any[] = bdKey
+      ? await scrapeBrightData(bdKey, keyword || category, job.city, Number(size), Number(job.min_rating))
+      : [];
+    if (!fetched.length) fetched = await generateDemoListings(category, job.city, Math.min(Number(size), 12));
+
+    // Deduplicate + tag
+    const novel = fetched.filter(l => {
+      const k = l.place_id || `${l.name}|${l.address}`;
+      if (seenIds.has(k)) return false;
+      seenIds.add(k);
+      return true;
+    }).map(l => ({ ...l, city: job.city, category: l.category || category, scraped_at: new Date().toISOString().split("T")[0] }));
+
+    const merged     = [...current, ...novel];
+    const newTotal   = merged.length;
+    const newDone    = Number(job.batches_done) + 1;
+    const isDone     = newDone >= safeJsonParse(job.batch_queue, []).length;
+
+    await db.execute(sql`
+      UPDATE directory_jobs
+      SET listings_json   = ${JSON.stringify(merged)},
+          place_ids_seen  = ${JSON.stringify([...seenIds])},
+          total_scraped   = ${newTotal},
+          batches_done    = ${newDone},
+          status          = ${isDone ? "done" : "running"},
+          completed_at    = ${isDone ? new Date().toISOString() : null}
+      WHERE id = ${req.params["id"]}
+    `);
+
+    res.json({
+      batch_done:    newDone,
+      batches_total: safeJsonParse(job.batch_queue, []).length,
+      scraped_batch: novel.length,
+      total_scraped: newTotal,
+      job_done:      isDone,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -2310,6 +2573,107 @@ async function scrapeBrightData(apiKey: string, category: string, city: string, 
   } catch {
     return [];
   }
+}
+
+// ── Directory job helpers ──────────────────────────────────────────────────────
+
+function safeJsonParse(raw: any, fallback: any) {
+  try { return JSON.parse(raw || "null") ?? fallback; } catch { return fallback; }
+}
+
+const BATCH_NEIGHBORHOODS: Record<string, string[]> = {
+  curitiba:          ["Batel", "Centro", "Água Verde", "Bigorrilho", "Mercês", "Portão", "Bacacheri", "Cajuru", "São Francisco", "Champagnat", "Rebouças", "Cabral"],
+  "são paulo":       ["Jardins", "Pinheiros", "Vila Madalena", "Moema", "Itaim Bibi", "Brooklin", "Centro", "Lapa", "Perdizes", "Santana", "Tatuapé", "Saúde"],
+  "rio de janeiro":  ["Copacabana", "Ipanema", "Leblon", "Botafogo", "Centro", "Lapa", "Santa Teresa", "Barra da Tijuca", "Flamengo", "Tijuca", "Méier", "Madureira"],
+  "nova york":       ["Manhattan", "Brooklyn", "Queens", "Bronx", "Harlem", "Midtown", "Downtown", "Williamsburg", "Astoria", "Flushing", "Staten Island"],
+  "new york":        ["Manhattan", "Brooklyn", "Queens", "Bronx", "Harlem", "Midtown", "Downtown", "Williamsburg", "Astoria", "Flushing"],
+  miami:             ["South Beach", "Brickell", "Wynwood", "Coral Gables", "Little Havana", "Design District", "Coconut Grove", "Downtown", "Hialeah"],
+  "belo horizonte":  ["Savassi", "Lourdes", "Funcionários", "Centro", "Pampulha", "Buritis", "Belvedere", "Santa Efigênia", "Nova Suíça"],
+  porto_alegre:      ["Moinhos de Vento", "Bela Vista", "Menino Deus", "Centro", "Petrópolis", "Boa Vista", "Jardim Botânico"],
+};
+
+const BATCH_SUB_NICHOS: Record<string, string[]> = {
+  restaurantes:  ["restaurantes", "bares", "pizzarias", "hamburguerias", "churrascarias", "padarias", "cafeterias", "sushi"],
+  "hotéis":      ["hotéis", "pousadas", "hostels", "apart-hotéis", "resorts", "suítes para casal"],
+  saúde:         ["clínicas médicas", "dentistas", "farmácias", "academias de ginástica", "psicólogos", "fisioterapeutas", "nutricionistas"],
+  serviços:      ["salões de beleza", "mecânicas automotivas", "escritórios de advocacia", "contabilidade", "imobiliárias", "pet shops"],
+  turismo:       ["pontos turísticos", "museus", "parques e jardins", "tours guiados", "agências de viagem", "teatros e shows"],
+  compras:       ["lojas de roupas", "shoppings", "supermercados", "farmácias", "eletrônicos", "livrarias"],
+  educação:      ["escolas", "cursos e idiomas", "universidades", "centros de treinamento", "creches", "pré-escolas"],
+  imóveis:       ["imobiliárias", "construtoras", "apartamentos à venda", "casas para alugar", "condomínios", "lançamentos"],
+};
+
+function generateBatchQueue(
+  categories: string[],
+  city: string,
+  countPerCat: number,
+  batchSize: number,
+): { keyword: string; category: string; size: number; batch_index: number }[] {
+  const cityLower     = city.toLowerCase().replace(/[^a-záàãâéêíóôõúç ]/gi, "");
+  const neighborhoods = BATCH_NEIGHBORHOODS[cityLower] || [];
+  const queue: { keyword: string; category: string; size: number; batch_index: number }[] = [];
+
+  for (const category of categories) {
+    const catLower     = category.toLowerCase();
+    const subNichos    = BATCH_SUB_NICHOS[catLower] || [category];
+    const batchCount   = Math.ceil(countPerCat / batchSize);
+
+    for (let i = 0; i < batchCount; i++) {
+      const remaining = Math.min(batchSize, countPerCat - i * batchSize);
+      let keyword: string;
+      if (i === 0) {
+        keyword = `${category} em ${city}`;
+      } else if (neighborhoods.length > 0 && i <= neighborhoods.length) {
+        keyword = `${category} em ${neighborhoods[(i - 1) % neighborhoods.length]}, ${city}`;
+      } else {
+        keyword = `${subNichos[i % subNichos.length]} em ${city}`;
+      }
+      queue.push({ keyword, category, size: remaining, batch_index: i });
+    }
+  }
+  return queue;
+}
+
+function extractNeighborhood(address: string, city: string): string {
+  if (!address) return "";
+  const parts = address.split(",").map(s => s.trim());
+  const cityLower = city.toLowerCase();
+  for (let i = parts.length - 1; i >= 1; i--) {
+    const p = parts[i].toLowerCase();
+    if (p.includes(cityLower) || /^\d{5}/.test(p) || /^[a-z]{2}$/i.test(p)) continue;
+    if (!parts[i].match(/^\d+$/)) return parts[i].replace(/[-\/].+$/, "").trim();
+  }
+  return "";
+}
+
+function buildCsv(listings: any[]): string {
+  const headers = [
+    "nome", "categoria", "cidade", "bairro", "endereco_completo",
+    "telefone", "website", "email_contato",
+    "avaliacao", "total_avaliacoes", "score_marketing",
+    "lat", "lng", "google_maps_url",
+    "url_foto", "horario_funcionamento", "descricao",
+    "place_id", "fonte", "data_scraping",
+    "status_publicacao", "url_wordpress",
+  ];
+  const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+  const rows = listings.map((l: any) => {
+    const rating = parseFloat(l.rating) || 0;
+    const reviews = parseInt(l.review_count) || 0;
+    const score   = rating > 0 ? (rating * Math.log10(reviews + 1)).toFixed(2) : "0.00";
+    const nb      = extractNeighborhood(l.address || "", l.city || "");
+    const mapsUrl = l.place_id ? `https://www.google.com/maps/place/?q=place_id:${l.place_id}` : "";
+    return [
+      l.name, l.category, l.city || "", nb, l.address,
+      l.phone, l.website, l.email || "",
+      l.rating || "", l.review_count || "", score,
+      l.lat || "", l.lng || "", mapsUrl,
+      l.photo_url || "", l.hours || "", l.description || "",
+      l.place_id || "", l.source || "brightdata", l.scraped_at || "",
+      l.wp_status || "pendente", l.wp_url || "",
+    ].map(esc).join(",");
+  });
+  return [headers.join(","), ...rows].join("\n");
 }
 
 function normalizePlace(p: any) {

@@ -510,36 +510,260 @@
             .always(function () { $btn.prop('disabled', false); $('#wpts-pfu-progress').hide(); });
     });
 
-    // ── Populate Directory ────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    // POPULAR DIRETÓRIO EM MASSA — completo com esteira N8N
+    // ═══════════════════════════════════════════════════════════════════════
+
+    var wptsPopJobId   = null;
+    var wptsPopPollTmr = null;
+    var wptsPopCsvUrl  = null;
+
+    // ── Chips de categoria ────────────────────────────────────────────────
+    $(document).on('click', '.wpts-pop-chip', function () {
+        $(this).toggleClass('active');
+        var active = [];
+        $('.wpts-pop-chip.active').each(function () { active.push($(this).data('cat')); });
+        $('#wpts-pop-categories').val(active.join(', '));
+        wptsPopUpdateEstimate();
+    });
+
+    // ── Cards de quantidade ───────────────────────────────────────────────
+    $(document).on('click', '.wpts-pop-qty-card', function () {
+        $('.wpts-pop-qty-card').removeClass('active');
+        $(this).addClass('active');
+        $('#wpts-pop-count').val($(this).data('qty'));
+        wptsPopUpdateEstimate();
+    });
+
+    // ── Live estimate ─────────────────────────────────────────────────────
+    $('#wpts-pop-city, #wpts-pop-categories').on('input', wptsPopUpdateEstimate);
+
+    function wptsPopGetCats() {
+        return $('#wpts-pop-categories').val().split(',').map(function(c){return c.trim();}).filter(Boolean);
+    }
+
+    function wptsPopUpdateEstimate() {
+        var cats  = wptsPopGetCats();
+        var count = parseInt($('#wpts-pop-count').val()) || 10;
+        var total = cats.length * count;
+        var BATCH = 50;
+        var batches = cats.length * Math.ceil(count / BATCH);
+        var credits = Math.min(20 * cats.length * Math.ceil(count / BATCH), 400);
+
+        var mode, modeLabel, timeLabel;
+        if (total <= 50) {
+            mode = 'immediate'; modeLabel = '<span class="wpts-mode-badge mode-immediate">⚡ Imediato</span>';
+            timeLabel = '~' + Math.max(30, cats.length * 30) + 's';
+        } else if (total <= 500) {
+            mode = 'background'; modeLabel = '<span class="wpts-mode-badge mode-background">🔄 Background</span>';
+            timeLabel = '~' + Math.round(batches * 3) + ' min';
+        } else {
+            mode = 'queue'; modeLabel = '<span class="wpts-mode-badge mode-queue">🤖 Esteira N8N</span>';
+            timeLabel = '~' + Math.round(batches * 5) + ' min';
+        }
+
+        $('#est-total').text(total.toLocaleString());
+        $('#est-batches').text(total <= 50 ? '1 (direto)' : batches);
+        $('#est-time').text(timeLabel);
+        $('#est-credits').text(credits);
+        $('#est-mode').html(modeLabel);
+    }
+    wptsPopUpdateEstimate();
+
+    // ── Iniciar ───────────────────────────────────────────────────────────
     $(document).on('click', '#wpts-run-populate', function () {
-        var city    = $('#wpts-pop-city').val().trim();
-        var rawCats = $('#wpts-pop-categories').val();
-        var cats    = rawCats.split(',').map(function (c) { return c.trim(); }).filter(Boolean);
-        var count   = parseInt($('#wpts-pop-count').val()) || 10;
-        var $btn    = $(this).prop('disabled', true);
-        var $prog   = $('#wpts-pop-progress');
-        $prog.show().text('⏳ Importando ' + cats.length + ' categorias em ' + city + '… aguarde ' + (cats.length * 30) + 's');
+        var city   = $('#wpts-pop-city').val().trim();
+        var cats   = wptsPopGetCats();
+        var count  = parseInt($('#wpts-pop-count').val()) || 10;
+        var rating = parseFloat($('#wpts-pop-rating').val()) || 0;
+        var pubWp  = $('#wpts-pop-publish').is(':checked') ? 1 : 0;
+
+        if (!city)        { alert('Informe a cidade'); return; }
+        if (!cats.length) { alert('Selecione pelo menos uma categoria'); return; }
+
+        var $btn = $(this).prop('disabled', true).text('⏳ Iniciando…');
         $('#wpts-pop-result').html('');
 
-        wpAjax('wpts_populate_directory', { city: city, categories: JSON.stringify(cats), count_per_category: count }, 180000)
+        wpAjax('wpts_schedule_populate', {
+            city:               city,
+            categories:         JSON.stringify(cats),
+            count_per_category: count,
+            min_rating:         rating,
+            publish_to_wp:      pubWp,
+        }, 30000)
+        .done(function (r) {
+            if (!r || !r.success) {
+                $('#wpts-pop-result').html(errHtml((r && r.data && r.data.error) || 'Erro ao iniciar'));
+                $btn.prop('disabled', false).text('⚡ Iniciar Esteira de Scraping');
+                return;
+            }
+            var d = r.data;
+            // Show job UI
+            $('#wpts-pop-info-card').hide();
+            $('.wpts-job-phase').show();
+            $('#wpts-pop-done-card').hide();
+
+            if (d.mode === 'immediate') {
+                // Immediate: already done
+                wptsPopHandleImmediate(d);
+            } else {
+                // Job mode: start polling
+                wptsPopJobId = d.job_id;
+                wptsPopAddLog('info', '🤖 Job criado: ' + d.job_id.slice(0,8) + '… · ' + d.batches_total + ' lotes agendados · ~' + d.estimated_minutes + 'min');
+                wptsPopSetStatus('running');
+                wptsPopStartPolling();
+            }
+        })
+        .fail(function () {
+            $('#wpts-pop-result').html(errHtml('Erro de comunicação ao iniciar a esteira.'));
+            $btn.prop('disabled', false).text('⚡ Iniciar Esteira de Scraping');
+        });
+    });
+
+    // ── Immediate mode handler ────────────────────────────────────────────
+    function wptsPopHandleImmediate(d) {
+        // Build download link from CSV string
+        if (d.csv) {
+            var blob = new Blob(['\uFEFF' + d.csv], {type:'text/csv;charset=utf-8;'});
+            var url  = URL.createObjectURL(blob);
+            wptsPopCsvUrl = url;
+            $('#wpts-pop-csv-btn').attr('href', url).attr('download', 'listings-' + d.city + '-' + d.total_scraped + '.csv');
+        }
+        $('#wpts-pop-bar').css('width', '100%');
+        $('#wpts-pop-scraped-label').text(d.total_scraped + ' listings coletados');
+        $('#wpts-pop-pct-label').text('100%');
+        wptsPopAddLog('ok', '✅ ' + d.total_scraped + ' listings coletados em modo imediato');
+        wptsPopShowDone(d);
+    }
+
+    // ── Polling ───────────────────────────────────────────────────────────
+    function wptsPopStartPolling() {
+        clearInterval(wptsPopPollTmr);
+        wptsPopPollTmr = setInterval(wptsPopPoll, 7000);
+        setTimeout(wptsPopPoll, 1500); // immediate first poll
+    }
+
+    function wptsPopPoll() {
+        if (!wptsPopJobId) return;
+        wpAjax('wpts_job_status', { job_id: wptsPopJobId }, 10000)
             .done(function (r) {
-                if (r.success) {
-                    var html = '<div class="wpts-alert wpts-alert-success"><strong>' + r.data.summary + '</strong><ul style="margin-top:8px">';
-                    (r.data.breakdown || []).forEach(function (b) {
-                        html += '<li>' + b.category + ': ' + b.imported + ' importados (' + b.source + ')</li>';
-                    });
-                    html += '</ul></div>';
-                    $('#wpts-pop-result').html(html);
+                if (!r || !r.success) return;
+                var d = r.data;
+                wptsPopUpdateProgress(d);
+                if (d.status === 'done') {
+                    clearInterval(wptsPopPollTmr);
+                    wptsPopAddLog('ok', '✅ Coleta 100% concluída! ' + d.total_scraped + ' listings prontos.');
+                    wptsPopFetchCsvUrl(d);
+                    wptsPopShowDone(d);
+                } else if (d.status === 'cancelled' || d.status === 'error') {
+                    clearInterval(wptsPopPollTmr);
+                    wptsPopAddLog('err', '✕ Job ' + d.status + (d.error_msg ? ': ' + d.error_msg : ''));
+                }
+            });
+    }
+
+    function wptsPopUpdateProgress(d) {
+        var pct = d.progress_pct || 0;
+        $('#wpts-pop-bar').css('width', pct + '%');
+        $('#wpts-pop-scraped-label').text((d.total_scraped || 0).toLocaleString() + ' / ' + (d.total_requested || 0).toLocaleString() + ' listings');
+        $('#wpts-pop-pct-label').text(pct + '%');
+        $('#wpts-pop-status-title').text(
+            d.status === 'running' ? '🔄 Coletando listings…' :
+            d.status === 'paused'  ? '⏸ Pausado' :
+            d.status === 'done'    ? '✅ Concluído' : '⏳ Na fila…'
+        );
+        if (d.next_batch_keyword) {
+            $('#wpts-pop-next').text('Próximo lote: "' + d.next_batch_keyword + '"');
+        }
+        if (d.batches_done > 0) {
+            wptsPopAddLog('ok', '✓ Lote ' + d.batches_done + '/' + d.batches_total + ' · ' + (d.total_scraped || 0) + ' listings no total');
+        }
+        // Pause/resume visibility
+        if (d.status === 'paused') {
+            $('#wpts-pop-pause').hide(); $('#wpts-pop-resume').show();
+        } else {
+            $('#wpts-pop-pause').show(); $('#wpts-pop-resume').hide();
+        }
+    }
+
+    function wptsPopFetchCsvUrl(d) {
+        wpAjax('wpts_job_csv_url', { job_id: wptsPopJobId }, 5000).done(function(r){
+            if (r && r.success && r.data && r.data.csv_url) {
+                wptsPopCsvUrl = r.data.csv_url;
+                $('#wpts-pop-csv-btn').attr('href', r.data.csv_url).attr('target', '_blank').removeAttr('download');
+            }
+        });
+    }
+
+    function wptsPopShowDone(d) {
+        $('#wpts-pop-status-card').hide();
+        $('#wpts-pop-done-card').show();
+        var cats = d.categories || [];
+        var breakdown = (d.breakdown || []).map(function(b){ return '<li>' + (b.category||b.source||'') + ': <strong>' + (b.scraped||b.generated||0) + '</strong> listings (' + (b.source||'—') + ')</li>'; }).join('');
+        $('#wpts-pop-done-stats').html(
+            '<strong>📍 Cidade:</strong> ' + (d.city || '') + '<br>' +
+            '<strong>📦 Total coletado:</strong> ' + (d.total_scraped || 0).toLocaleString() + ' listings<br>' +
+            '<strong>📂 Categorias:</strong> ' + (cats.join(', ') || '') +
+            (breakdown ? '<ul style="margin:8px 0 0;padding-left:16px">' + breakdown + '</ul>' : '')
+        );
+        if (wptsPopCsvUrl) $('#wpts-pop-csv-btn').attr('href', wptsPopCsvUrl);
+        $('#wpts-pop-publish-btn').data('job-id', wptsPopJobId || '');
+        // Update run button
+        $('#wpts-run-populate').prop('disabled', false).text('⚡ Nova Coleta');
+    }
+
+    // ── Pause / Resume / Cancel ───────────────────────────────────────────
+    function wptsPopJobAction(action) {
+        if (!wptsPopJobId) return;
+        wpAjax('wpts_job_action', { job_id: wptsPopJobId, action_type: action }, 8000)
+            .done(function(r) {
+                if (r && r.success) {
+                    wptsPopAddLog('info', action === 'pause' ? '⏸ Job pausado.' : action === 'resume' ? '▶ Job retomado.' : '✕ Job cancelado.');
+                    if (action === 'pause')  { $('#wpts-pop-pause').hide(); $('#wpts-pop-resume').show(); clearInterval(wptsPopPollTmr); }
+                    if (action === 'resume') { $('#wpts-pop-pause').show(); $('#wpts-pop-resume').hide(); wptsPopStartPolling(); }
+                    if (action === 'cancel') { clearInterval(wptsPopPollTmr); $('#wpts-pop-status-card').hide(); }
+                }
+            });
+    }
+    $(document).on('click', '#wpts-pop-pause',  function(){ wptsPopJobAction('pause'); });
+    $(document).on('click', '#wpts-pop-resume', function(){ wptsPopJobAction('resume'); });
+    $(document).on('click', '#wpts-pop-cancel', function(){ if (confirm('Cancelar a coleta?')) wptsPopJobAction('cancel'); });
+
+    // ── Publicar no WordPress (Fase 2) ────────────────────────────────────
+    $(document).on('click', '#wpts-pop-publish-btn', function () {
+        var jid = $(this).data('job-id') || wptsPopJobId;
+        if (!jid) { alert('Nenhum job ativo para publicar'); return; }
+        if (!confirm('Publicar todos os listings no WordPress? Esta operação pode levar vários minutos.')) return;
+        var $btn = $(this).prop('disabled', true).text('⏳ Publicando no WordPress…');
+        $('#wpts-pop-publish-result').html('');
+        wpAjax('wpts_job_publish', { job_id: jid }, 300000)
+            .done(function(r){
+                if (r && r.success) {
+                    $('#wpts-pop-publish-result').html(okHtml('✅ ' + r.data.message));
                 } else {
-                    $('#wpts-pop-result').html(errHtml((r.data && r.data.error) || 'Erro desconhecido'));
+                    $('#wpts-pop-publish-result').html(errHtml((r && r.data && r.data.error) || 'Erro ao publicar'));
                 }
             })
-            .fail(function (xhr, status) {
-                var msg = status === 'timeout' ? 'Tempo esgotado — tente novamente.' : 'Erro de conexão (' + status + ').';
-                $('#wpts-pop-result').html(errHtml(msg));
-            })
-            .always(function () { $btn.prop('disabled', false); $prog.hide(); });
+            .fail(function(){ $('#wpts-pop-publish-result').html(errHtml('Timeout — o servidor ainda pode estar processando.')); })
+            .always(function(){ $btn.prop('disabled', false).text('🌐 Publicar todos no WordPress'); });
     });
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    function wptsPopSetStatus(s) {
+        var labels = { running:'🔄 Coletando…', queued:'⏳ Na fila…', paused:'⏸ Pausado', done:'✅ Concluído', error:'❌ Erro' };
+        $('#wpts-pop-status-title').text(labels[s] || s);
+    }
+
+    var wptsPopLogLines = [];
+    function wptsPopAddLog(type, msg) {
+        var d = new Date(); var ts = d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0');
+        var cls = type === 'ok' ? 'log-ok' : type === 'err' ? 'log-err' : 'log-info';
+        wptsPopLogLines.push('<span class="' + cls + '">[' + ts + '] ' + msg + '</span>');
+        if (wptsPopLogLines.length > 30) wptsPopLogLines.shift();
+        var $log = $('#wpts-pop-log');
+        $log.html(wptsPopLogLines.join('<br>'));
+        $log.scrollTop($log[0].scrollHeight);
+    }
 
     // ── Article with Images (moved from inline PHP script) ────────────────
     $(document).on('click', '#wpts-run-article', function () {

@@ -448,29 +448,72 @@ function wpts_apply_chat_action( $action ) {
     }
 }
 
-// ─── Popular Diretório em Massa ───────────────────────────────────────────────
-add_action( 'wp_ajax_wpts_populate_directory', function () {
+// ─── Popular Diretório em Massa — Agendar Job ─────────────────────────────────
+add_action( 'wp_ajax_wpts_schedule_populate', function () {
+    @set_time_limit( 30 );
     wpts_ajax_check();
-    $city       = sanitize_text_field( $_POST['city']       ?? 'Curitiba' );
-    $cats_json  = sanitize_text_field( $_POST['categories'] ?? '["restaurantes"]' );
+    $city       = sanitize_text_field( $_POST['city']              ?? 'Curitiba' );
+    $cats_json  = sanitize_text_field( $_POST['categories']        ?? '["restaurantes"]' );
     $categories = json_decode( $cats_json, true ) ?: ['restaurantes'];
-    $count      = max(1, min(30, intval( $_POST['count_per_category'] ?? 10 )));
+    $count      = max(1, intval( $_POST['count_per_category']      ?? 10 ));
+    $min_rating = floatval( $_POST['min_rating']                   ?? 0 );
+    $publish_wp = ! empty( $_POST['publish_to_wp'] );
 
-    $result = wpts_call_api( '/populate-directory', [
+    $result = wpts_call_api( '/populate-directory/schedule', [
         'city'               => $city,
         'categories'         => $categories,
         'count_per_category' => $count,
-        'save_to'            => 'wp',
-    ]);
+        'min_rating'         => $min_rating,
+        'publish_to_wp'      => $publish_wp,
+    ], 25 );
 
-    if ( ! empty( $result['error'] ) ) {
-        wp_send_json_error( $result );
-        return;
-    }
-    // Update local credits cache
-    if ( isset( $result['credits_remaining'] ) ) {
-        update_option( 'wpts_credits', $result['credits_remaining'] );
-    }
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result ); return; }
+    if ( isset( $result['credits_remaining'] ) ) update_option( 'wpts_credits', $result['credits_remaining'] );
+    wp_send_json_success( $result );
+});
+
+// ─── Status de Job de Scraping ────────────────────────────────────────────────
+add_action( 'wp_ajax_wpts_job_status', function () {
+    wpts_ajax_check();
+    $job_id = sanitize_text_field( $_POST['job_id'] ?? '' );
+    if ( ! $job_id ) { wp_send_json_error( 'job_id obrigatório' ); return; }
+    $result = wpts_call_api( '/jobs/' . $job_id . '/status', [], 15 );
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result ); return; }
+    wp_send_json_success( $result );
+});
+
+// ─── Ação sobre Job (pausar / retomar / cancelar) ────────────────────────────
+add_action( 'wp_ajax_wpts_job_action', function () {
+    wpts_ajax_check();
+    $job_id = sanitize_text_field( $_POST['job_id'] ?? '' );
+    $action = sanitize_text_field( $_POST['action_type'] ?? '' );
+    if ( ! $job_id || ! $action ) { wp_send_json_error( 'job_id e action obrigatórios' ); return; }
+    $result = wpts_call_api( '/jobs/' . $job_id . '/action', [ 'action' => $action ], 15 );
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result ); return; }
+    wp_send_json_success( $result );
+});
+
+// ─── Download CSV do Job ──────────────────────────────────────────────────────
+add_action( 'wp_ajax_wpts_job_csv_url', function () {
+    wpts_ajax_check();
+    $job_id = sanitize_text_field( $_POST['job_id'] ?? '' );
+    if ( ! $job_id ) { wp_send_json_error( 'job_id obrigatório' ); return; }
+    $api_key = get_option( 'wpts_api_key', '' );
+    $api_base = rtrim( WPTS_API_BASE, '/wp' );
+    wp_send_json_success([
+        'csv_url' => $api_base . '/wp/jobs/' . $job_id . '/csv?site_key=' . urlencode( $api_key ),
+    ]);
+});
+
+// ─── Publicar Job no WordPress (Fase 2) ──────────────────────────────────────
+add_action( 'wp_ajax_wpts_job_publish', function () {
+    @set_time_limit( 300 );
+    wpts_ajax_check();
+    $job_id = sanitize_text_field( $_POST['job_id'] ?? '' );
+    if ( ! $job_id ) { wp_send_json_error( 'job_id obrigatório' ); return; }
+    $result = wpts_call_api( '/jobs/' . $job_id . '/publish', [], 280 );
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result ); return; }
+    if ( isset( $result['credits_remaining'] ) ) update_option( 'wpts_credits', $result['credits_remaining'] );
     wp_send_json_success( $result );
 });
 
