@@ -159,14 +159,16 @@ function wpts_local_seo_audit( $data ) {
 
 // ─── Content AI ───────────────────────────────────────────────────────────────
 add_action( 'wp_ajax_wpts_generate_content', function () {
+    @set_time_limit( 120 );
     wpts_ajax_check();
     $type    = sanitize_text_field( $_POST['type']    ?? 'post' );
     $topic   = sanitize_text_field( $_POST['topic']   ?? '' );
     $tone    = sanitize_text_field( $_POST['tone']    ?? 'professional' );
     $length  = sanitize_text_field( $_POST['length']  ?? 'medium' );
     $lang    = sanitize_text_field( $_POST['lang']    ?? 'pt-BR' );
-    $result  = wpts_call_api( '/generate-content', compact('type','topic','tone','length','lang') );
-    wp_send_json( $result );
+    $result  = wpts_call_api( '/generate-content', compact('type','topic','tone','length','lang'), 90 );
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result['error'] ); return; }
+    wp_send_json_success( $result );
 });
 
 // ─── Publish generated content ────────────────────────────────────────────────
@@ -187,11 +189,13 @@ add_action( 'wp_ajax_wpts_publish_content', function () {
 
 // ─── Branding / Colors ────────────────────────────────────────────────────────
 add_action( 'wp_ajax_wpts_generate_colors', function () {
+    @set_time_limit( 120 );
     wpts_ajax_check();
     $niche  = sanitize_text_field( $_POST['niche']  ?? '' );
     $style  = sanitize_text_field( $_POST['style']  ?? 'modern' );
-    $result = wpts_call_api( '/generate-colors', compact('niche','style') );
-    wp_send_json( $result );
+    $result = wpts_call_api( '/generate-colors', compact('niche','style'), 90 );
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result['error'] ); return; }
+    wp_send_json_success( $result );
 });
 
 add_action( 'wp_ajax_wpts_apply_colors', function () {
@@ -205,11 +209,13 @@ add_action( 'wp_ajax_wpts_apply_colors', function () {
 
 // ─── Menu Builder ─────────────────────────────────────────────────────────────
 add_action( 'wp_ajax_wpts_generate_menu', function () {
+    @set_time_limit( 120 );
     wpts_ajax_check();
     $niche    = sanitize_text_field( $_POST['niche']    ?? '' );
     $language = sanitize_text_field( $_POST['language'] ?? 'pt-BR' );
-    $result   = wpts_call_api( '/generate-menu', compact('niche','language') );
-    wp_send_json( $result );
+    $result   = wpts_call_api( '/generate-menu', compact('niche','language'), 90 );
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result['error'] ); return; }
+    wp_send_json_success( $result );
 });
 
 add_action( 'wp_ajax_wpts_apply_menu', function () {
@@ -240,12 +246,14 @@ add_action( 'wp_ajax_wpts_apply_menu', function () {
 
 // ─── Logo AI ─────────────────────────────────────────────────────────────────
 add_action( 'wp_ajax_wpts_generate_logo', function () {
+    @set_time_limit( 120 );
     wpts_ajax_check();
     $brand_name = sanitize_text_field( $_POST['brand_name'] ?? get_bloginfo('name') );
     $style      = sanitize_text_field( $_POST['style']      ?? 'modern minimalist' );
     $colors     = sanitize_text_field( $_POST['colors']     ?? 'blue and white' );
-    $result     = wpts_call_api( '/generate-logo', compact('brand_name','style','colors') );
-    wp_send_json( $result );
+    $result     = wpts_call_api( '/generate-logo', compact('brand_name','style','colors'), 90 );
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result['error'] ); return; }
+    wp_send_json_success( $result );
 });
 
 // ─── Scraping ─────────────────────────────────────────────────────────────────
@@ -268,7 +276,8 @@ add_action( 'wp_ajax_wpts_run_scraping', function () {
         }
         $result['inserted'] = $inserted;
     }
-    wp_send_json( $result );
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result['error'] ); return; }
+    wp_send_json_success( $result );
 });
 
 // ─── Directory Builder ────────────────────────────────────────────────────────
@@ -311,16 +320,18 @@ add_action( 'wp_ajax_wpts_save_chatbot', function () {
 
 // ─── Chat Editor ──────────────────────────────────────────────────────────────
 add_action( 'wp_ajax_wpts_chat_edit', function () {
+    @set_time_limit( 120 );
     wpts_ajax_check();
     $command = sanitize_textarea_field( $_POST['command'] ?? '' );
     $context = sanitize_text_field(     $_POST['context'] ?? '' );
-    $result  = wpts_call_api( '/chat-editor', [ 'command' => $command, 'context' => $context, 'site_url' => get_site_url() ] );
+    $result  = wpts_call_api( '/chat-editor', [ 'command' => $command, 'context' => $context, 'site_url' => get_site_url() ], 90 );
     if ( ! empty( $result['actions'] ) ) {
         foreach ( $result['actions'] as $action ) {
             wpts_apply_chat_action( $action );
         }
     }
-    wp_send_json( $result );
+    if ( ! empty( $result['error'] ) ) { wp_send_json_error( $result['error'] ); return; }
+    wp_send_json_success( $result );
 });
 
 function wpts_apply_chat_action( $action ) {
