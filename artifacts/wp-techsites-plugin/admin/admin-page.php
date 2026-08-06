@@ -576,7 +576,7 @@ function wpts_page_populate() { ?>
 
         jQuery.post(ajaxurl, {
             action: 'wpts_populate_directory',
-            nonce: wptsAdmin.nonce,
+            nonce: WPTS.nonce,
             city, categories: JSON.stringify(cats), count_per_category: count
         }, function(r) {
             btn.disabled = false; prog.style.display = 'none';
@@ -655,7 +655,7 @@ function wpts_page_page_from_url() { ?>
         btn.disabled = true; prog.style.display = 'block'; res.innerHTML = '';
 
         jQuery.post(ajaxurl, {
-            action: 'wpts_page_from_url', nonce: wptsAdmin.nonce,
+            action: 'wpts_page_from_url', nonce: WPTS.nonce,
             url, page_type: type, publish
         }, function(r) {
             btn.disabled = false; prog.style.display = 'none';
@@ -761,7 +761,7 @@ function wpts_page_article() { ?>
             timeout: 140000,
             dataType: 'json',
             data: {
-                action: 'wpts_article_with_images', nonce: wptsAdmin.nonce,
+                action: 'wpts_article_with_images', nonce: WPTS.nonce,
                 topic, city, category: cat, tone, word_count: words, publish
             },
             success: function(r) {
