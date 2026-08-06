@@ -92,9 +92,9 @@ async function requireSiteKey(req: any, res: any, next: any) {
 
 // Helper: call AI (Gemini primary → Grok fallback)
 async function callGemini(prompt: string): Promise<string> {
-  // Try Gemini first
+  // Try Gemini first (only if key looks valid — Gemini keys start with "AIzaSy")
   const geminiKey = process.env["GEMINI"] || process.env["GOOGLE_API_KEY"];
-  if (geminiKey) {
+  if (geminiKey && geminiKey.startsWith("AIzaSy")) {
     for (const model of ["gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-1.5-flash"]) {
       try {
         const res = await fetch(
@@ -109,6 +109,8 @@ async function callGemini(prompt: string): Promise<string> {
           }
         );
         const data = (await res.json()) as any;
+        // 400/401/403 = bad key — stop trying Gemini models entirely
+        if (data?.error?.code === 400 || data?.error?.code === 401 || data?.error?.code === 403) break;
         if (data?.error?.code === 429 || data?.error?.code === 503) continue;
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) return text;
@@ -1889,9 +1891,9 @@ async function wpCreateListing(site: any, listing: {
 
 // ── Extended AI call (more tokens for audit/scraping) ────────────────────────
 async function callGeminiLong(prompt: string): Promise<string> {
-  // Try Gemini with higher token limit
+  // Try Gemini with higher token limit (only if key looks valid — Gemini keys start with "AIzaSy")
   const geminiKey = process.env["GEMINI"] || process.env["GOOGLE_API_KEY"];
-  if (geminiKey) {
+  if (geminiKey && geminiKey.startsWith("AIzaSy")) {
     for (const model of ["gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-1.5-flash"]) {
       try {
         const res = await fetch(
@@ -1906,6 +1908,8 @@ async function callGeminiLong(prompt: string): Promise<string> {
           }
         );
         const data = (await res.json()) as any;
+        // 400/401/403 = bad key — stop trying Gemini models entirely
+        if (data?.error?.code === 400 || data?.error?.code === 401 || data?.error?.code === 403) break;
         if (data?.error?.code === 429 || data?.error?.code === 503) continue;
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) return text;
