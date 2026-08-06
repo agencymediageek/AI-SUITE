@@ -279,6 +279,94 @@ function wpts_admin_assets( $hook ) {
     ]);
 }
 
+// ─── Auto-update checker ──────────────────────────────────────────────────────
+// Hooks into WordPress's native update system so the "Plugins" list shows
+// "Update Available" automatically whenever a new version is released on
+// wp.techsites.ai — no external update server plugin needed.
+
+add_filter( 'pre_set_site_transient_update_plugins', 'wpts_check_for_update' );
+function wpts_check_for_update( $transient ) {
+    if ( empty( $transient->checked ) ) return $transient;
+
+    $plugin_file = 'wp-techsites/wp-techsites.php';
+    $current_ver = WPTS_VERSION;
+
+    // Cache remote check for 12 hours to avoid hammering the API on every page load
+    $cached = get_transient( 'wpts_remote_version' );
+    if ( false === $cached ) {
+        $response = wp_remote_get( WPTS_API_BASE . '/plugin-version', [
+            'timeout'   => 5,
+            'sslverify' => true,
+        ]);
+        if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+            set_transient( 'wpts_remote_version', [ 'version' => $current_ver, 'url' => '' ], 12 * HOUR_IN_SECONDS );
+            return $transient;
+        }
+        $data   = json_decode( wp_remote_retrieve_body( $response ), true );
+        $cached = [
+            'version'   => $data['latest']       ?? $current_ver,
+            'url'       => $data['download_url'] ?? '',
+            'changelog' => $data['changelog']    ?? '',
+        ];
+        set_transient( 'wpts_remote_version', $cached, 12 * HOUR_IN_SECONDS );
+    }
+
+    if ( version_compare( $current_ver, $cached['version'], '<' ) ) {
+        $transient->response[ $plugin_file ] = (object) [
+            'id'          => 'w.org/plugins/wp-techsites',
+            'slug'        => 'wp-techsites',
+            'plugin'      => $plugin_file,
+            'new_version' => $cached['version'],
+            'url'         => 'https://wp.techsites.ai',
+            'package'     => $cached['url'],
+            'icons'       => [],
+            'banners'     => [],
+            'requires'    => '5.8',
+            'requires_php'=> '7.4',
+            'tested'      => '6.6',
+        ];
+    }
+
+    return $transient;
+}
+
+// Provide plugin info in the "View version details" popup
+add_filter( 'plugins_api', 'wpts_plugin_info', 20, 3 );
+function wpts_plugin_info( $result, $action, $args ) {
+    if ( $action !== 'plugin_information' ) return $result;
+    if ( ! isset( $args->slug ) || $args->slug !== 'wp-techsites' ) return $result;
+
+    $cached = get_transient( 'wpts_remote_version' );
+
+    return (object) [
+        'name'          => 'WP TechSites',
+        'slug'          => 'wp-techsites',
+        'version'       => $cached['version'] ?? WPTS_VERSION,
+        'author'        => '<a href="https://techsites.ai">TechSites.ai</a>',
+        'homepage'      => 'https://wp.techsites.ai',
+        'requires'      => '5.8',
+        'requires_php'  => '7.4',
+        'tested'        => '6.6',
+        'sections'      => [
+            'description' => 'O SaaS de IA mais completo para WordPress — directory builder, scraping, logo, SEO, chatbot e muito mais.',
+            'changelog'   => '<p>' . esc_html( $cached['changelog'] ?? '' ) . '</p>',
+        ],
+        'download_link' => $cached['url'] ?? '',
+    ];
+}
+
+// Force WordPress to re-check for updates after plugin is saved/updated
+add_action( 'upgrader_process_complete', 'wpts_clear_update_cache', 10, 2 );
+function wpts_clear_update_cache( $upgrader, $options ) {
+    if (
+        $options['type'] === 'plugin' &&
+        isset( $options['plugins'] ) &&
+        in_array( 'wp-techsites/wp-techsites.php', (array) $options['plugins'], true )
+    ) {
+        delete_transient( 'wpts_remote_version' );
+    }
+}
+
 // ─── Chatbot frontend ─────────────────────────────────────────────────────────
 add_action( 'wp_footer', 'wpts_chatbot_frontend' );
 function wpts_chatbot_frontend() {
