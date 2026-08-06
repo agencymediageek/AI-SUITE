@@ -183,30 +183,43 @@ async function executeWpTool(opts: WpExecuteOptions): Promise<{ output: string; 
   } catch { /* table may not exist yet on very first boot */ }
 
   if (n8nUrl) {
-    const response = await fetch(n8nUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        toolId,
-        inputs,
-        siteKey:      site.apiKey,
-        siteUrl:      site.siteUrl,
-        siteName:     site.siteName,
-        systemPrompt,
-        language,
-      }),
-      signal: AbortSignal.timeout(120_000),
-    });
+    try {
+      const response = await fetch(n8nUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          toolId,
+          inputs,
+          siteKey:      site.apiKey,
+          siteUrl:      site.siteUrl,
+          siteName:     site.siteName,
+          systemPrompt,
+          language,
+        }),
+        signal: AbortSignal.timeout(60_000),
+      });
 
-    if (!response.ok) {
-      const errText = await response.text().catch(() => "");
-      throw new Error(`N8N webhook error ${response.status}: ${errText.slice(0, 200)}`);
-    }
+      if (response.ok) {
+        // Use text() first — avoids crash if body is empty or non-JSON
+        const rawText = await response.text();
 
-    const data = await response.json() as any;
-    // Normalize N8N response — workflows can return { text }, { output }, { content }, or any object
-    const output = data?.text ?? data?.output ?? data?.content ?? data?.result ?? JSON.stringify(data);
-    return { output: String(output), via: "n8n" };
+        if (rawText && rawText.trim().length > 0) {
+          // Try to parse as JSON and extract the text field
+          let output = rawText;
+          try {
+            const data = JSON.parse(rawText) as any;
+            // Normalize: workflows can return { text }, { output }, { content }, { result }
+            const extracted = data?.text ?? data?.output ?? data?.content ?? data?.result;
+            if (extracted !== undefined && extracted !== null) {
+              output = typeof extracted === "string" ? extracted : JSON.stringify(extracted);
+            }
+          } catch { /* not JSON — use rawText as-is */ }
+          return { output, via: "n8n" };
+        }
+        // Empty body from N8N — fall through to GROK (workflow not yet configured)
+      }
+      // Non-2xx or empty → fall through to GROK fallback (log silently)
+    } catch { /* N8N unreachable / timeout — fall through to GROK */ }
   }
 
   // 2. Fallback: direct GROK call
