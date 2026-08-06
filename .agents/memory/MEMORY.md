@@ -11,6 +11,7 @@
 - [CI pnpm version](ci-pnpm.md) — lockfile gerado com pnpm v10; CI deve usar version: 10 em pnpm/action-setup; v9 causa ERR_PNPM_LOCKFILE_CONFIG_MISMATCH
 - [useToast infinite loop](use-toast-fix.md) — dependência [state] no useEffect de use-toast.ts causa Maximum update depth exceeded; corrigir para []
 - [WP TechSites](wp-techsites.md) — plugin WP + dashboard SaaS; auth por X-WP-Site-Key (não JWT); tabela wp_sites criada on-startup sem migration
+- [WP TechSites N8N pattern](wp-techsites-n8n.md) — POST /wp/execute endpoint unificado; wp-tools-data.ts estático; wp_tools_config DB; N8N fallback para GROK quando body vazio
 - [VPS instances](vps-instances.md) — todos os PM2/Nginx/DB na VPS 179.197.229.207; próxima porta livre: 3013+
 - [APEX subscriptions](apex-subscriptions.md) — Stripe subscription mode, planos, webhook events, DB schema, token key fix
 - [WP TechSites investor demo](wp-techsites-demo.md) — /wp/demo endpoint, wpCreateListing fallback, BrightData confirmed working for Curitiba, plugin v2.1.0 ZIP pronto
