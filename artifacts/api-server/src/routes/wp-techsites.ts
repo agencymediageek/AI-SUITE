@@ -1019,7 +1019,7 @@ router.post("/wp/chat-editor", requireSiteKey, async (req, res) => {
     const { command, context } = req.body;
     if (!command) { res.status(400).json({ error: "command required" }); return; }
 
-    const prompt = `Você é um assistente inteligente que controla um site WordPress de diretório de negócios via comandos em linguagem natural.
+    const prompt = `Você é um assistente inteligente que controla um site WordPress via comandos em linguagem natural.
 Site: "${site.siteName}" (${context || site.siteUrl})
 
 Comando do usuário: "${command}"
@@ -1031,13 +1031,13 @@ Interprete o comando e retorne JSON com as ações a executar. Formato EXATO (na
     {
       "type": "<tipo>",
       "value": "<valor principal>",
-      "content": "<conteúdo opcional>",
+      "content": "<conteúdo ou URL>",
       "option": "<opção wp opcional>",
       "post_id": null,
       "address": "<endereço se create_listing>",
       "phone": "<telefone se create_listing>",
       "website": "<site se create_listing>",
-      "rating": <número se create_listing>,
+      "rating": null,
       "category": "<categoria se create_listing>",
       "city": "<cidade se create_listing>"
     }
@@ -1048,20 +1048,26 @@ Tipos de ação disponíveis:
 - update_tagline: muda a tagline/slogan do site (value = nova tagline)
 - update_site_title: muda o título do site (value = novo título)
 - update_option: muda uma opção do WordPress (option = nome da opção, value = novo valor)
-- create_post: cria um novo post/artigo (value = título, content = conteúdo HTML)
-- create_listing: cria um listing no diretório (value = nome do estabelecimento, address, phone, website, rating, category, city, content = descrição)
-- create_directory_page: cria uma página de diretório com shortcode [wpts_directory] (value = título da página)
-- update_post_title: muda o título de um post específico (post_id + value)
-- update_post_content: muda o conteúdo de um post específico (post_id + value)
+- create_post: cria um novo post/artigo (value = título, content = conteúdo HTML rico)
+- create_page: cria uma página WordPress com título e conteúdo (value = título da página, content = descrição/assunto — a IA gera HTML rico com hero, cards, CTA)
+- create_page_from_url: RASPA uma URL externa e cria página profissional com hero/cards/testemunhos/CTA (value = nome personalizado da página ou vazio, content = URL completa https://...)
+- create_listing: cria um listing no diretório (value = nome, address, phone, website, rating, category, city, content = descrição)
+- create_directory_page: cria página de diretório com shortcode [wpts_directory] (value = título)
+- add_to_menu: adiciona página/post ao menu de navegação principal (post_id = ID se disponível, value = título para busca)
+- update_post_title: muda o título de um post (post_id + value)
+- update_post_content: muda o conteúdo de um post (post_id + value)
 
 Exemplos:
 - "muda a tagline para X" → [{"type":"update_tagline","value":"X"}]
-- "adiciona o restaurante Bom Gosto na Rua XV nº 100" → [{"type":"create_listing","value":"Restaurante Bom Gosto","address":"Rua XV de Novembro, 100, Centro, Curitiba-PR","phone":"(41) 3333-0000","category":"restaurantes","city":"Curitiba","rating":4.5}]
-- "cria um post sobre turismo em Curitiba" → [{"type":"create_post","value":"Turismo em Curitiba: os melhores pontos turísticos","content":"<p>Curitiba é conhecida por...</p>"}]
+- "adiciona o restaurante Bom Gosto na Rua XV nº 100" → [{"type":"create_listing","value":"Restaurante Bom Gosto","address":"Rua XV de Novembro, 100","category":"restaurantes","city":"Curitiba","rating":4.5}]
+- "cria um post sobre turismo em Curitiba" → [{"type":"create_post","value":"Turismo em Curitiba: os melhores pontos turísticos","content":"Artigo sobre os principais atrativos turísticos de Curitiba"}]
+- "cria uma página sobre serviços de limpeza" → [{"type":"create_page","value":"Serviços de Limpeza Profissional","content":"Empresa de limpeza residencial e comercial com hero, cards de serviços e depoimentos"}]
+- "cria uma página sobre a agência PixelForge do site https://pixelforge.waas.host/ com nome Agência Fiverr e adiciona ao menu" → [{"type":"create_page_from_url","value":"Agência Fiverr","content":"https://pixelforge.waas.host/"},{"type":"add_to_menu"}]
+- "raspa o site https://exemplo.com e cria uma página" → [{"type":"create_page_from_url","value":"","content":"https://exemplo.com"}]
 - "cria a página do diretório" → [{"type":"create_directory_page","value":"Guia de Curitiba"}]
 - "muda o nome do site para Guia CWB" → [{"type":"update_site_title","value":"Guia CWB"}]
 
-Se o comando não for executável, retorne actions=[] e explique no message.`;
+Se o comando não for executável com os tipos acima, retorne actions=[] e explique no message.`;
 
     const raw = await callGemini(prompt);
     let result: any;
@@ -1106,6 +1112,99 @@ Se o comando não for executável, retorne actions=[] e explique no message.`;
               source:   "chat-editor",
             });
             wpResults.push({ action: action.type, success: true, post_id: listing.id });
+          } else if (action.type === "create_page") {
+            // Generate rich page HTML via AI then create in WP
+            const pagePrompt = `Você é especialista em design de páginas WordPress modernas.
+Crie HTML profissional para a página: "${action.value}"
+Descrição/contexto: ${action.content || action.value}
+
+Retorne JSON EXATO:
+{
+  "title": "${action.value}",
+  "slug": "slug-da-pagina",
+  "content_html": "HTML COMPLETO com: hero com gradiente, 3+ cards de serviços/features, seção de testemunhos (3 depoimentos), CTA final — APENAS inline CSS, responsivo"
+}`;
+            const pageRaw = await callGeminiLong(pagePrompt);
+            const pageMatch = pageRaw.match(/\{[\s\S]*\}/);
+            const pageData = pageMatch ? JSON.parse(pageMatch[0]) : null;
+            if (!pageData) throw new Error("Não consegui gerar a página");
+            const newPage = await wpCall(site, "/wp/v2/pages", "POST", {
+              title:   pageData.title || action.value,
+              slug:    pageData.slug,
+              content: pageData.content_html,
+              status:  "publish",
+            });
+            wpResults.push({ action: action.type, success: true, post_id: newPage.id, url: newPage.link } as any);
+
+          } else if (action.type === "create_page_from_url") {
+            // Scrape external URL → rich page with hero/cards/testimonials/CTA
+            const targetUrl = (action.content || action.value || "").trim();
+            if (!targetUrl.startsWith("http")) throw new Error("URL inválida — forneça uma URL completa (https://...)");
+            const customTitle = action.value && !action.value.startsWith("http") ? action.value : "";
+
+            let pageText = "";
+            try {
+              const fetchRes = await fetch(targetUrl, {
+                headers: { "User-Agent": "Mozilla/5.0 (compatible; WPTechSites/2.8)" },
+                signal: AbortSignal.timeout(10000),
+              });
+              const html = await fetchRes.text();
+              pageText = html
+                .replace(/<script[\s\S]*?<\/script>/gi, "")
+                .replace(/<style[\s\S]*?<\/style>/gi, "")
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s{3,}/g, "\n")
+                .trim()
+                .slice(0, 3000);
+            } catch { pageText = `Site: ${targetUrl}`; }
+
+            const pfuPrompt = `Você é especialista em design de páginas WordPress modernas.
+Analise este site: ${targetUrl}
+Conteúdo extraído:
+${pageText}
+
+Crie uma página WordPress profissional. ${customTitle ? `Título exato da página: "${customTitle}"` : ""}
+Retorne JSON EXATO:
+{
+  "title": "${customTitle || "Nome extraído do site"}",
+  "slug": "slug-da-pagina",
+  "meta_description": "SEO em até 155 chars",
+  "content_html": "HTML COMPLETO com: hero gradient com título+subtítulo+CTA, 3+ cards de serviços, seção de testemunhos (3 depoimentos), CTA final — APENAS inline CSS, responsivo",
+  "excerpt": "Resumo em 1 frase"
+}`;
+            const pfuRaw = await callGeminiLong(pfuPrompt);
+            const pfuMatch = pfuRaw.match(/\{[\s\S]*\}/);
+            const pfuData = pfuMatch ? JSON.parse(pfuMatch[0]) : null;
+            if (!pfuData) throw new Error("Não consegui gerar a página a partir da URL");
+
+            const fromUrlPage = await wpCall(site, "/wp/v2/pages", "POST", {
+              title:   pfuData.title,
+              slug:    pfuData.slug,
+              content: pfuData.content_html,
+              excerpt: pfuData.excerpt || "",
+              status:  "publish",
+            });
+
+            // Auto-add to menu
+            let fromUrlMenu: string | null = null;
+            try {
+              const mr = await wpCall(site, "/wp-techsites/v1/add-to-menu", "POST", { page_id: fromUrlPage.id });
+              fromUrlMenu = mr.menu;
+            } catch { /* menu optional */ }
+
+            wpResults.push({ action: action.type, success: true, post_id: fromUrlPage.id, url: fromUrlPage.link, menu: fromUrlMenu } as any);
+
+          } else if (action.type === "add_to_menu") {
+            // Find last created page ID from previous actions, or use provided post_id
+            const targetId = action.post_id
+              || (wpResults.find(r => (r as any).post_id) as any)?.post_id;
+            if (!targetId) throw new Error("Nenhuma página encontrada para adicionar ao menu");
+            const menuRes = await wpCall(site, "/wp-techsites/v1/add-to-menu", "POST", {
+              page_id: targetId,
+              menu:    action.value || "",
+            });
+            wpResults.push({ action: action.type, success: true, menu: menuRes.menu } as any);
+
           } else if (action.type === "create_directory_page") {
             const page = await wpCall(site, "/wp/v2/pages", "POST", {
               title:   action.value || "Guia de Negócios",
@@ -1119,8 +1218,10 @@ Se o comando não for executável, retorne actions=[] e explique no message.`;
         }
       }
       if (wpResults.length) {
-        const done = wpResults.filter(r => r.success).length;
-        result.message = `${result.message || ""} — ${done}/${wpResults.length} ação(ões) aplicada(s) no WordPress.`.trim();
+        const done  = wpResults.filter(r => r.success).length;
+        const pages = wpResults.filter(r => (r as any).url).map(r => `\n• ${(r as any).url}`).join("");
+        const menus = wpResults.filter(r => (r as any).menu).map(r => ` (adicionado ao menu "${(r as any).menu}")`).join("");
+        result.message = `${result.message || ""} — ${done}/${wpResults.length} ação(ões) aplicada(s)${menus}${pages}.`.trim();
       }
     }
 

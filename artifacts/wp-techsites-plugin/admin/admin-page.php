@@ -746,27 +746,95 @@ function wpts_page_seo_articles() { ?>
             </div>
         </div>
         <div>
-            <div class="wpts-card" style="background:#fdf4ff;border-color:#e879f9">
-                <h4>📅 Como funciona:</h4>
-                <ul style="font-size:13px;line-height:2">
-                    <li>✅ Cada artigo tem ângulo diferente</li>
-                    <li>✅ Título SEO com palavra-chave</li>
-                    <li>✅ Imagem hero + imagem de apoio</li>
-                    <li>✅ Meta description otimizada</li>
-                    <li>✅ Tags automáticas por categoria</li>
-                    <li>✅ Estrutura H2/H3 para SEO</li>
-                    <li>✅ Links diretos para editar no WP</li>
-                </ul>
+            <!-- Automation Calendar Card -->
+            <div class="wpts-card" style="border-color:#8b5cf6">
+                <h3 style="color:#7c3aed">🤖 Modo Automático (Cronjob)</h3>
+                <p class="wpts-help" style="color:#64748b;font-size:13px">Configure um calendário com intervalos randômicos. O Google não vai perceber que é automatizado.</p>
+
+                <div id="wpts-cron-status-bar" style="display:none;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#15803d">
+                    ✅ Automação <strong>ativa</strong>. Próxima publicação: <strong id="wpts-cron-next">—</strong>
+                </div>
+
+                <div class="wpts-field">
+                    <label>Palavra-chave / Tema *</label>
+                    <input type="text" id="wpts-cron-keyword" class="wpts-input" placeholder="Ex: restaurantes em Curitiba, turismo no Paraná…">
+                </div>
+                <div class="wpts-field">
+                    <label>Categoria WordPress</label>
+                    <input type="text" id="wpts-cron-category" class="wpts-input" placeholder="Ex: Gastronomia, Turismo…">
+                </div>
+
+                <div class="wpts-field">
+                    <label>Dias da semana permitidos</label>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+                        <?php
+                        $days_cfg = [
+                            ['Seg', 1, true], ['Ter', 2, true], ['Qua', 4, true],
+                            ['Qui', 8, true], ['Sex', 16, true], ['Sáb', 32, false], ['Dom', 64, false],
+                        ];
+                        foreach ( $days_cfg as [$label, $bit, $default] ) : ?>
+                        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px">
+                            <input type="checkbox" class="wpts-cron-day" data-bit="<?php echo $bit; ?>" <?php echo $default ? 'checked' : ''; ?> style="margin:0">
+                            <?php echo $label; ?>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="wpts-field">
+                    <label>Faixa de horário de publicação</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                        <input type="number" id="wpts-cron-hour-min" class="wpts-input" value="8" min="0" max="23" style="width:64px"> h
+                        <span style="color:#64748b">até</span>
+                        <input type="number" id="wpts-cron-hour-max" class="wpts-input" value="20" min="0" max="23" style="width:64px"> h
+                    </div>
+                </div>
+
+                <div class="wpts-field">
+                    <label>Intervalo randômico entre publicações</label>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                        mín. <input type="number" id="wpts-cron-min-days" class="wpts-input" value="2" min="1" max="30" style="width:64px">
+                        máx. <input type="number" id="wpts-cron-max-days" class="wpts-input" value="7" min="1" max="30" style="width:64px"> dias
+                    </div>
+                </div>
+
+                <div class="wpts-field" style="display:flex;gap:12px">
+                    <div style="flex:1">
+                        <label>Artigos por disparo</label>
+                        <select id="wpts-cron-quantity" class="wpts-input">
+                            <option value="1" selected>1 artigo</option>
+                            <option value="2">2 artigos</option>
+                            <option value="3">3 artigos</option>
+                        </select>
+                    </div>
+                    <div style="flex:1">
+                        <label>Tamanho</label>
+                        <select id="wpts-cron-wordcount" class="wpts-input">
+                            <option value="500">~500 palavras</option>
+                            <option value="800" selected>~800 palavras</option>
+                            <option value="1200">~1200 palavras</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:4px">
+                    <button id="wpts-cron-save" class="wpts-btn wpts-btn-primary" style="flex:1;background:linear-gradient(135deg,#7c3aed,#6366f1)">🤖 Ativar Automação</button>
+                    <button id="wpts-cron-pause" class="wpts-btn" style="background:#ef4444;color:#fff;white-space:nowrap">⏸ Pausar</button>
+                </div>
+                <div id="wpts-cron-result" style="margin-top:10px"></div>
             </div>
+
+            <!-- Publication Log Card -->
+            <div class="wpts-card" style="margin-top:12px">
+                <h4>📋 Log de Publicações Automáticas</h4>
+                <div id="wpts-cron-log">
+                    <p style="font-size:13px;color:#94a3b8">Nenhuma publicação automática ainda.</p>
+                </div>
+            </div>
+
             <div class="wpts-card" style="background:#fef9c3;border-color:#fde047;margin-top:12px">
-                <h4>⚡ Custo por artigo</h4>
-                <p style="font-size:13px;color:#713f12">8 créditos por artigo.<br>
-                3 artigos = 24 créditos.<br>
-                Você tem <strong><?php echo number_format(get_option('wpts_credits',0)); ?> créditos</strong>.</p>
-            </div>
-            <div class="wpts-card" style="background:#eff6ff;border-color:#93c5fd;margin-top:12px">
-                <h4>💡 Dica SEO</h4>
-                <p style="font-size:13px;color:#1e40af">Publique 1-2 artigos por semana para construir autoridade gradualmente. O Google penaliza picos de conteúdo repentinos.</p>
+                <h4>⚡ Custo</h4>
+                <p style="font-size:13px;color:#713f12">8 créditos/artigo.<br>Você tem <strong><?php echo number_format(get_option('wpts_credits',0)); ?> créditos</strong>.</p>
             </div>
         </div>
     </div>

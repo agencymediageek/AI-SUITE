@@ -321,6 +321,54 @@ add_action( 'wp_ajax_wpts_create_directory', function () {
     ]);
 });
 
+// ─── SEO Articles Schedule (Cron) ────────────────────────────────────────────
+add_action( 'wp_ajax_wpts_save_seo_schedule', function () {
+    wpts_ajax_check();
+    $raw = [
+        'active'     => (bool)( $_POST['active']     ?? false ),
+        'keyword'    => sanitize_text_field( $_POST['keyword']    ?? '' ),
+        'category'   => sanitize_text_field( $_POST['category']   ?? '' ),
+        'quantity'   => max( 1, min( 3, intval( $_POST['quantity']   ?? 1 ) ) ),
+        'word_count' => max( 300, min( 2000, intval( $_POST['word_count'] ?? 800 ) ) ),
+        'min_days'   => max( 1, min( 30,  intval( $_POST['min_days']  ?? 2 ) ) ),
+        'max_days'   => max( 1, min( 30,  intval( $_POST['max_days']  ?? 7 ) ) ),
+        'hour_min'   => max( 0, min( 23,  intval( $_POST['hour_min']  ?? 8 ) ) ),
+        'hour_max'   => max( 0, min( 23,  intval( $_POST['hour_max']  ?? 20) ) ),
+        'week_days'  => max( 1, intval( $_POST['week_days'] ?? 31 ) ),
+    ];
+    update_option( 'wpts_seo_schedule', $raw );
+
+    // Clear any existing job
+    $existing = wp_next_scheduled( 'wpts_cron_article_job' );
+    if ( $existing ) wp_unschedule_event( $existing, 'wpts_cron_article_job' );
+
+    $next_ts = null;
+    if ( $raw['active'] && $raw['keyword'] ) {
+        $next_ts = wpts_next_cron_time( $raw );
+        if ( $next_ts ) wp_schedule_single_event( $next_ts, 'wpts_cron_article_job' );
+    }
+
+    wp_send_json_success([
+        'active'   => $raw['active'],
+        'next_run' => $next_ts ? wp_date( 'd/m/Y \à\s H:i', $next_ts ) : null,
+        'message'  => $raw['active']
+            ? 'Automação ativada! Próxima publicação: ' . ( $next_ts ? wp_date( 'd/m/Y \à\s H:i', $next_ts ) : '—' )
+            : 'Automação pausada.',
+    ]);
+});
+
+add_action( 'wp_ajax_wpts_get_seo_status', function () {
+    wpts_ajax_check();
+    $schedule = (array) get_option( 'wpts_seo_schedule', [] );
+    $log      = array_reverse( (array) get_option( 'wpts_seo_log', [] ) );
+    $next_ts  = wp_next_scheduled( 'wpts_cron_article_job' );
+    wp_send_json_success([
+        'schedule' => $schedule,
+        'next_run' => $next_ts ? wp_date( 'd/m/Y \à\s H:i', $next_ts ) : null,
+        'log'      => array_slice( $log, 0, 10 ),
+    ]);
+});
+
 // ─── Chatbot Settings ─────────────────────────────────────────────────────────
 add_action( 'wp_ajax_wpts_save_chatbot', function () {
     wpts_ajax_check();

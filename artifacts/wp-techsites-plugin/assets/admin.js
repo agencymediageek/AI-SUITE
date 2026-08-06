@@ -631,4 +631,97 @@
         generateNext(0);
     });
 
+
+    // ─── SEO Cron Schedule ────────────────────────────────────────────────────
+    function wptsCronBitmask() {
+        var bits = 0;
+        $('.wpts-cron-day:checked').each(function () { bits |= parseInt($(this).data('bit')); });
+        return bits || 31; // Mon-Fri default
+    }
+
+    function wptsCronRenderLog(log) {
+        if (!log || !log.length) return '<p style="font-size:13px;color:#94a3b8">Nenhuma publicação automática ainda.</p>';
+        var html = '<table style="width:100%;font-size:12px;border-collapse:collapse">'
+            + '<thead><tr>'
+            + '<th style="text-align:left;padding:5px 6px;border-bottom:1px solid #e2e8f0">Data</th>'
+            + '<th style="text-align:left;padding:5px 6px;border-bottom:1px solid #e2e8f0">Artigo</th>'
+            + '<th style="text-align:left;padding:5px 6px;border-bottom:1px solid #e2e8f0">Status</th>'
+            + '</tr></thead><tbody>';
+        log.forEach(function (e) {
+            var ok = e.status === 'publicado';
+            html += '<tr>'
+                + '<td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;white-space:nowrap;color:#64748b">' + (e.date || '—') + '</td>'
+                + '<td style="padding:4px 6px;border-bottom:1px solid #f1f5f9">' + (e.title || e.topic || '—')
+                    + (e.url ? ' <a href="' + e.url + '" target="_blank" style="color:#6366f1">↗</a>' : '') + '</td>'
+                + '<td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;color:' + (ok ? '#16a34a' : '#ef4444') + ';font-weight:700">' + (e.status || '?') + '</td>'
+                + '</tr>';
+        });
+        return html + '</tbody></table>';
+    }
+
+    // Load existing schedule on page init
+    wpAjax('wpts_get_seo_status', {}).done(function (r) {
+        if (!r || !r.success || !r.data) return;
+        var d = r.data;
+        if (d.schedule && d.schedule.keyword) {
+            $('#wpts-cron-keyword').val(d.schedule.keyword);
+            $('#wpts-cron-category').val(d.schedule.category || '');
+            $('#wpts-cron-quantity').val(d.schedule.quantity || 1);
+            $('#wpts-cron-wordcount').val(d.schedule.word_count || 800);
+            $('#wpts-cron-hour-min').val(d.schedule.hour_min || 8);
+            $('#wpts-cron-hour-max').val(d.schedule.hour_max || 20);
+            $('#wpts-cron-min-days').val(d.schedule.min_days || 2);
+            $('#wpts-cron-max-days').val(d.schedule.max_days || 7);
+            if (d.schedule.week_days) {
+                var bits = parseInt(d.schedule.week_days);
+                $('.wpts-cron-day').each(function () { $(this).prop('checked', !!(bits & parseInt($(this).data('bit')))); });
+            }
+        }
+        if (d.schedule && d.schedule.active) {
+            $('#wpts-cron-status-bar').show();
+            $('#wpts-cron-next').text(d.next_run || '—');
+        }
+        if (d.log && d.log.length) $('#wpts-cron-log').html(wptsCronRenderLog(d.log));
+    });
+
+    $(document).on('click', '#wpts-cron-save', function () {
+        var keyword = $('#wpts-cron-keyword').val().trim();
+        if (!keyword) { alert('Informe a palavra-chave para automação'); return; }
+        var $btn = $(this).prop('disabled', true).text('⏳ Ativando…');
+        wpAjax('wpts_save_seo_schedule', {
+            active:     1,
+            keyword:    keyword,
+            category:   $('#wpts-cron-category').val().trim(),
+            quantity:   $('#wpts-cron-quantity').val(),
+            word_count: $('#wpts-cron-wordcount').val(),
+            hour_min:   $('#wpts-cron-hour-min').val(),
+            hour_max:   $('#wpts-cron-hour-max').val(),
+            min_days:   $('#wpts-cron-min-days').val(),
+            max_days:   $('#wpts-cron-max-days').val(),
+            week_days:  wptsCronBitmask(),
+        })
+        .done(function (r) {
+            if (r && r.success) {
+                $('#wpts-cron-result').html(okHtml(r.data.message || 'Automação ativada!'));
+                if (r.data.next_run) { $('#wpts-cron-status-bar').show(); $('#wpts-cron-next').text(r.data.next_run); }
+            } else {
+                $('#wpts-cron-result').html(errHtml((r && r.data && r.data.message) || 'Erro ao ativar.'));
+            }
+        })
+        .fail(function () { $('#wpts-cron-result').html(errHtml('Erro de comunicação.')); })
+        .always(function () { $btn.prop('disabled', false).text('🤖 Ativar Automação'); });
+    });
+
+    $(document).on('click', '#wpts-cron-pause', function () {
+        var $btn = $(this).prop('disabled', true);
+        wpAjax('wpts_save_seo_schedule', { active: 0 })
+        .done(function (r) {
+            if (r && r.success) {
+                $('#wpts-cron-result').html(okHtml(r.data.message || 'Automação pausada.'));
+                $('#wpts-cron-status-bar').hide();
+            }
+        })
+        .always(function () { $btn.prop('disabled', false); });
+    });
+
 })(jQuery);

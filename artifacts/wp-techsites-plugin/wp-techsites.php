@@ -3,7 +3,7 @@
  * Plugin Name:  WP TechSites
  * Plugin URI:   https://wp.techsites.ai
  * Description:  O SaaS de IA mais completo para WordPress — directory builder, scraping, logo, SEO, chatbot e muito mais.
- * Version:      2.7.0
+ * Version:      2.8.0
  * Author:       TechSites.ai
  * Author URI:   https://techsites.ai
  * License:      GPL-2.0+
@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'WPTS_VERSION',    '2.7.0' );
+define( 'WPTS_VERSION',    '2.8.0' );
 define( 'WPTS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPTS_API_BASE',   'https://wp.techsites.ai/api/wp' );
@@ -367,6 +367,86 @@ function wpts_clear_update_cache( $upgrader, $options ) {
         delete_transient( 'wpts_update_check' );
     }
 }
+
+// ─── SEO Articles Cron ───────────────────────────────────────────────────────
+add_action( 'wpts_cron_article_job', 'wpts_run_cron_article' );
+
+function wpts_run_cron_article() {
+    $schedule = (array) get_option( 'wpts_seo_schedule', [] );
+    if ( empty( $schedule['active'] ) || empty( $schedule['keyword'] ) ) return;
+
+    $keyword   = $schedule['keyword']    ?? '';
+    $category  = $schedule['category']  ?? '';
+    $quantity  = max( 1, min( 3, intval( $schedule['quantity']   ?? 1 ) ) );
+    $wordcount = intval( $schedule['word_count'] ?? 800 );
+    $variants  = [ '', 'Guia completo: ', 'Melhores dicas de: ', 'Como usar: ', 'Tudo sobre: ', 'Por que escolher: ' ];
+    $log       = (array) get_option( 'wpts_seo_log', [] );
+
+    for ( $i = 0; $i < $quantity; $i++ ) {
+        $topic  = ( $i === 0 ? '' : $variants[ $i % count( $variants ) ] ) . $keyword;
+        $result = wp_remote_post( WPTS_API_BASE . '/article-with-images', [
+            'timeout' => 150,
+            'headers' => [
+                'Content-Type'   => 'application/json',
+                'X-WP-Site-Key'  => get_option( 'wpts_api_key', '' ),
+            ],
+            'body' => wp_json_encode([
+                'topic'      => $topic,
+                'category'   => $category,
+                'tone'       => 'professional',
+                'word_count' => $wordcount,
+                'publish'    => true,
+                'city'       => '',
+            ]),
+        ]);
+        $body  = is_wp_error( $result ) ? null : json_decode( wp_remote_retrieve_body( $result ), true );
+        $log[] = [
+            'date'   => current_time( 'mysql' ),
+            'topic'  => $topic,
+            'status' => ( ! is_wp_error( $result ) && ! empty( $body['success'] ) ) ? 'publicado' : 'erro',
+            'title'  => $body['title']       ?? '',
+            'url'    => $body['wp_post_url'] ?? '',
+        ];
+    }
+    update_option( 'wpts_seo_log', array_slice( $log, -50 ) );
+
+    // Schedule next run with random interval
+    $next = wpts_next_cron_time( $schedule );
+    if ( $next ) wp_schedule_single_event( $next, 'wpts_cron_article_job' );
+}
+
+/**
+ * Calculate next valid publish timestamp with randomness for stealth.
+ */
+function wpts_next_cron_time( array $s ): int {
+    $min_days  = max( 1, intval( $s['min_days']  ?? 2 ) );
+    $max_days  = max( $min_days, intval( $s['max_days']  ?? 7 ) );
+    $hour_min  = max( 0, min( 23, intval( $s['hour_min'] ?? 8 ) ) );
+    $hour_max  = max( $hour_min, min( 23, intval( $s['hour_max'] ?? 20 ) ) );
+    $week_bits = intval( $s['week_days'] ?? 31 ); // bitmask: bit0=Mon..bit6=Sun
+
+    $delay = rand( $min_days, $max_days );
+
+    // Find a valid weekday within the next 14 days
+    for ( $attempt = 0; $attempt < 14; $attempt++ ) {
+        $ts  = strtotime( "+{$delay} days", current_time( 'timestamp' ) );
+        $dow = (int) date( 'N', $ts ) - 1; // 0=Mon..6=Sun
+        if ( $week_bits & ( 1 << $dow ) ) {
+            $h = rand( $hour_min, $hour_max );
+            $m = rand( 0, 59 );
+            return mktime( $h, $m, 0, (int) date( 'n', $ts ), (int) date( 'j', $ts ), (int) date( 'Y', $ts ) );
+        }
+        $delay++;
+    }
+    // Fallback: 3-7 days from now
+    return time() + rand( 3 * DAY_IN_SECONDS, 7 * DAY_IN_SECONDS );
+}
+
+// Clear cron on plugin deactivation
+register_deactivation_hook( __FILE__, function () {
+    $ts = wp_next_scheduled( 'wpts_cron_article_job' );
+    if ( $ts ) wp_unschedule_event( $ts, 'wpts_cron_article_job' );
+});
 
 // ─── Chatbot frontend ─────────────────────────────────────────────────────────
 add_action( 'wp_footer', 'wpts_chatbot_frontend' );
