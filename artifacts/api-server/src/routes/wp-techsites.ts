@@ -1508,8 +1508,14 @@ function parseSiteMetadata(raw: string | null | undefined): Record<string, any> 
 }
 
 function detectSiteType(meta: Record<string, any>): { siteType: "directory" | "standard"; themeName: string } {
-  const theme   = (meta?.theme   || "").toLowerCase().replace(/[\s_]+/g, "-");
-  const plugins: string[] = (meta?.plugins || []).map((p: string) => p.toLowerCase());
+  // Defensive: theme must be a string, plugins must be an array of strings
+  const rawTheme = meta?.theme;
+  const theme    = typeof rawTheme === "string" ? rawTheme.toLowerCase().replace(/[\s_]+/g, "-") : "";
+
+  const rawPlugins = meta?.plugins;
+  const plugins: string[] = Array.isArray(rawPlugins)
+    ? rawPlugins.filter((p: any) => typeof p === "string").map((p: string) => p.toLowerCase())
+    : [];
 
   const directoryThemes  = ["my-listing", "mylisting", "listingpro", "listing-pro", "listify", "listivo", "houzez", "findkit", "geodirectory", "directory-starter", "listdom"];
   const directoryPlugins = ["directorist", "geodirectory", "business-directory-plugin", "listdom", "geo-directory", "wp-listings", "listify"];
@@ -1520,7 +1526,7 @@ function detectSiteType(meta: Record<string, any>): { siteType: "directory" | "s
 
   return {
     siteType:  isDirectory ? "directory" : "standard",
-    themeName: meta?.theme || "Padrão",
+    themeName: typeof rawTheme === "string" && rawTheme ? rawTheme : "Padrão",
   };
 }
 
