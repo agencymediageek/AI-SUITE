@@ -47,6 +47,11 @@ import { sql as _sql } from "drizzle-orm";
     await _db.execute(_sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`);
     await _db.execute(_sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`);
   } catch { /* table may not exist yet on first boot — harmless */ }
+
+  // Task #104 — fix NULL credit_balance on wp_sites (new installs started with NULL)
+  try {
+    await _db.execute(_sql`UPDATE wp_sites SET credit_balance = 150 WHERE credit_balance IS NULL`);
+  } catch { /* wp_sites table may not exist yet — ensureWpSitesTable() creates it */ }
 })();
 
 // Serve static plugin ZIPs for download

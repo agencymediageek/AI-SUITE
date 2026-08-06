@@ -7,3 +7,4 @@ export * from "./meetings";
 export * from "./meeting_sessions";
 export * from "./whitelabel_configs";
 export * from "./wp-sites";
+export * from "./wp-tools-config";

@@ -9,14 +9,16 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
 import { db } from "@workspace/db";
-import { wpSitesTable } from "@workspace/db";
+import { wpSitesTable, wpToolsConfigTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
+import { getWpToolById, WP_N8N_BASE_URL, WP_TOOLS } from "../lib/wp-tools-data.js";
 
 const router = Router();
 
-// ── Ensure table exists + migrate new columns (idempotent) ───────────────────
+// ── Ensure tables exist + migrate columns + seed N8N URLs (idempotent) ───────
 async function ensureWpSitesTable() {
+  // ── wp_sites ─────────────────────────────────────────────────────────────
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS wp_sites (
       id             SERIAL PRIMARY KEY,
@@ -40,6 +42,33 @@ async function ensureWpSitesTable() {
   await db.execute(sql`ALTER TABLE wp_sites ADD COLUMN IF NOT EXISTS wp_app_password TEXT NOT NULL DEFAULT ''`);
   await db.execute(sql`ALTER TABLE wp_sites ADD COLUMN IF NOT EXISTS wp_rest_url TEXT NOT NULL DEFAULT ''`);
   await db.execute(sql`ALTER TABLE wp_sites ADD COLUMN IF NOT EXISTS site_metadata TEXT NOT NULL DEFAULT '{}'`);
+
+  // Task #104 — fix NULL credit_balance so new installs can use tools
+  await db.execute(sql`UPDATE wp_sites SET credit_balance = 150 WHERE credit_balance IS NULL`);
+
+  // ── wp_tools_config ───────────────────────────────────────────────────────
+  // Per-tool N8N routing table — mirrors tools_config used by AI Suite.
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS wp_tools_config (
+      id              TEXT PRIMARY KEY,
+      n8n_webhook_url TEXT,
+      usage_count     INTEGER NOT NULL DEFAULT 0,
+      is_enabled      BOOLEAN NOT NULL DEFAULT true,
+      updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  // Seed N8N webhook URLs for tools that already have workflows on n8n.xbest.cloud.
+  // ON CONFLICT DO NOTHING — never overrides admin customization.
+  const n8nBase = WP_N8N_BASE_URL;
+  for (const tool of WP_TOOLS) {
+    if (!tool.n8nDefaultPath) continue;
+    await db.execute(sql`
+      INSERT INTO wp_tools_config (id, n8n_webhook_url, usage_count, is_enabled, updated_at)
+      VALUES (${tool.id}, ${`${n8nBase}/${tool.n8nDefaultPath}`}, 0, true, NOW())
+      ON CONFLICT (id) DO NOTHING
+    `);
+  }
 }
 ensureWpSitesTable().catch(console.error);
 
@@ -116,6 +145,194 @@ router.use("/wp", (req, res, next) => {
   res.header("Access-Control-Allow-Headers", "Content-Type, X-WP-Site-Key");
   if (req.method === "OPTIONS") { res.sendStatus(204); return; }
   next();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// executeWpTool — N8N-first execution engine
+//
+// Routing decision:
+//   1. Query wp_tools_config for a configured N8N webhook URL
+//   2. If found → POST to N8N (passes tool inputs + systemPrompt + site context)
+//   3. If not found → call GROK directly as fallback
+//
+// This function is the heart of the unified /wp/execute endpoint and can be
+// imported internally by other routes as they migrate to the new pattern.
+// ─────────────────────────────────────────────────────────────────────────────
+interface WpExecuteOptions {
+  toolId: string;
+  inputs: Record<string, any>;
+  site: any;
+  systemPrompt: string;
+  language?: string;
+}
+
+async function executeWpTool(opts: WpExecuteOptions): Promise<{ output: string; via: "n8n" | "grok" }> {
+  const { toolId, inputs, site, systemPrompt, language = "pt-BR" } = opts;
+
+  // 1. Check for N8N webhook URL in wp_tools_config
+  let n8nUrl: string | null = null;
+  try {
+    const [config] = await db
+      .select()
+      .from(wpToolsConfigTable)
+      .where(eq(wpToolsConfigTable.id, toolId))
+      .limit(1);
+    if (config?.isEnabled && config?.n8nWebhookUrl) {
+      n8nUrl = config.n8nWebhookUrl;
+    }
+  } catch { /* table may not exist yet on very first boot */ }
+
+  if (n8nUrl) {
+    const response = await fetch(n8nUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        toolId,
+        inputs,
+        siteKey:      site.apiKey,
+        siteUrl:      site.siteUrl,
+        siteName:     site.siteName,
+        systemPrompt,
+        language,
+      }),
+      signal: AbortSignal.timeout(120_000),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "");
+      throw new Error(`N8N webhook error ${response.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const data = await response.json() as any;
+    // Normalize N8N response — workflows can return { text }, { output }, { content }, or any object
+    const output = data?.text ?? data?.output ?? data?.content ?? data?.result ?? JSON.stringify(data);
+    return { output: String(output), via: "n8n" };
+  }
+
+  // 2. Fallback: direct GROK call
+  const grokKey = process.env["GROK"];
+  if (!grokKey) throw new Error("Nenhuma chave de IA configurada (GROK)");
+
+  const inputLines = Object.entries(inputs)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`)
+    .join("\n");
+
+  const userMessage = inputLines
+    ? `${inputLines}\n\nIdioma de saída: ${language}`
+    : `Idioma de saída: ${language}`;
+
+  const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${grokKey}` },
+    body: JSON.stringify({
+      model:    "grok-3-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user",   content: userMessage },
+      ],
+      temperature: 0.7,
+      max_tokens:  2048,
+    }),
+    signal: AbortSignal.timeout(90_000),
+  });
+
+  if (!grokRes.ok) {
+    const errData = await grokRes.json() as any;
+    throw new Error(errData?.error?.message || `GROK error ${grokRes.status}`);
+  }
+
+  const grokData = await grokRes.json() as any;
+  const output = grokData?.choices?.[0]?.message?.content ?? "";
+  return { output, via: "grok" };
+}
+
+// ── POST /api/wp/execute — Unified N8N-first tool execution endpoint ──────────
+//
+// This is the canonical endpoint for all WP TechSites tools going forward.
+// Old individual routes (/wp/generate-content, /wp/audit/seo, etc.) remain for
+// backward compatibility with the existing plugin + dashboard, but new tools
+// and future frontend migrations should use this endpoint exclusively.
+//
+// See docs/architecture/wp-techsites-n8n-pattern.md for full documentation.
+router.post("/wp/execute", requireSiteKey, async (req, res) => {
+  try {
+    const site    = (req as any).wpSite;
+    const { toolId, inputs = {}, language = "pt-BR" } = req.body;
+
+    if (!toolId) {
+      res.status(400).json({ error: "toolId é obrigatório" });
+      return;
+    }
+
+    // Look up tool definition
+    const tool = getWpToolById(toolId);
+    if (!tool) {
+      res.status(404).json({ error: `Ferramenta "${toolId}" não encontrada` });
+      return;
+    }
+
+    // Check if tool is enabled for the site's plan
+    const planRank: Record<string, number> = { trial: 0, starter: 1, pro: 2 };
+    if ((planRank[site.plan] ?? 0) < (planRank[tool.plan] ?? 0)) {
+      res.status(403).json({
+        error: `Esta ferramenta requer o plano "${tool.plan}". Seu plano atual é "${site.plan}".`,
+        upgrade_url: "https://wp.techsites.ai/plans",
+      });
+      return;
+    }
+
+    // Credit check (safe against NULL — coerce to 0)
+    const balance = site.creditBalance ?? 0;
+    if (balance < tool.creditCost) {
+      res.status(402).json({
+        error: `Créditos insuficientes. Esta ferramenta custa ${tool.creditCost} créditos. Saldo atual: ${balance}.`,
+        credits_needed:   tool.creditCost,
+        credits_available: balance,
+        recharge_url: "https://wp.techsites.ai/credits",
+      });
+      return;
+    }
+
+    // Execute via N8N or direct AI
+    const { output, via } = await executeWpTool({
+      toolId,
+      inputs,
+      site,
+      systemPrompt: tool.systemPrompt,
+      language,
+    });
+
+    // Deduct credits atomically
+    await db.execute(sql`
+      UPDATE wp_sites
+      SET credit_balance = GREATEST(0, credit_balance - ${tool.creditCost})
+      WHERE id = ${site.id}
+    `);
+
+    // Update usage counter (upsert)
+    await db.execute(sql`
+      INSERT INTO wp_tools_config (id, n8n_webhook_url, usage_count, is_enabled, updated_at)
+      VALUES (${toolId}, NULL, 1, true, NOW())
+      ON CONFLICT (id) DO UPDATE
+        SET usage_count = wp_tools_config.usage_count + 1,
+            updated_at  = NOW()
+    `);
+
+    const creditsRemaining = Math.max(0, balance - tool.creditCost);
+
+    res.json({
+      output,
+      creditsUsed:      tool.creditCost,
+      creditsRemaining,
+      toolId,
+      toolLabel:        tool.label,
+      via,
+    });
+  } catch (err: any) {
+    req.log?.error(err, "wp/execute error");
+    res.status(500).json({ error: err.message || "Erro ao executar ferramenta" });
+  }
 });
 
 // ── GET /api/wp/plugin-version ────────────────────────────────────────────────
