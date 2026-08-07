@@ -246,6 +246,7 @@ interface CategorySectionProps {
 
 function CategorySection({ category, pathname, isCollapsed, isMobile, onClose, user, settingsFeatures, freeTools, disabledTools }: CategorySectionProps) {
     const [isOpen, setIsOpen] = useState(true);
+    const { t } = useLanguage();
 
     const filteredItems = category.items.filter((item) => {
         // White-label admin toggle — hides tool for all users when disabled
@@ -294,7 +295,7 @@ function CategorySection({ category, pathname, isCollapsed, isMobile, onClose, u
             <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider hover:text-muted-foreground transition-colors">
                 <div className="flex items-center gap-2">
                     <CategoryIcon className="w-3.5 h-3.5" />
-                    <span>{category.title}</span>
+                    <span>{t(category.title)}</span>
                 </div>
                 <ChevronDown className={cn(
                     "w-3 h-3 transition-transform duration-200",
