@@ -60,6 +60,7 @@ const toolIcons: Record<string, React.ReactNode> = {
 
 export default function AdminTokenUsage() {
     const [stats, setStats] = useState<TokenStats | null>(null);
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

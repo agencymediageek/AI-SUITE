@@ -48,6 +48,7 @@ interface Domain {
 
 export default function AdminDomains() {
     const [domains, setDomains] = useState<Domain[]>([]);
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const { toast } = useToast();

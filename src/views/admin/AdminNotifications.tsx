@@ -92,6 +92,7 @@ function formatDate(dateStr: string) {
 
 export default function AdminNotifications() {
     const [activeTab, setActiveTab] = useState("history");
+    const { t } = useLanguage();
     const [notifications, setNotifications] = useState<any[]>([]);
     const [conversations, setConversations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);

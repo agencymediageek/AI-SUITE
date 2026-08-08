@@ -71,6 +71,7 @@ const STRIPE_CURRENCIES = [
 
 export default function AdminSettings() {
     const [loading, setLoading] = useState(true);
+    const { t } = useLanguage();
     const [saving, setSaving] = useState(false);
     const [testingEmail, setTestingEmail] = useState(false);
     const [testingPaypal, setTestingPaypal] = useState(false);
